@@ -99,7 +99,7 @@ typedef Memory::IdFunctor<UNDEFINED | QWORD,               UNDEFINED,        (UN
 typedef Memory::IdFunctor<QWORD,                           UNDEFINED,        (UNDEFINED | INTEGER)> SMem64;
 typedef Memory::IdFunctor<UNDEFINED | QWORD,               UNDEFINED,        (UNDEFINED | FLOAT)>   Mem64f;
 typedef Memory::IdFunctor<QWORD,                           UNDEFINED,        (UNDEFINED | FLOAT)>   SMem64f;
-typedef Memory::IdFunctor<UNDEFINED | TBYTE,               UNDEFINED,        (UNDEFINED | BCD)>     Mem80BCD;
+typedef Memory::IdFunctor<UNDEFINED | TBYTE,               UNDEFINED,        (UNDEFINED | INTEGER)> Mem80BCD;
 typedef Memory::IdFunctor<TBYTE,                           UNDEFINED,        (UNDEFINED | FLOAT)>   SMem80f;
 typedef Memory::IdFunctor<UNDEFINED | TBYTE,               UNDEFINED,        (UNDEFINED | FLOAT)>   Mem80f;
 typedef Memory::IdFunctor<UNDEFINED | OWORD,               UNDEFINED,        (UNDEFINED | INTEGER)> Mem128;
