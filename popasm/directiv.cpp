@@ -16,6 +16,7 @@
  ***************************************************************************/
 
 #include "directiv.h"
+#include "immed.h"
 
 BasicSymbol *Directive::Read (const string &str, InputFile &inp)
 {
@@ -27,6 +28,30 @@ BasicSymbol *Directive::Read (const string &str, InputFile &inp)
 HashTable <Directive *, HashFunctor, PointerComparator<BasicSymbol> > Directive::DirectiveTable =
 	HashTable <Directive *, HashFunctor, PointerComparator<BasicSymbol> > ();
 
+void FunctionBITS (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding)
+{
+	if (sym != 0)
+	{
+		cout << "Label definition not implemented yet." << endl;
+		return;
+	}
+
+	if (Arguments.size() != 1)
+	{
+		cout << "Wrong number of arguments." << endl;
+		return;
+	}
+
+	const Immediate *i = dynamic_cast<const Immediate *> (Arguments[0]->GetData());
+   if (i == 0)
+	{
+		cout << "Must be a constant expression." << endl;
+		return;
+	}
+
+	CurrentAssembler->SetCurrentMode (static_cast<IntegerNumber> (i->GetValue()).GetValue(false));
+}
+
 void Directive::SetupDirectiveTable () throw ()
 {
 	static Directive *Directives[] =
@@ -37,10 +62,10 @@ void Directive::SetupDirectiveTable () throw ()
 		new DefinitionDirective ("DF", 48, false),
 		new DefinitionDirective ("DP", 48, false),
 		new DefinitionDirective ("DQ", 64, true),
-		new DefinitionDirective ("DT", 80, true)
+		new DefinitionDirective ("DT", 80, true),
+      new Directive ("BITS", FunctionBITS)
 	};
 
 	for (unsigned int i = 0; i < sizeof (Directives) / sizeof (Directive *); i++)
 		DirectiveTable.Insert (Directives[i]);
 }
-

@@ -24,18 +24,26 @@
 #include "hashtab.h"
 #include "symbol.h"
 
+typedef void (*DirectiveFunction) (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding);
+
 // Assembler directives, such as DB, DW, STRUCT, etc
 class Directive : public Command
 {
 	static HashTable<Directive *, HashFunctor, PointerComparator<BasicSymbol> > DirectiveTable;
 
+	void (*Function) (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding);
+
 	public:
-	Directive (const string &n) throw () : Command (n) {}
+	Directive (const string &n, DirectiveFunction df = 0) throw () : Command (n), Function (df) {}
 	~Directive () throw () {}
 
 	static void SetupDirectiveTable () throw ();
-
 	static BasicSymbol *Read (const string &str, InputFile &inp);
+
+	void Assemble (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding) const
+	{
+		(*Function) (sym, Arguments, Encoding);
+	}
 };
 
 // Directives that define data, like DB, DW, etc.
@@ -51,4 +59,3 @@ class DefinitionDirective : public Directive
 };
 
 #endif
-
