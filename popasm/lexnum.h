@@ -37,7 +37,7 @@ class Number : public Token
 
 	public:
 	Number () throw () : Size (0) {}
-	Number (const RealNumber &x) throw () : n(x), Size(0) {}
+	Number (const RealNumber &x, unsigned int sz = 0) throw () : n(x), Size(sz) {}
 	Number (const Number &x) throw () : n(x.n), Size(x.Size) {}
 	~Number () throw () {}
 
