@@ -35,6 +35,7 @@ void PrintVector (const vector<Byte> &v)
 	for (vector<Byte>::const_iterator i = v.begin(); i != v.end(); i++)
 	{
 		Byte b = *i;
+		if (b < 16) cout << "0";
 		cout << hex << (unsigned int) b << " ";
 	}
 
