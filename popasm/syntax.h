@@ -171,7 +171,7 @@ class BinarySyntax : public Syntax
 	// means the reg field is an extension of the opcode, and PRESENT means the byte is a function
 	// of the combination of the arguments.
 	public:
-	enum ModRegRM_Usage {ABSENT, PARTIAL, PRESENT, REPEATED};
+	enum ModRegRM_Usage {ABSENT, PARTIAL, PRESENT, REPEATED, EXCHANGED_REGS};
 	private:
 	ModRegRM_Usage mrr_usage;
 
@@ -210,6 +210,19 @@ class FPUBinarySyntax : public Syntax
 	public:
 	FPUBinarySyntax (unsigned int p, const Opcode &op, BasicIdFunctor *arg1, BasicIdFunctor *arg2) throw ();
 	~FPUBinarySyntax () {}
+
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
+};
+
+class SuffixedBinarySyntax : public BinarySyntax
+{
+	Byte Suffix;
+
+	public:
+	SuffixedBinarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, bool i,
+	                     Argument::CheckType chk, Byte dwm, ModRegRM_Usage usage,
+	                     BasicIdFunctor *arg1, BasicIdFunctor *arg2, Byte suf) throw ();
+	~SuffixedBinarySyntax () throw () {}
 
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
 };

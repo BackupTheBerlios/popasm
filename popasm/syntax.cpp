@@ -310,30 +310,39 @@ bool BinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 		regs[i] = dynamic_cast <const Register *> (Arguments[i]->GetData());
 		if (regs[i] != 0)
 		{
-			if (i == 2) continue;
+			switch (i)
+			{
+				// The first argument is a register. Place it in the r/m field and set mod to 11B
+				case 0:
+					mod_reg_rm |= regs[0]->GetCode() | 0xC0;
+					break;
 
-			// Special case: XMM registers
-			if (dynamic_cast <const XMMRegister *> (Arguments[i]->GetData()) != 0)
-			{
-				// Shifts the previous XMM register to bits 3..5 of mod_reg_rm byte
-				mod_reg_rm <<= 3;
-				mod_reg_rm |= regs[i]->GetCode() | 0xC0;
-			}
-			else
-			{
-				// If the register is special (segment, control, test or debug) or the second one, write it in reg field
-				// If the register is the first argument, write it in the r/m field
-				if ((dynamic_cast <const GPRegister *>  (Arguments[i]->GetData()) != 0) ||
-				    (dynamic_cast <const FPURegister *> (Arguments[i]->GetData()) != 0) ||
-			   	 (dynamic_cast <const MMXRegister *> (Arguments[i]->GetData()) != 0))
-				{
-					mod_reg_rm |= (i == 0) ? (regs[i]->GetCode() | 0xC0) : (regs[i]->GetCode() << 3);
-				}
-				else
-				{
-					mod_reg_rm |= regs[i]->GetCode() << 3;
-					if (i == 0) mod_reg_rm |= 0xC0;
-				}
+            // The second argument is a register.
+				case 1:
+					// The code for this register must go in the reg field if:
+					// 1. The previous argument is not a register or
+					// 2. The previous argument is a register and ...
+					if (regs[0] == 0)
+					{
+						mod_reg_rm |= regs[i]->GetCode() << 3;
+					}
+					else
+					{
+						// If Mod_Reg_r/m usage is EXCHANGED_REGS,
+						// place first argument in reg field and the second one in reg field
+						if (mrr_usage == EXCHANGED_REGS)
+						{
+							mod_reg_rm <<= 3;
+							mod_reg_rm |= 0xC0 | regs[1]->GetCode();
+						}
+						else
+						{
+							// Leaves the first argument in r/m field and places the second one into the reg field.
+							mod_reg_rm |= regs[i]->GetCode() << 3;
+						}
+					}
+
+					break;
 			}
 
 			continue;
@@ -393,6 +402,7 @@ bool BinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 			mod_reg_rm |= (mod_reg_rm & 7) << 3;
 
 		case PRESENT:
+      case EXCHANGED_REGS:
 			(Encoding | Opcode (dw)).Write (Output);
 			Output.push_back (mod_reg_rm);
 			break;
@@ -402,6 +412,18 @@ bool BinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 	Output.insert (Output.end(), TrailerOpcode.begin(), TrailerOpcode.end());
 
 	return true;
+}
+
+SuffixedBinarySyntax::SuffixedBinarySyntax (unsigned int p, const Opcode &op,
+	OperandSizeDependsOn dep, bool i, Argument::CheckType chk, Byte dwm, ModRegRM_Usage usage,
+	BasicIdFunctor *arg1, BasicIdFunctor *arg2, Byte suf) throw ()
+	: BinarySyntax (p, op, dep, i, chk, dwm, usage, arg1, arg2), Suffix(suf) {}
+
+bool SuffixedBinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
+{
+	bool Result = BinarySyntax::Assemble (Arguments, Output);
+	if (Result) Output.push_back (Suffix);
+	return Result;
 }
 
 FPUBinarySyntax::FPUBinarySyntax (unsigned int p, const Opcode &op, BasicIdFunctor *arg1, BasicIdFunctor *arg2) throw ()
@@ -468,7 +490,7 @@ bool StringSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 			break;
 	}
 
-	// Checks for the need of prefixes
+	// Checks for the need for prefixes
 	AddressSizePrefix = (CurrentAssembler->GetCurrentMode() == 16) != (mem->GetAddressSize() == 16);
 	SegmentPrefix = mem->GetSegmentPrefix ();
 
