@@ -474,7 +474,8 @@ Examples:
 
 Typical uses for separators include separating binary fields of bit
 records. As an example, let's suppose that a simple communication
-protocol uses a byte to encode information about a transmission as
+protocol uses a byte
+ to encode information about a transmission as
 follows:
 
 \begin{table}[h]
@@ -560,7 +561,7 @@ They have their exact values stored as long as possible.
 Another key point is that \popasm\ distinguishes between 0.0 and -0.0, because
 they have different encodings.
 
-\subsection{Special numbers}
+\subsection{Special numbers\label{SPECNUMSEC}}
 When converted to binary format, real numbers are encoded in IEEE format, which
 is the one used by x86 FPU's. However, some bit patterns have special meaning,
 such as NaN's and infinities. The ability of defining such values is very useful
@@ -677,7 +678,7 @@ Real & Real & Real & 3.0 + 2.0 = 5.0\\
 
 The next sections provide additional details about each operator.
 
-\section{Size specifiers}
+\section{Size specifiers\label{SIZESPECSEC}}
 Also known as size qualifiers, these are the BYTE, WORD, DWORD,
 etc. operators. They allow the developer to specify or override
 the size (in bits) of an expression. For example:
@@ -717,7 +718,7 @@ code in any particular way, anyone who likes specifying variable sizes
 are allowed to do so anytime.
 
 Note that these size specifiers can be used to control the size of
-nearly \emph{any} expressions, as shown bellow.
+nearly \emph{any} expressions, as shown below.
 
 \begin{verbatim}
                 ADD     EDX,18                  ; Adds 18 to EDX
@@ -1243,8 +1244,8 @@ pair of matching square brackets. Example:
                 MOV     CX,[VAR]                ; CX = VAR's contents
 \end{verbatim}
 
-The reader is strongly encouraged to avoid using wek memory references, for
-their meaning is assembler-dependant. Instead, whenever you refer to a variable's
+The reader is advised to avoid using weak memory references, for their
+meaning is assembler-dependant. Instead, whenever you refer to a variable's
 offset, you should use the \emph{OFFSET} keyword, and whenever you want to
 reference the variable's contents, a strong memory reference is the best
 choice. Doing that way, your code will rely neither on \popasm's default
@@ -1321,30 +1322,248 @@ The next example shows some memory access in 32-bit mode:
                 MOV     AX,TABLE[ECX*2]         ; Encoded as TABLE[ECX+ECX]
                 MOV     AX,TABLE[NOSPLIT ECX*2] ; Encoded as TABLE
 
-                MOV     AX,TABLE[ECX+EDX]       ;
-                MOV     AX,TABLE[EDX+ECX]       ;
+                MOV     AX,TABLE[ECX+EDX]       ; ECX is base
+                MOV     AX,TABLE[EDX+ECX]       ; EDX is base
 
-                MOV     AX,DS:TABLE[EBP+ECX]    ;
+                MOV     AX,DS:TABLE[EBP+ECX]    ; Optimizeable
                 MOV     AX,SS:TABLE[ECX+EBP]    ;
 
-DS:             MOV     AX,TABLE[EBP+ECX]       ;
+DS:             MOV     AX,TABLE[EBP+ECX]       ; Non-optimizeable
+
+                DS:                             ; Same as above
+                MOV     AX,TABLE[EBP+ECX]       ;
+
 \end{verbatim}
 
 The memory reference of the first line is encoded as \verb@TABLE[ECX+ECX]@.
 Such behavior can be avoided using the \emph{NOSPLIT} keyword, borrowed from
 \nasm, as in the second line.
 
-The second and third lines look equal, but there is a slight difference
+The third and fourth lines look equal, but there is a slight difference
 betwwen them: in the third line, ECX is the base register and EDX is the
 index one. In the fourth line, the role of ECX and EDX are exchanged.
 Whenever possible, the first register will always be encoded as a base
 register and the second one as the index register within the SIB.
 
-The next two lines 
+The next two lines illustrate an exception to that rule. If EBP is used
+as the base register, the default segment register for that memory access
+would be SS. Conversely, if ECX is used as the base register, DS will be
+the default segment register, allowing the segment prefix in the fifth
+line to be skipped. Likewise, in the sixth line, exchanging the order of
+the registers inside the brackets will make SS the default segment register,
+turning the explicit segment override prefix redundant. By default,
+\popasm\ performs such optimizations automatically, but they can be disabled
+as shown in Chapter \ref{CMDLINE}.
 
+It is more common, however, to disable such optimization for a single critical
+line of code, as in the seventh line, where the segment prefix appears to be
+a label\footnote{As with labels, the colon is optionsl.}. Such syntax forces
+\popasm\ to write the segment prefix and to leave the registers inside the
+brackets in their given order. The eigth and ninth lines show an alternative
+way of doing so.
 
 \chapter{Defining data\label{DEFDATA}}
-To be written.
+This chapter shows how to allocate static storage for variables and, if
+desirable, give them an initial value. The general syntax for definig data
+is:
+
+\begin{verbatim}
+label:          DEF_CMD expression_list
+\end{verbatim}
+
+\noindent where:
+
+\begin{itemize}
+\item \verb@label@ is the name of the variable to be defined. It is optional,
+as well as the colon following it.
+\item \verb@DEF_CMD@ is a definition command (see below).
+\item \verb@expression_list@ is a comma-separated sequence of expressions.
+Such expressions determine the initial value of the variable. If the developer
+wants to define uninitialized data, the special value ``?'' may be used instead.
+\end{itemize}
+
+The definition command may be any of the following:
+
+\begin{itemize}
+\item DB --- Define Byte: defines 8-bits integer variables.
+\item DW --- Define Word: defines 16-bits\footnote{Regardless of whether the assembler
+is in 16- or 32-bits mode} integer variables.
+\item DD --- Define Double word: defines 32-bits integer or floating point variables.
+\item DP --- Define triPle word: defines 48-bit integer variables, often used to store
+a 48-bits far pointer (16 bits due to segment; 32 bits due offset).
+\item DF --- Define Far word: same as DP. Included in \popasm\ for compatibility with \tasm.
+\item DQ --- Define Quadruple word: defines 64-bits integer or floating point variables.
+\item DT --- Define Ten bytes: defines a 80-bits floating point variable or an 80-bits
+integer packed BCD variable.
+\item DO --- Define Octuple word: defines 128-bits XMM data.
+\end{itemize}
+
+For example:
+
+\begin{verbatim}
+FOO             DB     1, 2, 3
+                DW     123 + 456, 1234h, ?, -175
+NEGATIVE_ZERO   DD     -0.0
+ENTRY_POINT     DD     07C0h:0000h
+FAR_ADDRESS     DP     1234h:56789ABCh
+HUGE_VALUE      DQ     INFINITY
+\end{verbatim}
+
+The first line defines FOO as a byte variable. It allocates three bytes in a row and
+assign them the 1, 2 and 3 initial values. The second line defines no variable at all,
+but allocates four words just after the last byte defined in the first line. Note that
+the third word is undefined and that any numeric expression can be accepted as initial
+value. The next line defines a double word (32 bits) variable named NEGATIVE\_ZERO,
+initialized to the IEEE representation for -0.0. The fourth and fifth lines define a
+double and a triple word , but they store a full pointer instead of a sinple integer.
+The last line encodes the IEEE representation for $+\infty$ (see Section \ref{SPECNUMSEC}).
+
+\section{DUP expressions}
+Sometimes it is necessary to allocate large amounts of memory. There is a special
+operator for that purpose: the \emph{DUP} operator. It can only be used within
+definition statements. Its role is to duplicate a sequence of expressions. For example:
+
+\begin{verbatim}
+FOO             DB      0, 0, 0, 0, 0           ; 5 null bytes
+BAR             DB      5 DUP (0)               ; same as above
+\end{verbatim}
+
+The parenthesis surrounding the expression to be duplicated are optional. There is
+a pitfall regarding their use, shown below:
+
+\begin{verbatim}
+FOO             DB      4 DUP (0, 1)            ; defines 8 bytes
+FOO2            DB      0, 1, 0, 1, 0, 1, 0, 1  ; same as above
+
+BAR             DB      4 DUP 0, 1              ; defines 5 bytes
+BAR2            DB      0, 0, 0, 0, 1           ; same as above
+\end{verbatim}
+
+Note that only the expressions inside parenthesis are duplicated. If they are not
+used, the DUP operator will act only on the first one, as showm in defining BAR
+variable.
+
+DUP expressions can also be nested:
+
+\begin{verbatim}
+                DB      2 DUP (1, 2, 2 DUP 3)   ; defines 8 bytes
+                DB      1, 2, 3, 3, 1, 2, 3, 3  ; same as above
+\end{verbatim}
+
+\section{Label variables}
+It is not necessary to allocate any storage to define a variable. In case one
+needs to define a variable wothout reserving any memory space, the keyword
+\verb@LABEL@ may be used. Its syntax is:
+
+\begin{verbatim}
+VARIABLE_NAME   LABEL   type
+\end{verbatim}
+
+\noindent where
+
+\begin{itemize}
+\item \verb@VARIABLE_NAME@ is the name of the variable to be defined.
+\item \verb@type@ is one of the size specifiers discussed in Section
+\ref{SIZESPECSEC}.
+\end{itemize}
+
+For example:
+
+\begin{verbatim}
+INFO_START      LABEL   BYTE                    ; Marks beginning of INFO
+LENGTH          DD      35.8                    ;
+WIDTH           DD      12.5                    ; Some stuff here...
+HEIGTH          DD      80.1                    ;
+INFO_END        LABEL   BYTE                    ; Marks end of INFO
+
+INFO_LENGTH     EQU     INFO_END - INFO_START   ; Total storage for INFO
+\end{verbatim}
+
+\section{Reserving storage}
+In order to achieve compatibility with \nasm, \popasm\ also supports
+the RESB, RESW, ..., etc. directives. They are used in the BSS section
+of a module to allocate uninitialized memory. Their syntax is:
+
+\begin{verbatim}
+LABEL           RES_CMD qty
+\end{verbatim}
+
+\noindent where
+
+\begin{itemize}
+\item \verb@LABEL@ is the variable to be defined (optional). It may be
+followed by an optional colon.
+\item \verb@RES_CMD@ is any of the RESB, RESW, ..., etc. commands.
+\item \verb@qty@ is the number of bytes, words, etc. to reserve.
+\end{itemize}
+
+For example:
+
+\begin{verbatim}
+STACK1          RESD    1024                    ; reserve 1024 dwords
+BUFFER          RESB    32768                   ; reserve 32768 bytes
+\end{verbatim}
+
+\section{Notes on labels}
+One of the greatest features of \popasm\ is its type checking mechanism.
+When one defines a variable as a word, the assembler will keep track of
+that and will issue error messages when it finds type mismatchs, unless
+the developer uses a type specifier (see Section \ref{SIZESPECSEC}) to
+explicitly override a variable's type.
+
+Note, however, that in order to achieve compability with \tasm, all
+labels followed by the optional colon will be treated as code labels
+(that is, a label one can JMP to). For example:
+
+\begin{verbatim}
+ENTRY_POINT:    DW      OFFSET FUNCTION         ; Watch out!
+ENTRY_POINT2    DW      OFFSET FUNCTION         ; Ok.
+
+                .
+                .
+                .
+
+                JMP     ENTRY_POINT             ; Disaster!
+                JMP     [ENTRY_POINT]           ; Ok.
+                JMP     ENTRY_POINT2            ; Better.
+\end{verbatim}
+
+The first label, ENTRY\_POINT, is defined as a code label. the JMP
+instruction will transfer the CPU execution to its offset, \bf{NOT}
+to its contens, unless the square brackets are used. Note that code
+labels have no type at all, so if ENTRY\_POINT were a far pointer
+instead of a near one the wrong instruction would be generated.
+
+ENTRY\_POINT2 is defined using the recommended syntax. Because no
+colon is used, \popasm\ assigns the proper typing info to that
+variable, so the last line will generate the correct instruction.
+
+In order to avoid this pitfall, the developer may follow a simple
+rule: use the colon \emph{only} if the symbol is a code label.
+Because defining such labels does not require a colon, one may
+choose not to use it at all.
+
+The reader might wonder why \popasm\ does not keep track of the
+typing info even when the colon is used. The reason for that is
+that some assemblers did not recognize recent instructions (such
+as earlier versions of \tasm.). The developer, then, was forced
+to encode some instructions manually. For example, if an assembler
+does not recognize the EMMS instruction then someone could encode
+it this way:
+
+\begin{verbatim}
+SOME_LABEL:     DW      77FFh                   ; EMMS
+
+                .
+                .
+                .
+
+                JMP     SOME_LABEL              ; Ok.
+\end{verbatim}
+
+If \verb@SOME_LABEL@ were treated as an ordinary variable the JMP
+instruction would jump to address 0FF77h instead of the desired
+target.
 
 \part{\popasm\ Advanced Syntax}
 This part presents advanced \popasm\ features, including commands and macros
@@ -1464,7 +1683,7 @@ its fields. This value can be returned by the \verb@SIZE@ keyword. For
 example, \verb@SIZE DATE_STRUCT@ returns 4 (DAY and MONTH occupy one byte
 each, plus two bytes due to the YEAR field).
 
-\section{UNION}
+\section{UNION\label{SECUNION}}
 Unions are like structures, except that all of its fields are placed in the
 same memory address. Writing to one of its fields thus modifies all of them,
 given the shared memory nature of the union.
@@ -1472,22 +1691,36 @@ given the shared memory nature of the union.
 The syntax for declaring a union is similar to the one for structures,
 except that the \verb@STRUCT@ keyword is replaced for \verb@UNION@. Note,
 however, that because unions fields occupy the same memory location it
-is possible to specify a default value for \emph{at most} one of the
+is possible to specify a default value for \emph{at most} one of their
 fields. For example:
 
 \begin{verbatim}
-Place examples here
+EXAMPLE         UNION
+BYTE_FIELD      DB      ?
+WORD_FIELD      DW      ?
+DWORD_FIELD     DD      1234_5678h
+ENDS            ; Yes, unions are ended with ENDS, not ENDU
 \end{verbatim}
 
 Unions fields are accessed the same way as the fields of a structure (via
-the period operator). The offsets of their fields are obtained by the
+the period operator). The offsets of their fields are referred by the
 same means as with structures, but keep in mind that the offset of all
-fields are the same as the offset of the union variable itself, as shown
-below:
+fields are the same as the offset of the union variable itself. Considering
+the union defined above:
 
 \begin{verbatim}
-Place example here
+INSTANCE        EXAMPLE <, 4321h,>
+INSTANCE2       EXAMPLE <, 4321h, 123>          ; Error!
+
+                MOV     AL,INSTANCE.BYTE_FIELD  ; AL = 21h
+                MOV     AL,BYTE INSTANCE        ; same as above
+                MOV     EAX,INSTANCE.DWORD_FIELD; EAX = 1234_4321h
 \end{verbatim}
+
+\noindent That it, the default value for the \verb@DWORD_FIELD@ is used
+and then it's least significant word is overriden by the specification of
+the second field. The second line is not correct because it attempts to
+initialize two fields at the same time, which is not allowed.
 
 Some developers may claim that unions are useless. In fact, one can define
 a single variable as the largest field of the union. Then, using size
@@ -1508,18 +1741,151 @@ That is, a single dword emulates EAX and when the AL, AH or AX emulated
 counterparts need to be accessed, a size specifier overrides the original
 size of the variable. In the last line, the person must also remember to
 add 1 to the base offset because AH lies in the second least significant
-byte in EAX. Needless to say, this is too error prone.
-
-The next code shows how the same thing could be implemented using a union:
-
-\begin{verbatim}
-Rewrite the code above with union
-\end{verbatim}
-
-
+byte in EAX. Needless to say, this is too error prone. An example of how
+structures and unions can be used to provide a safer solution is shown in
+Section \ref{NESTSEC}.
 
 \section{RECORD}
 To be written.
+
+\section{Nesting Aggregates\label{NESTSEC}}
+Aggregates can be nested as well. They behave as a field of the aggregate
+that contains them. For example, let's suppose we wish to rewrite the
+EAX simulation code (shown in Section \ref{SECUNION}) using nested aggregates.
+The EAX register can be seen as the union of a dword (EAX itself), a word
+(AX) and two bytes (AH and AL).
+
+The problem is that AH and AL do not share the same storage. Instead, they
+should be combined into a 16-bits data unit, which will be one of the fields
+of the union. The code below does exactely that.
+
+\begin{verbatim}
+; AL and AH must be combined in a 16-bits data unit
+AX_STRUCT       STRUCT
+SIMULATED_AL    DB      ?
+SIMULATED_AH    DB      ?
+ENDS
+
+EAX_UNION       UNION
+SIMULATED_EAX   DD      ?
+SIMULATED_AX    DW      ?
+SIMULATED_AH_AL AX_STRUCT       <,>
+ENDS
+
+EAX_CLONE       EAX_UNION <0,,>
+
+                MOV     AL,EAX_CLONE.SIMULATED_AH_AL.SIMULATED_AL
+                MOV     AH,EAX_CLONE.SIMULATED_AH_AL.SIMULATED_AH
+                MOV     AX,EAX_CLONE.SIMULATED_AX
+                MOV     EAX,EAX_CLONE.SIMULATED_EAX
+\end{verbatim}
+
+The code above first defines a structure to mimic AX lower and upper
+bytes. This structure is then used as a field of the \verb@EAX_UNION@,
+occupying the same memory space as \verb@SIMULATED_EAX@ itself. Note
+that a major drawback of this approach is that the user cannot simply
+write \verb@EAX_CLONE.SIMULATED_AL@ because \verb@EAX_UNION@ does not 
+have such a field. Instead, it should be written
+\verb@EAX_CLONE.AX_STRUCT.SIMULATED_AL@, which is too awkward.
+
+There is a way to remedy that situation, though. If the structure is
+defined ``on the fly'' its namespace will merge with the union's one
+(for details about namespaces, see Section \ref{NAMESPACESEC}).
+The example above can be rewritten as:
+
+\begin{verbatim}
+EAX_UNION       UNION
+SIMULATED_EAX   DD      ?
+SIMULATED_AX    DW      ?
+
+                STRUCT                          ;
+SIMULATED_AL    DB      ?                       ; Structure defined
+SIMULATED_AH    DB      ?                       ; on the fly
+ENDS                                            ;
+
+ENDS
+
+EAX_CLONE       EAX_UNION <,,>
+
+                MOV     AL,EAX_UNION.SIMULATED_AL
+                MOV     AH,EAX_UNION.SIMULATED_AH
+                MOV     AX,EAX_UNION.SIMULATED_AX
+                MOV     EAX,EAX_UNION.SIMULATED_EAX
+\end{verbatim}
+
+\section{Namespace considerations\label{NAMESPACESEC}}
+As a project grows in size, there are likely to be many variables,
+structures and unions defined throughout the code. This implies
+that there is a greater probability of name clashes occur (that
+is, an attempt to define a symbol whose name is already being
+used by another symbol definition).
+
+The reason why many compilers complain about name clashes is to
+avoid ambiguity when such names are referenced. Unfortunatelly
+some assemblers are just too rigid in this constraint. For
+example, consider the code below:
+
+\begin{verbatim}
+NAME            DB      'John Adams', 0
+
+STUDENT         STRUCT
+NAME            DB      50 DUP (0)
+AGE             DB      ?
+ENDS
+
+EMPLOYEE        STRUCT
+NAME            DB      50 DUP (0)
+SALARY          DD      ?
+ENDS
+
+CHARLIE         STUDENT <'Charlie Smith', 12>
+DAVE            EMPLOYEE <'Dave Thompson', 4000.00>
+
+                MOV     DX,OFFSET NAME
+                MOV     DX,OFFSET CHARLIE.NAME
+                MOV     DX,OFFSET DAVE.NAME
+\end{verbatim}
+
+As can be seen, a variable \verb@NAME@ appears three times there.
+It has a stand-alone version (defined as John Adams), and it is
+also a field in both structures.
+
+The first MOV instruction copies the offset of \verb@NAME@ to DX,
+but which \verb@NAME@? In \popasm, because nothing more has being
+said so far, the stand-alone version is used. The second MOV
+instruction makes it clear it refers to the field of the \verb@STUDENT@
+structure (given \verb@CHARLIE@ is a student in this code). The
+third MOV instruction has no ambiguity either, because it specifies
+the \verb@NAME@ in question is a field on EMPLOYEE structure.
+
+The code above is accepted by \popasm\ but some other assemblers
+claim there is a name clash in that code. The reason why \popasm\ 
+sees no ambiguity in the example above is that it defines a separate
+namespace for each existing segment, structure, union and record
+\footnote{Note, however, that aggregates defined on the fly have
+their namespace intentionally merged with the one of the aggregate
+that contains it. See Section \ref{NESTSEC}}.
+
+Because \popasm\ must also be compatible with existing code, there
+are means to force the use of a global namespace for all symbols. See
+Chapter \ref{CMDLINE} for details. The code below illustrates this
+problem:
+
+\begin{verbatim}
+STUDENT         STRUCT
+NAME            DB      50 DUP (0)
+AGE             DB      ?
+ENDS
+
+                MOV     AX,OFFSET AGE           ; Not good
+                MOV     AX,OFFSET STUDENT.AGE   ; Better
+\end{verbatim}
+
+The first MOV instruction relies on the fact that \verb@AGE@ lies
+in a global namespace. Such a statement would be treated as an
+error, unless \popasm\ is configured to use the global namespace.
+The second MOV instruction shows the prefered way of doing what
+the line before it does in other assemblers.
 
 \chapter{Macros}
 To be written.
@@ -1528,7 +1894,7 @@ To be written.
 
 \chapter{\popasm\ commands}
 This chapter is a list of all commands supported by \popasm\ (except machine
-instructions, summarized in chapter \ref{INSTSUM}) in alphabetic order. If a
+instructions, summarized in appendix \ref{INSTSUM}) in alphabetic order. If a
 command has already been mentioned before in this manual, it will be quickly
 summarized here, along with a reference to where it is detailed.
 
