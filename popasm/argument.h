@@ -53,6 +53,28 @@ class BasicArgument : public Type
 	};
 };
 
+class UndefinedSize : public exception
+{
+	static const char WhatString[];
+
+	public:
+	UndefinedSize () throw () {}
+	~UndefinedSize () throw () {}
+
+	const char *what() const throw() {return WhatString;}
+};
+
+class InvalidFullPointer : public exception
+{
+	static const char WhatString[];
+
+	public:
+	InvalidFullPointer () throw () {}
+	~InvalidFullPointer () throw () {}
+
+	const char *what() const throw() {return WhatString;}
+};
+
 class Argument
 {
 	const BasicArgument *Data;
@@ -65,12 +87,12 @@ class Argument
 	~Argument () {if (Owner) delete Data;}
 
 	const BasicArgument *GetData () const throw () {return Data;}
-	static Argument *MakeArgument (const Expression &e);
+	static Argument *MakeArgument (const Expression &e) throw (InvalidArgument, InvalidFullPointer);
 
 	bool Match (BasicIdFunctor *arg) const {return (*arg)(Data);}
 
 	enum CheckType {NONE, EQUAL, GREATER, HALF, MINUS_16BITS};
-	bool TypeCheck (Argument &arg, CheckType ct);
+	bool TypeCheck (Argument &arg, CheckType ct) const throw (UndefinedSize);
 	unsigned int GetSize () const throw () {return Data->GetSize();}
 	void SetSize (unsigned int sz) const {Data->SetSize(sz);}
 

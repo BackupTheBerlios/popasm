@@ -27,7 +27,7 @@
 #include "lexnum.h"
 #include "immed.h"
 
-bool Argument::TypeCheck (Argument &arg, CheckType ct)
+bool Argument::TypeCheck (Argument &arg, CheckType ct) const throw (UndefinedSize)
 {
 	if (ct == NONE) return true;
 
@@ -35,7 +35,7 @@ bool Argument::TypeCheck (Argument &arg, CheckType ct)
 	unsigned int s2 = arg.Data->GetSize();
 
 	// If both arguments have no defined size, throw exception
-	if ((s1 == 0) && (s2 == 0)) throw 0;
+	if ((s1 == 0) && (s2 == 0)) throw UndefinedSize();
 
 	// Performs the check according to the desired way
 	switch (ct)
@@ -99,7 +99,7 @@ bool Argument::TypeCheck (Argument &arg, CheckType ct)
 	return true;
 }
 
-Argument *Argument::MakeArgument (const Expression &e)
+Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, InvalidFullPointer)
 {
 	const Expression *Prefix = e.GetSegmentPrefix();
 
@@ -121,7 +121,7 @@ Argument *Argument::MakeArgument (const Expression &e)
 					if (reg != 0)
 					{
 						// Registers cannot be preceeded by prefixes like ES:
-						if (Prefix != 0) throw 0;
+						if (Prefix != 0) throw InvalidFullPointer();
 						return new Argument (reg, false);
 					}
 
@@ -135,9 +135,9 @@ Argument *Argument::MakeArgument (const Expression &e)
 						if (Prefix == 0) return new Argument (new Immediate (*p->first, e.GetDistanceType()), true);
 
 						// Checks for full-pointers. The prefix must be constant
-						if (Prefix->QuantityOfTerms() != 1) throw 0;
+						if (Prefix->QuantityOfTerms() != 1) throw InvalidFullPointer();
 						const pair<Number *, Symbol *> *q = Prefix->TermAt(0);
-						if ((q->first == 0) || (q->second != 0)) throw 0;
+						if ((q->first == 0) || (q->second != 0)) throw InvalidFullPointer();
 
 						Word seg = q->first->GetInteger (false);
 						Dword off = p->first->GetInteger (false);
@@ -159,3 +159,6 @@ Argument *Argument::MakeArgument (const Expression &e)
 
 	return 0;
 }
+
+const char UndefinedSize::WhatString[] = "Operation size undefined. At least one argument must be explicitly sized.";
+const char InvalidFullPointer::WhatString[] = "Non-constant full-pointer. Both parts must be constants.";
