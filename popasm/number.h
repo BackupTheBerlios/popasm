@@ -137,12 +137,13 @@ class NaturalNumber : vector <Word>
 	bool operator== (const NaturalNumber &n) const throw ();
 	bool operator!= (const NaturalNumber &n) const throw ();
 
-	NaturalNumber &OnesComplement () throw ();
-	NaturalNumber &TwosComplement () throw ();
+	NaturalNumber &OnesComplement (Dword sz = 0) throw (Overflow);
+	NaturalNumber &TwosComplement (Dword sz = 0) throw (Overflow);
 	NaturalNumber &operator~ () throw ();
 
 	void SetBit (Dword n) throw ();
 	void ClearBit (Dword n) throw ();
+	bool TestBit (Dword n) throw ();
 
 	// Prints the number in any base. Default is 10.
 	string Print (Word Base = 10) const throw ();
@@ -217,6 +218,11 @@ class IntegerNumber
 
 	// Sign extends *this and n to be the same size
 	void SignExtend (IntegerNumber &n) throw ();
+
+	// Performs a binary shift right assuming (*this) is sz bytes long
+	IntegerNumber &BinaryShiftRight (const IntegerNumber &n, Dword sz = 0) throw (NegativeShift, Overflow);
+	IntegerNumber &UnsignedDivision (const IntegerNumber &n, Dword sz = 0) throw (Overflow);
+	IntegerNumber &UnsignedModulus (const IntegerNumber &n, Dword sz = 0) throw (Overflow);
 
 	void ChangeSign () throw () {Negative = !Negative;}
 	IntegerNumber &OnesComplement () throw ();

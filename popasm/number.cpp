@@ -527,18 +527,27 @@ NaturalNumber &NaturalNumber::operator~ () throw ()
 	return answer.OnesComplement();
 }
 
-NaturalNumber &NaturalNumber::OnesComplement () throw ()
+NaturalNumber &NaturalNumber::OnesComplement (Dword sz = 0) throw (Overflow)
 {
-	if (empty())
-	{
-		push_back (0xFFFF);
-	}
+	// If the user accepts the default size (0), replace it for the real size in bytes
+	if (sz == 0)
+		sz = empty() ? 1 : SizeInBytes();
 	else
-	{
-		// Toggles all bits
-		for (iterator i = begin(); i != end(); i++)
-			*i ^= 0xFFFF;
-	}
+		if (SizeInBytes() > sz) throw Overflow();
+
+	// szw is the size in words
+	Dword szw = sz / 2;
+	if ((sz & 1) != 0) szw++;
+
+	// Fills the number with leading zeroes so it get get to the desiref size
+	resize (szw, 0);
+
+	// Toggles all bits
+	for (iterator i = begin(); i != end(); i++)
+		*i ^= 0xFFFF;
+
+	// If the number of bytes is odd, retoggles the most significant one
+	if ((sz & 1) != 0) back() ^= 0xFF00;
 
 	// Skips leading zeroes
 	while (!empty())
@@ -550,11 +559,11 @@ NaturalNumber &NaturalNumber::OnesComplement () throw ()
 	return *this;
 }
 
-NaturalNumber &NaturalNumber::TwosComplement () throw ()
+NaturalNumber &NaturalNumber::TwosComplement (Dword sz = 0) throw (Overflow)
 {
 	if (empty()) return *this;
 
-	OnesComplement();
+	OnesComplement(sz);
 	Increment();
 	return *this;
 }
@@ -911,6 +920,15 @@ void NaturalNumber::ClearBit (Dword n) throw ()
 		(*this)[n / 16] &= ~(1 << (n & 15));
 }
 
+bool NaturalNumber::TestBit (Dword n) throw ()
+{
+	// First check if the bit is beyond vactor bounds
+	if (n / 16 < size())
+		return ((*this)[n / 16] & (1 << (n & 15))) != 0;
+
+	return false;
+}
+
 bool NaturalNumber::Test () throw ()
 {
 	try
@@ -1226,6 +1244,56 @@ void IntegerNumber::SignExtend (IntegerNumber &n) throw ()
 	{
 		n.AbsoluteValue.MatchSize (AbsoluteValue, n.LesserThanZero() ? 0xFFFF : 0);
 	}
+}
+
+IntegerNumber &IntegerNumber::BinaryShiftRight (const IntegerNumber &n, Dword sz = 0) throw (NegativeShift, Overflow)
+{
+	// Prevents negative shifts
+	if (n.LesserThanZero()) throw NegativeShift (*this, n);
+
+	// If this number is negative convert it to its two's complement first
+	if (LesserThanZero())
+	{
+		AbsoluteValue.TwosComplement(sz);
+		// Checks sign bit. If not set, the absolute value was too large
+		if (sz != 0)
+			if (!AbsoluteValue.TestBit (sz * 8 - 1)) throw Overflow();
+	}
+
+	Negative = false;
+	AbsoluteValue >>= n.AbsoluteValue;
+	return *this;
+}
+
+IntegerNumber &IntegerNumber::UnsignedDivision (const IntegerNumber &n, Dword sz = 0) throw (Overflow)
+{
+	// If this number is negative convert it to its two's complement first
+	if (LesserThanZero())
+	{
+		AbsoluteValue.TwosComplement(sz);
+		// Checks sign bit. If not set, the absolute value was too large
+		if (sz != 0)
+			if (!AbsoluteValue.TestBit (sz * 8 - 1)) throw Overflow();
+	}
+
+	Negative = false;
+	return (*this) /= n;
+}
+
+IntegerNumber &IntegerNumber::UnsignedModulus (const IntegerNumber &n, Dword sz = 0) throw (Overflow)
+{
+	// If this number is negative convert it to its two's complement first
+	if (LesserThanZero())
+	{
+		AbsoluteValue.TwosComplement(sz);
+		// Checks sign bit. If not set, the absolute value was too large
+		if (sz != 0)
+			if (!AbsoluteValue.TestBit (sz * 8 - 1)) throw Overflow();
+	}
+
+	Negative = false;
+	return (*this) %= n;
+	return *this;
 }
 
 IntegerNumber &IntegerNumber::operator&= (IntegerNumber n) throw ()
