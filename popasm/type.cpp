@@ -24,11 +24,27 @@ string MultipleBrackets::WhatString = "Illegal: Multiple brackets.";
 
 Type &Type::operator+= (const Type &t) throw (IncompatibleTypes)
 {
+	// Cannot operate on SHORT, NEAR or FAR expressions
+	if ((DistanceType != NONE) && (t.DistanceType != NONE)) throw IncompatibleTypes();
+
 	switch (t.CurrentType)
 	{
 		case SCALAR:
-			// Adding a scalar to a number does not change its original type, but STRONG_MEMORY + SCALAR is not allowed
-			if (CurrentType == STRONG_MEMORY) throw IncompatibleTypes();
+			switch (CurrentType)
+			{
+				case SCALAR:
+					Size = 0;
+					break;							// SCALAR + SCALAR = SCALAR
+
+				case WEAK_MEMORY:
+					CurrentType = WEAK_MEMORY; // WEAK_MEMORY + SCALAR = WEAK_MEMORY
+					break;
+
+				case STRONG_MEMORY:
+					throw IncompatibleTypes();	// STRONG_MEMORY + SCALAR = error!
+					break;
+			}
+
 			break;
 
 		case WEAK_MEMORY:
@@ -36,10 +52,12 @@ Type &Type::operator+= (const Type &t) throw (IncompatibleTypes)
 			{
 				case SCALAR:
 					CurrentType = WEAK_MEMORY;	// SCALAR + WEAK_MEMORY = WEAK_MEMORY
+					Size = t.Size;
 					break;
 
 				case WEAK_MEMORY:
 					CurrentType = SCALAR;		// WEAK_MEMORY + WEAK_MEMORY = SCALAR
+					Size = 0;
 					break;
 
 				case STRONG_MEMORY:
@@ -66,9 +84,12 @@ Type &Type::operator*= (const Type &t) throw (IncompatibleTypes)
 {
 	// Strong memory cannot multiply or divide.
 	if ((CurrentType == STRONG_MEMORY) || (t.CurrentType == STRONG_MEMORY)) throw IncompatibleTypes();
+	// Cannot operate on SHORT, NEAR or FAR expressions
+	if ((DistanceType != NONE) && (t.DistanceType != NONE)) throw IncompatibleTypes();
 
 	// The result of any valid operation will be scalar
 	CurrentType = SCALAR;
+	Size = 0;
 	return *this;
 }
 
@@ -114,14 +135,18 @@ Type &Type::operator>>= (const Type &t) throw (IncompatibleTypes)
 	return *this *= t;
 }
 
-Type Type::operator~ () const throw (IncompatibleTypes)
+Type Type::operator~ () throw (IncompatibleTypes)
 {
 	// Strong memory cannot negate or complement.
 	if (CurrentType == STRONG_MEMORY) throw IncompatibleTypes();
+	// Cannot operate on SHORT, NEAR or FAR expressions
+	if (DistanceType != NONE) throw IncompatibleTypes();
+
+	Size = 0;
 	return *this;
 }
 
-Type Type::operator- () const throw (IncompatibleTypes)
+Type Type::operator- () throw (IncompatibleTypes)
 {
 	// - and ~ share the same behavior
 	return ~*this;
@@ -129,6 +154,9 @@ Type Type::operator- () const throw (IncompatibleTypes)
 
 void Type::operator[] (int) throw (MultipleBrackets)
 {
+	// Cannot operate on SHORT, NEAR or FAR expressions
+	if (DistanceType != NONE) throw 0;
 	if (CurrentType == STRONG_MEMORY) throw MultipleBrackets();
+
 	CurrentType = STRONG_MEMORY;
 }

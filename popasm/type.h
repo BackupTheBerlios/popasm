@@ -48,16 +48,26 @@ class Type
 {
 	public:
 	enum TypeName {SCALAR, WEAK_MEMORY, STRONG_MEMORY};
+	enum Distance {NONE, SHORT, NEAR, FAR};
 
 	private:
+	unsigned int Size;
 	TypeName CurrentType;
+	Distance DistanceType;
 
 	public:
-	Type (TypeName t = SCALAR) throw () : CurrentType (t) {}
+	Type (unsigned int sz = 0, TypeName t = SCALAR, Distance dist = NONE) throw () : Size (sz), CurrentType (t), DistanceType(dist) {}
 	~Type () throw () {}
 
-	const TypeName &GetCurrentType () const throw () {return CurrentType;}
-	void SetCurrentType (const TypeName &NewType) throw () {CurrentType = NewType;}
+	// Methods for reading and writing each member
+	unsigned int GetSize () const throw () {return Size;}
+	void SetSize (unsigned int sz) throw () {Size = sz;}
+
+	TypeName GetCurrentType () const throw () {return CurrentType;}
+	void SetCurrentType (TypeName NewType) throw () {CurrentType = NewType;}
+
+	Distance GetDistanceType () const throw () {return DistanceType;}
+	void SetDistanceType (Distance dist) throw () {DistanceType = dist;}
 
 	Type &operator+= (const Type &t) throw (IncompatibleTypes);
 	Type &operator-= (const Type &t) throw (IncompatibleTypes);
@@ -71,11 +81,13 @@ class Type
 	Type &operator<<= (const Type &t) throw (IncompatibleTypes);
 	Type &operator>>= (const Type &t) throw (IncompatibleTypes);
 
-	Type operator- () const throw (IncompatibleTypes);
-	Type operator~ () const throw (IncompatibleTypes);
+	Type operator- () throw (IncompatibleTypes);
+	Type operator~ () throw (IncompatibleTypes);
 
-	bool operator== (const Type &t) const throw () {return CurrentType == t.CurrentType;}
-	bool operator!= (const Type &t) const throw () {return CurrentType != t.CurrentType;}
+	bool operator== (const Type &t) const throw ()
+		{return (Size == t.Size) && (CurrentType == t.CurrentType) && (DistanceType == t.DistanceType);}
+	bool operator!= (const Type &t) const throw ()
+		{return (Size != t.Size) || (CurrentType != t.CurrentType) || (DistanceType != t.DistanceType);}
 
 	void operator[] (int) throw (MultipleBrackets);
 };
