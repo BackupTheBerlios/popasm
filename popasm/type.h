@@ -57,7 +57,7 @@ class Type
 
 	public:
 	Type (unsigned int sz = 0, TypeName t = SCALAR, Distance dist = NONE) throw () : Size (sz), CurrentType (t), DistanceType(dist) {}
-	~Type () throw () {}
+	virtual ~Type () throw () {}
 
 	// Methods for reading and writing each member
 	unsigned int GetSize () const throw () {return Size;}
