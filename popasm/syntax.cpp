@@ -273,14 +273,20 @@ bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 	// Checks for SHORT or NEAR
 	if (static_cast<RelativeArgument *> (ArgumentTypes[0])->GetRelativeDistance() == SHORT)
 	{
-		RelativeDistance--;
-		if ((RelativeDistance < -128) || (RelativeDistance > 127))
+		// Overlooks undefined arguments
+		if (!Arguments[0]->IsUndefined())
 		{
-			if (immed->GetDistanceType() == SHORT)
-				throw JumpOutOfRange();
-			else
-				return false;
+			RelativeDistance--;
+			if ((RelativeDistance < -128) || (RelativeDistance > 127))
+			{
+				if (immed->GetDistanceType() == SHORT)
+					throw JumpOutOfRange();
+				else
+					return false;
+			}
 		}
+		else
+			RelativeDistance = 0;
 
 		temp.push_back (static_cast<Byte> (RelativeDistance & 0xFF));
 	}
@@ -288,6 +294,10 @@ bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 	{
 		unsigned int size = (immed->GetSize() == 0) ? CurrentAssembler->GetCurrentMode() : immed->GetSize();
 		RelativeDistance -= size / 8;
+
+		// Overlooks undefined arguments
+		if (Arguments[0]->IsUndefined())
+			RelativeDistance = 0;
 
 		if (size == 16)
 		{
