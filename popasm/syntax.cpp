@@ -297,6 +297,15 @@ BinarySyntax::BinarySyntax (const Opcode &op, OperandSizeDependsOn dep, bool i, 
 	if (arg3 != 0) ArgumentTypes.push_back (arg3);
 }
 
+inline bool SpecialReg (const Register *reg)
+{
+	if (reg == 0) return false;
+
+	return (dynamic_cast<const ControlRegister *> (reg) != 0) ||
+		(dynamic_cast<const DebugRegister *> (reg) != 0) ||
+		(dynamic_cast<const TestRegister *> (reg) != 0);
+}
+
 bool BinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
 {
 	unsigned int i;
@@ -344,8 +353,8 @@ bool BinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 					else
 					{
 						// If Mod_Reg_r/m usage is EXCHANGED_REGS,
-						// place first argument in reg field and the second one in reg field
-						if (mrr_usage == EXCHANGED_REGS)
+						// place first argument in reg field and the second one in r/m field
+						if ((mrr_usage == EXCHANGED_REGS) || (SpecialReg (regs[0])))
 						{
 							mod_reg_rm <<= 3;
 							mod_reg_rm |= 0xC0 | regs[1]->GetCode();
