@@ -40,43 +40,8 @@ want to read, understand and/or modify \popasm\ sources.
 
 Please check which manual is the one intended for your needs.
 
-\chapter*{About the author}
-H\'elcio Mello was born in Brazil, in 1979. He has a degree in Computer
-Engineering from Federal University of
-Espirito Santo -- ES -- Brazil\cite{UFES}, and is curently taking
-Computer Science in Pontificial Catholic
-University in Rio de Janeiro -- RJ -- Brazil\cite{PUC}. He is expected
-to be a Master of Science in 2004.
-
-He joined \emph{Sourceforge}\cite{SF} in December 2001, and then
-registered \popasm\ as a \emph{SourceForge}
-project. The project was finally open to the Free Software community.
-In July 2002, he joined \emph{Advogato}
-\cite{ADV,ADVPRSN} and \emph{FreshMeat}\cite{FRESH}
-
-\chapter*{Acknowledgements}
-\popasm\ is the result of many months of work. Despite being the
-sole author of this project, I would like to
-thank everybody that somehow contributed to this project. Among those
-are the hundreds of people who have already
-visited \popasm\ home page, talked about it with friends, mailed
-me for comments, and so on.
-
-I would also like to thank the ones who use \popasm\ and trust it.
-I know I can always count on you for
-feedback about this project. \emph{Sourceforge} support was crucial, as
-it hosts \popasm\ CVS repository,
-home page, and so on. Thank you very much.
-
-Special thanks go to my first university, UFES\cite{UFES}, where
-I learned the bulk of my computering skills, and
-to those classmates and teachers who believed \popasm\ project,
-such as professor and PhD S\'ergio Freitas%
-\cite{FREITAS}, who decided to adopt \popasm\ as the assembler for
-his graduate classes about assembly language.
-
-Last, but not least, I would like to thank my family, friends and God
-for what I am now and what I have done so far.
+\include{author}
+\include{acks}
 
 \tableofcontents
 \newpage
@@ -1500,7 +1465,58 @@ example, \verb@SIZE DATE_STRUCT@ returns 4 (DAY and MONTH occupy one byte
 each, plus two bytes due to the YEAR field).
 
 \section{UNION}
-To be written.
+Unions are like structures, except that all of its fields are placed in the
+same memory address. Writing to one of its fields thus modifies all of them,
+given the shared memory nature of the union.
+
+The syntax for declaring a union is similar to the one for structures,
+except that the \verb@STRUCT@ keyword is replaced for \verb@UNION@. Note,
+however, that because unions fields occupy the same memory location it
+is possible to specify a default value for \emph{at most} one of the
+fields. For example:
+
+\begin{verbatim}
+Place examples here
+\end{verbatim}
+
+Unions fields are accessed the same way as the fields of a structure (via
+the period operator). The offsets of their fields are obtained by the
+same means as with structures, but keep in mind that the offset of all
+fields are the same as the offset of the union variable itself, as shown
+below:
+
+\begin{verbatim}
+Place example here
+\end{verbatim}
+
+Some developers may claim that unions are useless. In fact, one can define
+a single variable as the largest field of the union. Then, using size
+specifiers it would be possible to access the variable as one with a
+different size. For example, let's suppose someone wishes to create a variable
+that emulates the EAX register. That could be accomplished this way:
+
+\begin{verbatim}
+EMULATED_EAX    DD      0
+
+                MOV     [EMULATED_EAX],EAX
+                MOV     WORD [EMULATED_EAX],AX
+                MOV     BYTE [EMULATED_EAX],AL
+                MOV     BYTE [EMULATED_EAX+1],AH
+\end{verbatim}
+
+That is, a single dword emulates EAX and when the AL, AH or AX emulated
+counterparts need to be accessed, a size specifier overrides the original
+size of the variable. In the last line, the person must also remember to
+add 1 to the base offset because AH lies in the second least significant
+byte in EAX. Needless to say, this is too error prone.
+
+The next code shows how the same thing could be implemented using a union:
+
+\begin{verbatim}
+Rewrite the code above with union
+\end{verbatim}
+
+
 
 \section{RECORD}
 To be written.
