@@ -32,41 +32,8 @@
 
 Assembler *CurrentAssembler;
 
-void PrintVector2 (const vector<Byte> &v)
-{
-	for (vector<Byte>::const_reverse_iterator i = v.rbegin(); i != v.rend(); i++)
-	{
-		Byte b = *i;
-		if (b < 16) cout << "0";
-		cout << hex << (unsigned int) b;
-	}
-
-	cout << endl;
-}
-
-union test
-{
-	double f;
-	struct {
-	unsigned long i;
-	unsigned long j;
-	} s;
-};
-
 int main (int argc, char **argv)
 {
-	test t;
-	RealNumber n (argv[1]);
-	vector<Byte> Output;
-try {
-	n.Write (Output, 8);
-	PrintVector2 (Output);
-} catch (...) {}
-
-	t.f = atof (argv[1]);
-	cout << hex << t.s.j << hex << t.s.i << endl;
-	return 0;
-
 	if (argc == 1)
 	{
 		cerr << "Error: expected at least one source file as argument." << endl;
