@@ -45,7 +45,8 @@ Expression *MakeTerm (Token *t)
 
 	// Checks for numbers
 	n = dynamic_cast<Number *> (t);
-	if (n != 0) return new Expression (n, 0);
+	if (n != 0)
+		return new Expression (new Number (*n), 0);
 
 	// Checks for symbols
 	s = dynamic_cast<Symbol *> (t);
@@ -68,7 +69,7 @@ Expression *MakeTerm (Token *t)
 			// If we have a forward reference, make it an unknown expression
 			if (typeid (*s->GetData()) == typeid (BasicSymbol))
 			{
-				exp = new Expression (0, s, Type(0, Type::UNKNOWN));
+				exp = new Expression (0, s->Clone(), Type(0, Type::UNKNOWN));
 
 				// If the symbol has not beed defined in the previous pass then we have an error
 				if (s->GetData()->GetDefinitionPass() != CurrentAssembler->GetCurrentPass())
@@ -80,7 +81,7 @@ Expression *MakeTerm (Token *t)
 				CurrentAssembler->RequestNewPass();
 			}
 			else
-				exp = new Expression (0, s);
+				exp = new Expression (0, s->Clone());
 		}
 
 		return exp;
@@ -189,7 +190,6 @@ Expression *GetExpression (const vector<Token *> &v, vector<Token *>::const_iter
 			i++;
 			Term = GetExpression (v, i, 0, enc);
 			(*enc)(*Term);
-			delete enc;
 			i++;
 			break;
 
@@ -210,7 +210,6 @@ Expression *GetExpression (const vector<Token *> &v, vector<Token *>::const_iter
 			if (op->Precedence (Operator::PREFIX) >= NextPrec)
 			{
 				(*op)(*Term);
-				delete op;
 				UnaryOps.pop_back();
 				continue;
 			}
@@ -225,13 +224,11 @@ Expression *GetExpression (const vector<Token *> &v, vector<Token *>::const_iter
 		if (dynamic_cast<Encloser *> (BinaryOp) != 0)
 		{
 			i++;
-			delete BinaryOp;
 			break;
 		}
 
 		Expression *NextExpression = GetExpression (v, ++i, NextPrec, Opener);
 		(*BinaryOp)(*Term, *NextExpression);
-		delete BinaryOp;
 		delete NextExpression;
 
 		BinaryOp = GetBinaryOperator(v, i, Opener);
@@ -241,10 +238,9 @@ Expression *GetExpression (const vector<Token *> &v, vector<Token *>::const_iter
 	return Term;
 }
 
-Expression *Parser::EvaluateExpression (const vector<Token *> &v)
+Expression *Parser::EvaluateExpression (const vector<Token *> &v, vector<Token *>::iterator &i)
 {
 	Expression *Result;
-	vector<Token *>::const_iterator i = v.begin();
 
 	Result = GetExpression (v, i, 0, 0);
 	return Result;
@@ -287,33 +283,38 @@ void Parser::ReadLine (vector<Token *> &Tokens) throw ()
 	}
 }
 
-void Parser::ParseArguments (vector<Argument *> &args, vector<Token *>::iterator i, vector<Token *>::iterator j)
+void Parser::ParseArguments (vector<Argument *> &args, vector<Token *> &Tokens)
 {
-	while (i != j)
+	Expression *e;
+	Operator *op;
+	vector<Token *>::iterator i = Tokens.begin();
+
+	while (i != Tokens.end())
 	{
-		vector<Token *>::iterator k = i;
-
-		// Seeks the comma or the rest of the line
-		while (k != j)
-		{
-			Operator *op = dynamic_cast <Operator *> (*k);
-			if (op != 0)
-			{
-				// If it is a comma the end of argument has been found
-				if (op->GetName() == ",") break;
-			}
-
-			k++;
-		}
-
-		// Converts the tokens into an argument
-		Expression *e = EvaluateExpression (vector<Token *> (i, k));
+		e = EvaluateExpression (Tokens, i);
 		args.push_back (Argument::MakeArgument (*e));
 		delete e;
 
-		// Skips the comma
-		if (k != j) k++;
-		i = k;
+		if (i == Tokens.end())
+			break;
+
+		op = dynamic_cast <Operator *> (*i);
+		if (op != 0)
+		{
+			// If it is a comma the end of argument has been found
+			if (op->GetName() == ",")
+				i++;
+			else
+			{
+				cout << "Extra characters on line." << endl;
+				return;
+			}
+		}
+		else
+		{
+			cout << "Extra characters on line." << endl;
+			return;
+		}
 	}
 }
 
@@ -322,9 +323,10 @@ void Parser::ParseArguments (vector<Argument *> &args)
 	vector <Token *> Tokens;
 	ReadLine (Tokens);
 
-	vector<Token *>::iterator i = Tokens.begin();
-	vector<Token *>::iterator j = Tokens.end();
-	ParseArguments (args, i, j);
+	ParseArguments (args, Tokens);
+
+	for (vector<Token *>::iterator i = Tokens.begin(); i != Tokens.end(); i++)
+		delete *i;
 }
 
 vector<Byte> Parser::ParseLine ()

@@ -101,8 +101,8 @@ class Parser
 	InputFile &Input;
 
 	public:
-	static Expression *EvaluateExpression (const vector<Token *> &v);
-	static void ParseArguments (vector<Argument *> &args, vector<Token *>::iterator i, vector<Token *>::iterator j);
+	static Expression *EvaluateExpression (const vector<Token *> &v, vector<Token *>::iterator &i);
+	static void ParseArguments (vector<Argument *> &args, vector<Token *> &Tokens);
 
 	void ParseArguments (vector<Argument *> &args);
 	void ReadLine (vector<Token *> &Tokens) throw ();
