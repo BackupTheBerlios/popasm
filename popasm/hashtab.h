@@ -50,8 +50,8 @@ class HashTable
 	ContainerType Chains[n];
 
 	public:
-	HashTable () {}
-	virtual ~HashTable () {};
+	HashTable () throw () {}
+	virtual ~HashTable () throw () {};
 
 	// Inserts elements in the Hash Table
 	void Insert (const T &x) throw (DuplicatedElement);
@@ -76,5 +76,12 @@ const T *HashTable<T, H, Comp, n>::Find (const T &x) const throw ()
 
 	return (j == Chains[i].end()) ? 0 : &*j;
 }
+
+template <class T>
+class PointerComparator
+{
+	public:
+	bool operator() (const T *a, const T *b) const {return *a < *b;}
+};
 
 #endif
