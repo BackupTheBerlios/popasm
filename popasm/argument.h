@@ -22,39 +22,51 @@
 #ifndef ARGUMENT_H
 #define ARGUMENT_H
 
-#include "lexnum.h"
+#include <exception>
+
+#include "defs.h"
 #include "number.h"
-#include "lexop.h"
+#include "lexnum.h"
+#include "type_exp.h"
 
-namespace Argument
+class BasicArgument
 {
-	class BasicArgument
-	{
-		public:
-		BasicArgument () {}
-		virtual ~BasicArgument () {}
-	};
+	unsigned int Size;	// Size of the argument, in bits. Zero means: no size constraint
 
-	class Immediate : public BasicArgument
-	{
-		public:
-		Immediate () {}
-		~Immediate () {}
-	};
+	public:
+	BasicArgument (unsigned int sz = 0) throw () : Size(sz) {}
+	virtual ~BasicArgument () throw () {}
 
-	class Memory : public BasicArgument
-	{
-		public:
-		Memory () {}
-		~Memory () {}
-	};
+	unsigned int GetSize () const {return Size;}
+	virtual string Print () const throw () = 0;
+};
 
-	class Register : public BasicArgument
-	{
-		public:
-		Register () {}
-		~Register () {}
-	};
-}
+class Immediate : public BasicArgument
+{
+	RealNumber Value;
+
+	public:
+	Immediate (const Number &n) throw ();
+	~Immediate () throw () {}
+
+	string Print () const throw () {return Value.Print();}
+};
+
+class Argument
+{
+	const BasicArgument *Data;
+	bool Owner;
+
+	static Argument *MakeMemory (const Expression &e, unsigned int CurrentAddressSize);
+
+	public:
+	Argument (const BasicArgument *d, bool own) : Data(d), Owner(own) {}
+	~Argument () {if (Owner) delete Data;}
+
+	const BasicArgument *GetData () const throw () {return Data;}
+	static Argument *MakeArgument (const Expression &e, unsigned int CurrentAddressSize);
+
+	string Print () const throw () {return Data->Print();}
+};
 
 #endif

@@ -20,6 +20,50 @@
  ***************************************************************************/
 
 #include "argument.h"
+#include "memory.h"
 
-using namespace Argument;
+Immediate::Immediate (const Number &n) throw () : BasicArgument(n.GetSize()), Value(n.GetValue())
+{
+}
 
+Argument *Argument::MakeArgument (const Expression &e, unsigned int CurrentAddressSize)
+{
+	switch (e.GetType())
+	{
+		case Type::SCALAR:
+			if (e.QuantityOfTerms() == 1)
+			{
+				// Get a reference for the only term of the expression
+				const pair<Number *, Symbol *> *p = e.TermAt(0);
+
+				// Checks for a symbol
+				if ((p->first == 0) && (p->second != 0))
+				{
+					const BasicSymbol *data = p->second->GetData();
+
+					// Checks for registers
+					const Register *reg = dynamic_cast<const Register *> (data);
+					if (reg != 0) return new Argument (reg, false);
+					throw InvalidArgument (e);
+				}
+				else
+				{
+					// Checks for immediate arguments
+					if ((p->first != 0) && (p->second == 0))
+						return new Argument (new Immediate (*p->first), true);
+
+					throw InvalidArgument (e);
+				}
+			}
+			else throw InvalidArgument (e);
+			break;
+
+		case Type::WEAK_MEMORY:
+			break;
+
+		case Type::STRONG_MEMORY:
+			return MakeMemory (e, CurrentAddressSize);
+	}
+
+	return 0;
+}
