@@ -139,8 +139,8 @@ Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, e
 						const pair<Number *, Symbol *> *q = Prefix->TermAt(0);
 						if ((q->first == 0) || (q->second != 0)) throw InvalidFullPointer();
 
-						Dword seg = q->first->GetInteger (false);
-						Dword off = p->first->GetInteger (false);
+						Dword seg = q->first->GetUnsignedLong ();
+						Dword off = p->first->GetUnsignedLong ();
 						if (seg > 0xFFFF) throw InvalidFullPointer();
 						return new Argument (new FullPointer (p->first->GetSize(), static_cast<Word> (seg), off), true);
 					}
