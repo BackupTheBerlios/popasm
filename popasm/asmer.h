@@ -23,6 +23,7 @@
 #define ASMER_H
 
 #include "inp_file.h"
+#include "type.h"
 
 class Parser;
 
@@ -47,6 +48,8 @@ class Assembler
 	unsigned long int GetCurrentOffset () const throw () {return CurrentOffset;}
 	unsigned long int GetCurrentLine () const throw ();
 	void AssembleFile (InputFile &File) throw ();
+
+	virtual Type::TypeName TranslateWeakMemory() throw () = 0;
 };
 
 #endif
