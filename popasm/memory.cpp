@@ -421,3 +421,53 @@ Argument *Argument::MakeMemory (const Expression &e)
 
 	return new Argument (mem, true);
 }
+
+string Memory::Print() const throw ()
+{
+	string s;
+
+	if (GetSize() != 0)
+		s = PrintSize(GetSize()) + " ";
+
+	switch (SegmentPrefix)
+	{
+		case 0x26: s += "ES:"; break;
+		case 0x2e: s += "CS:"; break;
+		case 0x36: s += "SS:"; break;
+		case 0x3e: s += "DS:"; break;
+		case 0x64: s += "FS:"; break;
+		case 0x65: s += "GS:"; break;
+	}
+
+	s += "[";
+
+	if (AddressSize == 16)
+	{
+		switch (Code & 7)
+		{
+			case 0: s += "BX+SI"; break;
+			case 1: s += "BX+DI"; break;
+			case 2: s += "BP+SI"; break;
+			case 3: s += "BP+DI"; break;
+			case 4: s += "SI"; break;
+			case 5: s += "DI"; break;
+
+			case 6:
+				s += "BP"; break;
+
+			case 7: s += "BX"; break;
+		}
+
+		if ((SHR (Code, 6) != 0) && (!Displacement.Zero()))
+		{
+			s += "+";
+			s += Displacement.Print();
+		}
+	}
+	else
+	{
+	}
+
+	s += "]";
+	return s;
+}

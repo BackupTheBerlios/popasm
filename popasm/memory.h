@@ -253,21 +253,7 @@ class Memory : public BasicArgument
 		}
 	};
 
-	string Print () const throw ()
-	{
-		string s ("AddressSize = ");
-		s += ::Print (AddressSize);
-		s += ", Segment prefix = ";
-		s += ::Print (SegmentPrefix);
-		s += ", Code = ";
-		s += ::Print (Code);
-		s += ", SIB = ";
-		s += ::Print (SIB);
-		s += ", Displacement = ";
-		s += Displacement.Print();
-
-		return s;
-	}
+	string Print () const throw ();
 };
 
 #endif
