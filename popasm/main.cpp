@@ -29,7 +29,7 @@
 #include "lexical.h"
 #include "parser.h"
 #include "asmer.h"
-#include "hashtab.h"
+#include "argument.h"
 
 bool ParseLine (InputFile &inp)
 {
@@ -37,6 +37,7 @@ bool ParseLine (InputFile &inp)
 	vector<Token *> v;
 	Symbol *s;
 	Expression *e;
+	Argument *a;
 
 	while (true)
 	{
@@ -52,7 +53,8 @@ bool ParseLine (InputFile &inp)
 				if (v.empty()) break;
 
 				e = Parser::EvaluateExpression (v);
-				cout << e->Print() << endl;
+				a = Argument::MakeArgument (*e, 16);
+				cout << a->Print() << endl;
 				break;
 			}
 		}
