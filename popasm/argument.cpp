@@ -23,6 +23,7 @@
 
 #include "argument.h"
 #include "memory.h"
+#include "full_ptr.h"
 #include "lexnum.h"
 #include "immed.h"
 
@@ -100,6 +101,8 @@ bool Argument::TypeCheck (Argument &arg, CheckType ct)
 
 Argument *Argument::MakeArgument (const Expression &e)
 {
+	const Expression *Prefix = e.GetSegmentPrefix();
+
 	switch (e.GetType())
 	{
 		case Type::SCALAR:
@@ -115,14 +118,31 @@ Argument *Argument::MakeArgument (const Expression &e)
 
 					// Checks for registers
 					const Register *reg = dynamic_cast<const Register *> (data);
-					if (reg != 0) return new Argument (reg, false);
+					if (reg != 0)
+					{
+						// Registers cannot be preceeded by prefixes like ES:
+						if (Prefix != 0) throw 0;
+						return new Argument (reg, false);
+					}
+
 					throw InvalidArgument (e);
 				}
 				else
 				{
 					// Checks for immediate arguments
 					if ((p->first != 0) && (p->second == 0))
-						return new Argument (new Immediate (*p->first, e.GetDistanceType()), true);
+					{
+						if (Prefix == 0) return new Argument (new Immediate (*p->first, e.GetDistanceType()), true);
+
+						// Checks for full-pointers. The prefix must be constant
+						if (Prefix->QuantityOfTerms() != 1) throw 0;
+						const pair<Number *, Symbol *> *q = Prefix->TermAt(0);
+						if ((q->first == 0) || (q->second != 0)) throw 0;
+
+						Word seg = q->first->GetInteger (false);
+						Dword off = p->first->GetInteger (false);
+						return new Argument (new FullPointer (e.GetSize(), seg, off), true);
+					}
 
 					throw InvalidArgument (e);
 				}
