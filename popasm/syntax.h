@@ -44,8 +44,8 @@ class Syntax
 
 	protected:
 	OperandSizeDependsOn OperandSizePrefixUsage;
-	void WriteOperandSizePrefix (vector<Argument *> &Arguments, vector<Byte> &Output, unsigned int CurrentMode) const throw ();
-	void WriteOperandSizePrefix (Argument *arg, vector<Byte> &Output, unsigned int CurrentMode) const throw ();
+	void WriteOperandSizePrefix (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ();
+	void WriteOperandSizePrefix (Argument *arg, vector<Byte> &Output) const throw ();
 
 	bool Match (vector<Argument *> &Arguments) const throw ();
 
@@ -55,7 +55,7 @@ class Syntax
 	virtual ~Syntax () throw ();
 
 	bool operator< (const Syntax &s) const throw() {return Precedence < s.Precedence;}
-	virtual bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output, unsigned int CurrentMode) const throw () = 0;
+	virtual bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw () = 0;
 };
 
 // Syntaxes of instructions that take no arguments
@@ -65,9 +65,11 @@ class ZerarySyntax : public Syntax
 	ZerarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep) throw () : Syntax (p, op, dep) {}
 	ZerarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg) throw ()
 		: Syntax (p, op, dep) {ArgumentTypes.push_back (arg);}
+	ZerarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, BasicIdFunctor *arg2) throw ()
+		: Syntax (p, op, dep) {ArgumentTypes.push_back (arg); ArgumentTypes.push_back (arg2);}
 	~ZerarySyntax () throw () {}
 
-	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output, unsigned int CurrentMode) const throw ();
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ();
 };
 
 // Syntaxes of instructions that take one argument
@@ -78,9 +80,10 @@ class UnarySyntax : public Syntax
 
 	public:
 	UnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, Byte dwm = 0) throw ();
+	UnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg1, BasicIdFunctor *arg2, Byte dwm = 0) throw ();
 	~UnarySyntax () throw () {}
 
-	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output, unsigned int CurrentMode) const throw ();
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ();
 };
 
 // Syntaxes of instructions whose only argument is added to the basic encoding
@@ -89,9 +92,11 @@ class AdditiveUnarySyntax : public UnarySyntax
 	public:
 	AdditiveUnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, Byte dwm = 0)
 		throw () : UnarySyntax (p, op, dep, arg, dwm) {}
+	AdditiveUnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, BasicIdFunctor *arg2, Byte dwm = 0)
+		throw () : UnarySyntax (p, op, dep, arg, dwm) {ArgumentTypes.push_back (arg2);}
 	~AdditiveUnarySyntax () throw () {}
 
-	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output, unsigned int CurrentMode) const throw ();
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ();
 };
 
 // Syntaxes of instructions that take two argument
@@ -107,17 +112,17 @@ class BinarySyntax : public Syntax
 	// means the reg field is an extension of the opcode, and PRESENT means the byte is a function
 	// of the combination of the arguments.
 	public:
-	enum ModRegRM_Usage {ABSENT, PARTIAL, PRESENT};
+	enum ModRegRM_Usage {ABSENT, PARTIAL, PRESENT, REPEATED};
 	private:
 	ModRegRM_Usage mrr_usage;
 
 	public:
 	BinarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, bool i,
 	              Argument::CheckType chk, Byte dwm, ModRegRM_Usage usage,
-	              BasicIdFunctor *arg1, BasicIdFunctor *arg2) throw ();
+	              BasicIdFunctor *arg1, BasicIdFunctor *arg2, BasicIdFunctor *arg3 = 0) throw ();
 	~BinarySyntax () throw () {}
 
-	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output, unsigned int CurrentMode) const;
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
 };
 
 class FPUBinarySyntax : public Syntax
@@ -126,7 +131,23 @@ class FPUBinarySyntax : public Syntax
 	FPUBinarySyntax (unsigned int p, const Opcode &op, BasicIdFunctor *arg1, BasicIdFunctor *arg2) throw ();
 	~FPUBinarySyntax () {}
 
-	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output, unsigned int CurrentMode) const;
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
+};
+
+class StringSyntax : public Syntax
+{
+	bool Overrideable;
+
+	// Type check to be performed
+	Argument::CheckType Check;
+
+	public:
+	StringSyntax (unsigned int p, const Opcode &op, BasicIdFunctor *arg1, bool ovr) throw ();
+	StringSyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, Argument::CheckType chk,
+		BasicIdFunctor *arg1, BasicIdFunctor *arg2) throw ();
+	~StringSyntax () throw () {}
+
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
 };
 
 #endif
