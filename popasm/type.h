@@ -95,6 +95,11 @@ class Type
 	public:
 	Type (unsigned int sz = 0, TypeName t = SCALAR, int dist = UNDEFINED, int num = UNDEFINED) throw ()
 		: Size (sz), CurrentType (t), DistanceType(dist), NumericalType (num) {}
+	Type (const Type &t) throw ()
+	{
+		Size = t.Size; CurrentType = t.CurrentType; DistanceType = t.DistanceType; NumericalType = t.NumericalType;
+	}
+
 	virtual ~Type () throw () {}
 
 	// Methods for reading and writing each member
@@ -131,11 +136,16 @@ class Type
 
 	Type operator- () throw (IncompatibleTypes);
 	Type operator~ () throw (IncompatibleTypes);
+	Type &operator= (const Type &t) throw ()
+	{
+		Size = t.Size; CurrentType = t.CurrentType; DistanceType = t.DistanceType; NumericalType = t.NumericalType;
+		return *this;
+	}
 
 	bool operator== (const Type &t) const throw ()
-		{return (Size == t.Size) && (CurrentType == t.CurrentType) && (DistanceType == t.DistanceType);}
+		{return (Size == t.Size) && (CurrentType == t.CurrentType) && (DistanceType == t.DistanceType) && (NumericalType == t.NumericalType);}
 	bool operator!= (const Type &t) const throw ()
-		{return (Size != t.Size) || (CurrentType != t.CurrentType) || (DistanceType != t.DistanceType);}
+		{return (Size != t.Size) || (CurrentType != t.CurrentType) || (DistanceType != t.DistanceType) || (NumericalType != t.NumericalType);}
 
 	void operator[] (int) throw (MultipleBrackets, DistanceSizedMemory);
 };
