@@ -52,7 +52,7 @@ class Expression : BasicExpression<Number, Symbol>
 	virtual Expression *Clone() const {return new Expression(*this);}
 
 	unsigned int GetSize () const throw () {return Size;}
-	void SetSize (unsigned int s, Number::NumberType = Number::SIGNED) throw (InvalidSize, CastFailed);
+	void SetSize (unsigned int s, Number::NumberType nt = Number::ANY) throw (InvalidSize, CastFailed);
 	Type::TypeName GetType () const throw () {return t.GetCurrentType();}
 	const Expression *GetSegmentPrefix () const throw () {return SegmentPrefix;}
 

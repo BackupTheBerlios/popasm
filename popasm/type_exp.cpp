@@ -19,7 +19,7 @@
 #include "symbol.h"
 #include <algorithm>
 
-void Expression::SetSize (unsigned int s, Number::NumberType = Number::SIGNED) throw (InvalidSize, CastFailed)
+void Expression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) throw (InvalidSize, CastFailed)
 {
 	if (t == Type::SCALAR)
 	{
@@ -29,14 +29,14 @@ void Expression::SetSize (unsigned int s, Number::NumberType = Number::SIGNED) t
 		{
 			if ((*i)->Constant())
 			{
-				(*i)->first->SetSize (s);
+				(*i)->first->SetSize (s, nt);
 				return;
 			}
 		}
 
 		// If no constant term found, add a dummy zero. This is required for compatibility with NASM
 		Number *dummy = new Number (0);
-		dummy->SetSize (s);
+		dummy->SetSize (s, nt);
 		BasicExpression<Number, Symbol>::operator+= (BasicExpression<Number, Symbol> (dummy, 0));
 	}
 	else
