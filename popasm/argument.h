@@ -41,7 +41,7 @@ class BasicArgument : public Type
 	BasicArgument (const Type &t) throw () : Type (t) {}
 	virtual ~BasicArgument () throw () {}
 
-	void SetSize (unsigned int sz) const throw () {const_cast<BasicArgument *> (this)->SetSize (sz);}
+	void SetSize (unsigned int sz) const throw () {const_cast<BasicArgument *> (this)->Type::SetSize (sz);}
 
 	virtual string Print () const throw () = 0;
 
@@ -60,6 +60,17 @@ class UndefinedSize : public exception
 	public:
 	UndefinedSize () throw () {}
 	~UndefinedSize () throw () {}
+
+	const char *what() const throw() {return WhatString;}
+};
+
+class OneUndefinedSize : public exception
+{
+	static const char WhatString[];
+
+	public:
+	OneUndefinedSize () throw () {}
+	~OneUndefinedSize () throw () {}
 
 	const char *what() const throw() {return WhatString;}
 };
@@ -87,12 +98,12 @@ class Argument
 	~Argument () {if (Owner) delete Data;}
 
 	const BasicArgument *GetData () const throw () {return Data;}
-	static Argument *MakeArgument (const Expression &e) throw (InvalidArgument, InvalidFullPointer);
+	static Argument *MakeArgument (const Expression &e) throw (InvalidArgument, InvalidFullPointer, exception);
 
 	bool Match (BasicIdFunctor *arg) const {return (*arg)(Data);}
 
 	enum CheckType {NONE, EQUAL, GREATER, HALF, MINUS_16BITS};
-	bool TypeCheck (Argument &arg, CheckType ct) const throw (UndefinedSize);
+	bool TypeCheck (Argument &arg, CheckType ct) const throw (UndefinedSize, OneUndefinedSize);
 	unsigned int GetSize () const throw () {return Data->GetSize();}
 	void SetSize (unsigned int sz) const {Data->SetSize(sz);}
 

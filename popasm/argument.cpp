@@ -27,20 +27,20 @@
 #include "lexnum.h"
 #include "immed.h"
 
-bool Argument::TypeCheck (Argument &arg, CheckType ct) const throw (UndefinedSize)
+bool Argument::TypeCheck (Argument &arg, CheckType ct) const throw (UndefinedSize, OneUndefinedSize)
 {
 	if (ct == NONE) return true;
 
 	unsigned int s1 = Data->GetSize();
 	unsigned int s2 = arg.Data->GetSize();
 
-	// If both arguments have no defined size, throw exception
-	if ((s1 == 0) && (s2 == 0)) throw UndefinedSize();
-
 	// Performs the check according to the desired way
 	switch (ct)
 	{
 		case EQUAL:
+			// If both arguments have no defined size, throw exception
+			if ((s1 == 0) && (s2 == 0)) throw UndefinedSize();
+
 			// If either argument has no defined size, match them
 			if (s1 == 0)
 			{
@@ -58,7 +58,7 @@ bool Argument::TypeCheck (Argument &arg, CheckType ct) const throw (UndefinedSiz
 
 		case GREATER:
 			// Both sizes MUST be known
-			if ((s1 == 0) || (s2 == 0)) return false;
+			if ((s1 == 0) || (s2 == 0)) throw OneUndefinedSize();
 			return s1 > s2;
 
 		case HALF:
@@ -99,7 +99,7 @@ bool Argument::TypeCheck (Argument &arg, CheckType ct) const throw (UndefinedSiz
 	return true;
 }
 
-Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, InvalidFullPointer)
+Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, InvalidFullPointer, exception)
 {
 	const Expression *Prefix = e.GetSegmentPrefix();
 
@@ -161,4 +161,5 @@ Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, I
 }
 
 const char UndefinedSize::WhatString[] = "Operation size undefined. At least one argument must be explicitly sized.";
+const char OneUndefinedSize::WhatString[] = "Operation size undefined. Both arguments must be explicitly sized.";
 const char InvalidFullPointer::WhatString[] = "Non-constant full-pointer. Both parts must be constants.";
