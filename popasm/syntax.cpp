@@ -239,8 +239,8 @@ bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 
 	// Calculates the relative distance between the end of the instruction and the address it targets
 	const Immediate *immed = dynamic_cast <const Immediate *> (Arguments[0]->GetData());
-	unsigned long int Target = static_cast <IntegerNumber> (immed->GetValue()).GetValue (false);
-	long int RelativeDistance = Target -= FinalOffset;
+	unsigned long int Target = immed->GetUnsignedLong();
+	long int RelativeDistance = Target - FinalOffset;
 
 	// Checks for SHORT or NEAR
 	if (static_cast<RelativeArgument *> (ArgumentTypes[0])->GetRelativeDistance() == SHORT)

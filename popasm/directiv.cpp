@@ -49,7 +49,7 @@ void FunctionBITS (const BasicSymbol *sym, vector<Argument *> &Arguments, vector
 		return;
 	}
 
-	CurrentAssembler->SetCurrentMode (static_cast<IntegerNumber> (i->GetValue()).GetValue(false));
+	CurrentAssembler->SetCurrentMode (i->GetUnsignedLong());
 }
 
 void Directive::SetupDirectiveTable () throw ()

@@ -173,7 +173,7 @@ void Memory::MakeMemory32Bits (const GPRegister *Base32, const GPRegister *Index
 // Returns the minimum size of the given number as a memory displacement of a non-direct memory acess
 unsigned int GetMinimumSize (Number &n, bool set)
 {
-	long int i = n.GetInteger(false);
+	long int i = n.GetLong();
 
 	if (i == 0)
 	{
@@ -415,7 +415,7 @@ Argument *Argument::MakeMemory (const Expression &e)
 			break;
 
 		case 32:
-			mem->MakeMemory32Bits (Base32, Index32, (Scale == 0) ? 1 : Scale->GetInteger());
+			mem->MakeMemory32Bits (Base32, Index32, (Scale == 0) ? 1 : Scale->GetLong());
 			break;
 	}
 
