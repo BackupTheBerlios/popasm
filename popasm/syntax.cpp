@@ -309,19 +309,28 @@ bool BinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 		{
 			if (i == 2) continue;
 
-			// If the register is special (segment, control, test or debug) or the second one, write it in reg field
-			// If the register is the first argument, write it in the r/m field
-			if ((dynamic_cast <const GPRegister *>  (Arguments[i]->GetData()) == 0) &&
-			    (dynamic_cast <const FPURegister *> (Arguments[i]->GetData()) == 0) &&
-			    (dynamic_cast <const MMXRegister *> (Arguments[i]->GetData()) == 0) &&
-			    (dynamic_cast <const XMMRegister *> (Arguments[i]->GetData()) == 0))
+			// Special case: XMM registers
+			if (dynamic_cast <const XMMRegister *> (Arguments[i]->GetData()) != 0)
 			{
-				mod_reg_rm |= regs[i]->GetCode() << 3;
-				if (i == 0) mod_reg_rm |= 0xC0;
+				// Shifts the previous XMM register to bits 3..5 of mod_reg_rm byte
+				mod_reg_rm <<= 3;
+				mod_reg_rm |= regs[i]->GetCode() | 0xC0;
 			}
 			else
 			{
-				mod_reg_rm |= (i == 0) ? (regs[i]->GetCode() | 0xC0) : (regs[i]->GetCode() << 3);
+				// If the register is special (segment, control, test or debug) or the second one, write it in reg field
+				// If the register is the first argument, write it in the r/m field
+				if ((dynamic_cast <const GPRegister *>  (Arguments[i]->GetData()) != 0) ||
+				    (dynamic_cast <const FPURegister *> (Arguments[i]->GetData()) != 0) ||
+			   	 (dynamic_cast <const MMXRegister *> (Arguments[i]->GetData()) != 0))
+				{
+					mod_reg_rm |= (i == 0) ? (regs[i]->GetCode() | 0xC0) : (regs[i]->GetCode() << 3);
+				}
+				else
+				{
+					mod_reg_rm |= regs[i]->GetCode() << 3;
+					if (i == 0) mod_reg_rm |= 0xC0;
+				}
 			}
 
 			continue;
