@@ -17,10 +17,11 @@
 
 #include "immed.h"
 
+const char UnknownImmediateSize::WhatString[] = "Undefined size for immediate argument.";
+
 void Immediate::SetSize(unsigned int sz) const
 {
 	Number temp(Value);
 	temp.SetSize(sz);
 	BasicArgument::SetSize(sz);
 }
-

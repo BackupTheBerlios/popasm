@@ -20,6 +20,8 @@
 
 #include <set>
 #include <string>
+#include <vector>
+#include <exception>
 
 #include "argument.h"
 #include "command.h"
@@ -52,6 +54,19 @@ class Instruction : public Command
 	static BasicSymbol *Read (const string &str, InputFile &inp);
 
 	void Assemble (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding) const;
+};
+
+class InvalidSyntax : public exception
+{
+	const Command *BadCommand;
+	vector<Argument *> BadArguments;
+	string WhatString;
+
+	public:
+	InvalidSyntax (const Command *cmd, const vector<Argument *> args) throw ();
+	~InvalidSyntax () throw () {}
+
+	const char *what() const throw ();
 };
 
 #endif

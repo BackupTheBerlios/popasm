@@ -22,8 +22,20 @@
 #ifndef IMMED_H
 #define IMMED_H
 
+#include <exception>
 #include "argument.h"
 #include "number.h"
+
+class UnknownImmediateSize : public exception
+{
+	static const char WhatString[];
+
+	public:
+	UnknownImmediateSize () throw () {}
+	~UnknownImmediateSize () throw () {}
+
+	const char *what () const throw () {return WhatString;}
+};
 
 class Immediate : public BasicArgument
 {

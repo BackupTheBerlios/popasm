@@ -54,8 +54,8 @@ void Instruction::Assemble (const BasicSymbol *sym, vector<Argument *> &Argument
 	// Include in the symbol table the creation of the new label
 	if (sym != 0)
 	{
-		cout << "Label definition not yet implemented." << endl;
-		throw 0;
+		cout << "Label definition not implemented yet." << endl;
+		return;
 	}
 
 	// Checks all syntaxes avaiable
@@ -64,9 +64,8 @@ void Instruction::Assemble (const BasicSymbol *sym, vector<Argument *> &Argument
 		if ((*i)->Assemble (Arguments, Encoding)) return;
 	}
 
-	cout << "Syntax not found" << endl;
 	// None of them fits, so throw exception
-	throw 0;
+	throw InvalidSyntax(this, Arguments);
 }
 
 HashTable <Instruction *, HashFunctor, PointerComparator<BasicSymbol> > Instruction::InstructionTable =
@@ -2109,4 +2108,14 @@ Instruction::~Instruction () throw ()
 {
 	for (ContainerType::const_iterator i = Syntaxes.begin(); i != Syntaxes.end(); i++)
 		delete *i;
+}
+
+InvalidSyntax::InvalidSyntax (const Command *cmd, const vector<Argument *> args) throw ()
+	: BadCommand(cmd), BadArguments(args), WhatString("Invalid combination of arguments for this command.")
+{
+}
+
+const char *InvalidSyntax::what() const throw ()
+{
+	return WhatString.c_str();
 }
