@@ -33,7 +33,7 @@ class Syntax
 	const Opcode Encoding;
 
 	// Arguments accepted by this syntax
-	vector<BasicIdFunctor *> ArgumentTypes;
+	vector<BasicArgument::IdFunctor *> ArgumentTypes;
 	// Says if the order of the types of the arguments can be exchanged
 	bool Interchangeable;
 
@@ -105,7 +105,7 @@ class AddressSizeMix : public exception
 class ZerarySyntax : public Syntax
 {
 	public:
-	ZerarySyntax (const Opcode &op, OperandSizeDependsOn dep = NOTHING, BasicIdFunctor *arg1 = 0, BasicIdFunctor *arg2 = 0) throw ()
+	ZerarySyntax (const Opcode &op, OperandSizeDependsOn dep = NOTHING, BasicArgument::IdFunctor *arg1 = 0, BasicArgument::IdFunctor *arg2 = 0) throw ()
 		: Syntax (op, dep)
 	{
 		if (arg1 != 0)
@@ -123,7 +123,7 @@ class ZerarySyntax : public Syntax
 class RetSyntax : public ZerarySyntax
 {
 	public:
-	RetSyntax (const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg) : ZerarySyntax (op, dep, arg) {}
+	RetSyntax (const Opcode &op, OperandSizeDependsOn dep, BasicArgument::IdFunctor *arg) : ZerarySyntax (op, dep, arg) {}
 	~RetSyntax () {}
 
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
@@ -136,8 +136,8 @@ class UnarySyntax : public Syntax
 	Byte dw_mask;
 
 	public:
-	UnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, Byte dwm = 0) throw ();
-	UnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg1, BasicIdFunctor *arg2, Byte dwm = 0) throw ();
+	UnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicArgument::IdFunctor *arg, Byte dwm = 0) throw ();
+	UnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicArgument::IdFunctor *arg1, BasicArgument::IdFunctor *arg2, Byte dwm = 0) throw ();
 	~UnarySyntax () throw () {}
 
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
@@ -147,9 +147,9 @@ class UnarySyntax : public Syntax
 class AdditiveUnarySyntax : public UnarySyntax
 {
 	public:
-	AdditiveUnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, Byte dwm = 0)
+	AdditiveUnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicArgument::IdFunctor *arg, Byte dwm = 0)
 		throw () : UnarySyntax (op, dep, arg, dwm) {}
-	AdditiveUnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, BasicIdFunctor *arg2, Byte dwm = 0)
+	AdditiveUnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicArgument::IdFunctor *arg, BasicArgument::IdFunctor *arg2, Byte dwm = 0)
 		throw () : UnarySyntax (op, dep, arg, dwm) {ArgumentTypes.push_back (arg2);}
 	~AdditiveUnarySyntax () throw () {}
 
@@ -160,7 +160,7 @@ class AdditiveUnarySyntax : public UnarySyntax
 class RelativeUnarySyntax : public UnarySyntax
 {
 	public:
-	RelativeUnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg) throw () : UnarySyntax (op, dep, arg) {}
+	RelativeUnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicArgument::IdFunctor *arg) throw () : UnarySyntax (op, dep, arg) {}
 	~RelativeUnarySyntax () throw () {}
 
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
@@ -186,7 +186,7 @@ class BinarySyntax : public Syntax
 	public:
 	BinarySyntax (const Opcode &op, OperandSizeDependsOn dep, bool i,
 	              Argument::CheckType chk, Byte dwm, ModRegRM_Usage usage,
-	              BasicIdFunctor *arg1, BasicIdFunctor *arg2, BasicIdFunctor *arg3 = 0) throw ();
+	              BasicArgument::IdFunctor *arg1, BasicArgument::IdFunctor *arg2, BasicArgument::IdFunctor *arg3 = 0) throw ();
 	~BinarySyntax () throw () {}
 
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
@@ -195,7 +195,7 @@ class BinarySyntax : public Syntax
 class FPUBinarySyntax : public Syntax
 {
 	public:
-	FPUBinarySyntax (const Opcode &op, BasicIdFunctor *arg1, BasicIdFunctor *arg2) throw ();
+	FPUBinarySyntax (const Opcode &op, BasicArgument::IdFunctor *arg1, BasicArgument::IdFunctor *arg2) throw ();
 	~FPUBinarySyntax () {}
 
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
@@ -208,7 +208,7 @@ class SuffixedBinarySyntax : public BinarySyntax
 	public:
 	SuffixedBinarySyntax (const Opcode &op, OperandSizeDependsOn dep, bool i,
 	                     Argument::CheckType chk, Byte dwm, ModRegRM_Usage usage,
-	                     BasicIdFunctor *arg1, BasicIdFunctor *arg2, Byte suf) throw ();
+	                     BasicArgument::IdFunctor *arg1, BasicArgument::IdFunctor *arg2, Byte suf) throw ();
 	~SuffixedBinarySyntax () throw () {}
 
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
@@ -224,7 +224,7 @@ class StringSyntax : public Syntax
 
 	public:
 	StringSyntax (const Opcode &op, OperandSizeDependsOn dep, Argument::CheckType chk,
-		BasicIdFunctor *arg1, BasicIdFunctor *arg2, unsigned int ovr) throw ();
+		BasicArgument::IdFunctor *arg1, BasicArgument::IdFunctor *arg2, unsigned int ovr) throw ();
 	~StringSyntax () throw () {}
 
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;

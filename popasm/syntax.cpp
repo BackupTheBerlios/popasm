@@ -15,6 +15,8 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <typeinfo>
+
 #include "syntax.h"
 #include "register.h"
 #include "memory.h"
@@ -23,7 +25,7 @@
 
 Syntax::~Syntax () throw ()
 {
-	for (vector<const BasicIdFunctor *>::const_iterator i = ArgumentTypes.begin(); i != ArgumentTypes.end(); i++)
+	for (vector<const BasicArgument::IdFunctor *>::const_iterator i = ArgumentTypes.begin(); i != ArgumentTypes.end(); i++)
 		delete *i;
 }
 
@@ -119,8 +121,13 @@ bool ZerarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 
 bool RetSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
 {
+	if (!Arguments.empty())
+		return false;
+
 	// Verifies the type of procedure
-	if (!(*ArgumentTypes.back())(0)) return false;
+	Argument a;
+	if (!(*ArgumentTypes.back())(a))
+		return false;
 
 	// Writes the operand size prefix if necessary
 	WriteOperandSizePrefix (Arguments, Output);
@@ -130,13 +137,13 @@ bool RetSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) c
 	return true;
 }
 
-UnarySyntax::UnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, Byte dwm = 0)
+UnarySyntax::UnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicArgument::IdFunctor *arg, Byte dwm = 0)
 	throw () : Syntax (op, dep), dw_mask(dwm)
 {
 	ArgumentTypes.push_back (arg);
 }
 
-UnarySyntax::UnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg1, BasicIdFunctor *arg2, Byte dwm = 0)
+UnarySyntax::UnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicArgument::IdFunctor *arg1, BasicArgument::IdFunctor *arg2, Byte dwm = 0)
 	throw () : Syntax (op, dep), dw_mask(dwm)
 {
 	ArgumentTypes.push_back (arg1);
@@ -193,7 +200,7 @@ bool UnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output)
 				if (mem == 0) throw UnknownArgument (arg);
 
 				// Checks for the need of prefix
-				if (CurrentAssembler->GetCurrentMode() != mem->GetAddressSize()) Output.push_back (0x67);
+				if (mem->UseAddressSizePrefix()) Output.push_back (0x67);
 				mod_reg_rm = mem->GetCode();
 				SegmentPrefix = mem->GetSegmentPrefix ();
 				if (SegmentPrefix != 0) Output.push_back (SegmentPrefix);
@@ -221,7 +228,6 @@ bool AdditiveUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 
 	// Writes the operand size prefix if necessary
 	WriteOperandSizePrefix (Arguments, Output);
-
 
 	// Gets the relevant argument for type specification
 	switch (OperandSizePrefixUsage)
@@ -298,8 +304,8 @@ bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 	return true;
 }
 
-BinarySyntax::BinarySyntax (const Opcode &op, OperandSizeDependsOn dep, bool i, Argument::CheckType chk,
-	Byte dwm, ModRegRM_Usage usage, BasicIdFunctor *arg1, BasicIdFunctor *arg2, BasicIdFunctor *arg3 = 0) throw () : Syntax (op, dep, i)
+BinarySyntax::BinarySyntax (const Opcode &op, OperandSizeDependsOn dep, bool i, Argument::CheckType chk, Byte dwm, ModRegRM_Usage usage,
+	BasicArgument::IdFunctor *arg1, BasicArgument::IdFunctor *arg2, BasicArgument::IdFunctor *arg3 = 0) throw () : Syntax (op, dep, i)
 {
 	Check = chk;
 	dw_mask = dwm;
@@ -354,7 +360,7 @@ bool BinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 					mod_reg_rm |= regs[0]->GetCode() | 0xC0;
 					break;
 
-            // The second argument is a register.
+				// The second argument is a register.
 				case 1:
 					// The code for this register must go in the reg field if:
 					// 1. The previous argument is not a register or
@@ -392,7 +398,7 @@ bool BinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 			if (i == 2) continue;
 
 			// Checks for the need of prefixes
-			AddressSizePrefix = (CurrentAssembler->GetCurrentMode() == 16) != (mems[i]->GetAddressSize() == 16);
+			AddressSizePrefix = mems[i]->UseAddressSizePrefix();
 			mod_reg_rm <<= 3;
 			mod_reg_rm |= mems[i]->GetCode();
 			SegmentPrefix = mems[i]->GetSegmentPrefix ();
@@ -453,7 +459,7 @@ bool BinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 
 SuffixedBinarySyntax::SuffixedBinarySyntax (const Opcode &op,
 	OperandSizeDependsOn dep, bool i, Argument::CheckType chk, Byte dwm, ModRegRM_Usage usage,
-	BasicIdFunctor *arg1, BasicIdFunctor *arg2, Byte suf) throw ()
+	BasicArgument::IdFunctor *arg1, BasicArgument::IdFunctor *arg2, Byte suf) throw ()
 	: BinarySyntax (op, dep, i, chk, dwm, usage, arg1, arg2), Suffix(suf) {}
 
 bool SuffixedBinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
@@ -463,7 +469,7 @@ bool SuffixedBinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte>
 	return Result;
 }
 
-FPUBinarySyntax::FPUBinarySyntax (const Opcode &op, BasicIdFunctor *arg1, BasicIdFunctor *arg2) throw ()
+FPUBinarySyntax::FPUBinarySyntax (const Opcode &op, BasicArgument::IdFunctor *arg1, BasicArgument::IdFunctor *arg2) throw ()
 	: Syntax (op, NOTHING, false)
 {
 	ArgumentTypes.push_back (arg1);
@@ -484,7 +490,7 @@ bool FPUBinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Out
 }
 
 StringSyntax::StringSyntax (const Opcode &op, OperandSizeDependsOn dep,
-	Argument::CheckType chk, BasicIdFunctor *arg1, BasicIdFunctor *arg2, unsigned int ovr) throw ()
+	Argument::CheckType chk, BasicArgument::IdFunctor *arg1, BasicArgument::IdFunctor *arg2, unsigned int ovr) throw ()
 	: Syntax (op, dep, false), Overrideable (ovr), Check (chk)
 {
 	ArgumentTypes.push_back (arg1);
@@ -508,7 +514,7 @@ bool StringSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 		mem = dynamic_cast<const Memory *> (Arguments[0]->GetData());
 		mem2 = dynamic_cast<const Memory *> (Arguments[1]->GetData());
 		if ((mem != 0) && (mem2 != 0))
-			if (mem->GetAddressSize() != mem2->GetAddressSize())
+			if ((mem->GetAddressSize() != mem2->GetAddressSize()) && (mem->GetAddressSize() != 0) && (mem2->GetAddressSize() != 0))
 				throw AddressSizeMix();
 	}
 
@@ -525,7 +531,7 @@ bool StringSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 	}
 
 	// Checks for the need for prefixes
-	AddressSizePrefix = CurrentAssembler->GetCurrentMode() != mem->GetAddressSize();
+	AddressSizePrefix = mem->UseAddressSizePrefix();
 
 	for (unsigned int i = 0; i < Arguments.size(); i++)
 	{
