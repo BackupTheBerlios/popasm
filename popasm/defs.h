@@ -6,9 +6,9 @@
 //    email                : helcio@users.sourceforge.net
 //--------------------------------------------------------------------------
 
-//---------------------------------------------------------------------------------
-// This file contains definitions used throughout the project
-//---------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// This file contains definitions and functions used throughout the project
+//---------------------------------------------------------------------------
 
 /***************************************************************************
  *                                                                         *
@@ -22,19 +22,24 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-// typedefs used here just to save some typing
+#include <string>
+#include <algorithm>
+
+// typedefs used here to save some typing and increase portability
 typedef unsigned char Byte;
 typedef unsigned short int Word;
 typedef unsigned long int Dword;
 
-Dword ZeroExtend (Byte b);
-Dword ZeroExtend (Word w);
+Dword ZeroExtend (Byte b) throw ();
+Dword ZeroExtend (Word w) throw ();
 
-Dword SignExtend (Byte b);
-Dword SignExtend (Word w);
+Dword SignExtend (Byte b) throw ();
+Dword SignExtend (Word w) throw ();
 
 // SHR and SAR stand for SHift Right and Shift Arithmetic Right, respectivelly
-Dword SHR (Dword d, int n);
-Dword SAR (Dword d, int n);
+Dword SHR (Dword d, int n) throw ();
+Dword SAR (Dword d, int n) throw ();
+
+string Print (unsigned long int i) throw ();
 
 #endif

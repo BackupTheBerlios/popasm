@@ -6,6 +6,10 @@
 //    email                : helcio@users.sourceforge.net
 //--------------------------------------------------------------------------
 
+//---------------------------------------------------------------------------
+// This file contains definitions and functions used throughout the project
+//---------------------------------------------------------------------------
+
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -18,7 +22,7 @@
 #include "defs.h"
 
 // Zero-extends a byte to a double word
-Dword ZeroExtend (Byte b)
+Dword ZeroExtend (Byte b) throw ()
 {
 	Dword answer = b;
 	answer &= 0xFF;
@@ -26,14 +30,14 @@ Dword ZeroExtend (Byte b)
 }
 
 // Zero-extends a word to a double word
-Dword ZeroExtend (Word w)
+Dword ZeroExtend (Word w) throw ()
 {
 	Dword answer = w;
 	answer &= 0xFFFF;
 	return answer;
 }
 
-Dword SignExtend (Byte b)
+Dword SignExtend (Byte b) throw ()
 {
 	Dword answer = b;
 	if (b & 0x80 != 0)
@@ -48,7 +52,7 @@ Dword SignExtend (Byte b)
 	return answer;
 }
 
-Dword SignExtend (Word w)
+Dword SignExtend (Word w) throw ()
 {
 	Dword answer = w;
 	if (w & 0x8000 != 0)
@@ -64,13 +68,13 @@ Dword SignExtend (Word w)
 
 }
 
-Dword SHR (Dword d, int n)
+Dword SHR (Dword d, int n) throw ()
 {
 	Dword mask = ((1 << (32 - n)) - 1);
 	return (d >> n) & mask;
 }
 
-Dword SAR (Dword d, int n)
+Dword SAR (Dword d, int n) throw ()
 {
 	bool negative = (d & 0x80000000) != 0;
 	d >>= n;
@@ -86,4 +90,23 @@ Dword SAR (Dword d, int n)
 	}
 
 	return d;
+}
+
+string Print (unsigned long int i) throw ()
+{
+	string s;
+	unsigned long int d;
+
+	// Pushes each digit to a temporary string.
+	do
+	{
+		d = i % 10;
+		d += '0';
+		s += static_cast<char> (d);
+		i /= 10;
+	} while (i != 0);
+
+	// Digits came from least to most significant. Order must be adjusted.
+	reverse(s.begin(), s.end());
+	return s;
 }
