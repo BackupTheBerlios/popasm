@@ -20,6 +20,7 @@
 #include "asmer.h"
 #include "instruct.h"
 #include "directiv.h"
+#include "type.h"
 
 const OperatorData<Expression> *PopAsm::OperatorTable[] =
 {
@@ -45,6 +46,9 @@ const OperatorData<Expression> *PopAsm::OperatorTable[] =
 	new SizeCast<Expression> ("QWORD", 50, 0, 64),
 	new SizeCast<Expression> ("TBYTE", 50, 0, 80),
 	new SizeCast<Expression> ("TWORD", 50, 0, 80),
+	new DistanceCast<Expression> ("SHORT", 50, 0, Type::SHORT),
+	new DistanceCast<Expression> ("NEAR", 50, 0, Type::NEAR),
+	new DistanceCast<Expression> ("FAR", 50, 0, Type::FAR),
 	0	// End of list
 };
 
