@@ -22,6 +22,8 @@
 #include "memory.h"
 #include "lexsym.h"
 
+const Memory * const Memory::ClassInstance = new Memory (0);
+
 void Memory::MakeMemory16Bits (const BaseRegister *Base16, const IndexRegister *Index16)
 {
 	if ((Base16 != 0) && (Index16 != 0))
@@ -71,7 +73,7 @@ void Memory::MakeMemory32Bits (const GPRegister *Base32, const GPRegister *Index
 				if ((Code & 0xC0) == 0)
 				{
 					Code = 0x45;
-					Displacement.SetSize (8);
+					Displacement.SetSize (8, Number::SIGNED);
 				}
 				break;
 
@@ -120,7 +122,7 @@ void Memory::MakeMemory32Bits (const GPRegister *Base32, const GPRegister *Index
 				{
 					// If not, the only solution is to encode the zero displacement using a byte
 					Code |= 0x40;
-					Displacement.SetSize (8);
+					Displacement.SetSize (8, Number::SIGNED);
 				}
 /*			}*/
 

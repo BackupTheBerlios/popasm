@@ -25,6 +25,7 @@
 #include <exception>
 #include <utility>
 #include <string>
+#include <vector>
 
 #include "argument.h"
 #include "register.h"
@@ -37,6 +38,8 @@ class Memory : public BasicArgument
 	Byte Code;						// mod___r/m byte
 	Number Displacement;			// Displacement (including any size casts)
 	unsigned int AddressSize;	// Address size: 16 or 32 bits, or zero if undecided
+
+	bool SIBUsed () const throw () {return (AddressSize == 32) && ((Code & 7) == 4);}
 
 	public:
 	Memory (unsigned int sz = 0) throw ()
@@ -52,7 +55,16 @@ class Memory : public BasicArgument
 	void SetAddressSize (unsigned int as) throw () {AddressSize = as;}
 
 	Byte &GetCode () throw () {return Code;}
+	const Byte &GetCode () const throw () {return Code;}
 	Number &GetDisplacement() throw () {return Displacement;}
+
+	void WriteSIB (vector<Byte> &Output) const throw () {if (SIBUsed()) Output.push_back (SIB);}
+	void WriteDisplacement (vector<Byte> &Output) const throw () {Displacement.Write (Output);}
+
+	// Checks whether ptr is a pointer to an instance of this class.
+	static const Memory * const ClassInstance;
+	bool Identify (const BasicArgument * const ptr) const throw ()
+		{return dynamic_cast<const Memory * const> (ptr) != 0;}
 
 	string Print () const throw ()
 	{
