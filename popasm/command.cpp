@@ -18,6 +18,7 @@
 #include "command.h"
 #include "instruct.h"
 #include "directiv.h"
+#include "prefix.h"
 
 BasicSymbol *Command::Read (const string &str, InputFile &inp)
 {
@@ -32,5 +33,8 @@ BasicSymbol *Command::Read (const string &str, InputFile &inp)
 	if (s != 0) return s;
 
 	s = Directive::Read (UppercaseName, inp);
+	if (s != 0) return s;
+
+	s = PrefixInstruction::Read (UppercaseName, inp);
 	return s;
 }
