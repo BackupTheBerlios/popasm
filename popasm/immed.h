@@ -47,7 +47,7 @@ class Immediate : public BasicArgument
 	~Immediate () throw () {}
 
 	const RealNumber &GetValue() const throw () {return Value;}
-	void SetSize (unsigned int sz) const;
+	void SetSize (unsigned int sz, Number::NumberType t = Number::ANY) const throw (InvalidSize, CastFailed);
 
 	class IdFunctor : public BasicArgument::IdFunctor
 	{
@@ -56,8 +56,13 @@ class Immediate : public BasicArgument
 	};
 
 	// Cannot write a number if its size is unknown (zero)
-	void Write (vector<Byte> &Output) const {if (GetSize() == 0) throw 0; Value.Write(Output, GetSize() / 8);}
-	string Print() const throw() {return Value.Print();}
+	void Write (vector<Byte> &Output) const throw (UnknownImmediateSize)
+	{
+		if (GetSize() == 0) throw UnknownImmediateSize();
+		Value.Write(Output, GetSize() / 8);
+	}
+
+	string Print() const throw() {return Number::PrintSize(GetSize()) + " " + Value.Print();}
 };
 
 template <long int n>
@@ -73,7 +78,7 @@ class ImmedEqual : public UnaryFunction<const BasicArgument *, bool>
 	}
 };
 
-template <unsigned int n, Number::NumberType t>
+template <unsigned int n, Number::NumberType t, bool ThrowExceptions = true>
 class Immed : public UnaryFunction<const BasicArgument *, bool>
 {
 	public:
@@ -82,12 +87,26 @@ class Immed : public UnaryFunction<const BasicArgument *, bool>
 		// Checks whether we have an integer immediate value
 		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
 		if (immed == 0) return false;
+		if (immed->GetSize() != 0)
+		{
+			// If the size is the same but the type is different, throw exception.
+			if (immed->GetSize() != n)
+				return 0;
+			else
+				immed->SetSize (n, t);
+
+			return true;
+		}
 
 		try
 		{
-			immed->SetSize (n);
+			immed->SetSize (n, t);
 		}
-		catch (...) {return false;}
+		catch (...)
+		{
+			if (ThrowExceptions) throw;
+			return false;
+		}
 
 		return true;
 	}

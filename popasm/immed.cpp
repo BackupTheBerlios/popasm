@@ -19,9 +19,9 @@
 
 const char UnknownImmediateSize::WhatString[] = "Undefined size for immediate argument.";
 
-void Immediate::SetSize(unsigned int sz) const
+void Immediate::SetSize (unsigned int sz, Number::NumberType t = Number::ANY) const throw (InvalidSize, CastFailed)
 {
 	Number temp(Value);
-	temp.SetSize(sz);
+	temp.SetSize(sz, t);
 	BasicArgument::SetSize(sz);
 }
