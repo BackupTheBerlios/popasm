@@ -37,16 +37,30 @@ class MultidefinedSymbol : public exception
 	const char *what() const throw () {return WhatString.c_str();}
 };
 
+class UndefinedSymbol : public exception
+{
+	string WhatString;
+
+	public:
+	UndefinedSymbol (const string &name) throw ()
+		: WhatString (string ("Undefined symbol: ") + name) {}
+	~UndefinedSymbol () throw () {}
+
+	const char *what() const throw () {return WhatString.c_str();}
+};
+
 // Contains data necessary to describe a basic symbol (i.e. one which has no type)
 class BasicSymbol
 {
 	string Name;
+	unsigned int DefinitionPass;
 
 	public:
-	BasicSymbol (const string &n) throw () : Name(n) {}
+	BasicSymbol (const string &n) throw ();
 	virtual ~BasicSymbol () throw () {}
 
 	const string &GetName () const throw () {return Name;}
+	unsigned int GetDefinitionPass () const throw () {return DefinitionPass;}
 	string Print () const throw () {return Name;}
 
 	virtual BasicSymbol *Clone() const throw () {cout << "Not implemented: BasicSymbol::Clone()" << endl; return 0; }
@@ -54,17 +68,6 @@ class BasicSymbol
 	// This method is used to compare symbols' names, to put them in lexicographical order in a set
 	virtual bool operator< (const BasicSymbol &s) const throw () {return Name < s.Name;}
 };
-
-/*
-class Macro : public BasicSymbol
-{
-	public:
-	Macro (const string &n) : BasicSymbol (n) {}
-	~Macro () {}
-
-	void Print () const;
-};
-*/
 
 class HashFunctor
 {

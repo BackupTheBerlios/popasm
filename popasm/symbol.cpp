@@ -16,6 +16,8 @@
  ***************************************************************************/
 
 #include "symbol.h"
+#include "asmer.h"
+#include "defs.h"
 
 unsigned int HashFunctor::operator() (const BasicSymbol * const &sd)
 {
@@ -25,4 +27,9 @@ unsigned int HashFunctor::operator() (const BasicSymbol * const &sd)
 		x += *i;
 
 	return x;
+}
+
+BasicSymbol::BasicSymbol (const string &n) throw () : Name(n)
+{
+	DefinitionPass = (CurrentAssembler == 0) ? 0 : CurrentAssembler->GetCurrentPass();
 }
