@@ -16,22 +16,36 @@
  ***************************************************************************/
 
 #include "lexop.h"
+#include "defs.h"
 
 const OperatorData<Expression> **Operator::OperatorTable = 0;
 
 Operator *Operator::Read (const string &str, InputFile &inp) throw ()
 {
 	string UppercaseName(str);
-
-	// Gets a copy of the original string in uppercase
-	for (string::iterator i = UppercaseName.begin(); i < UppercaseName.end(); i++)
-		if ((*i <= 'z') && (*i >= 'a')) *i -= 32;
+	UpperCase (UppercaseName);
 
 	// Scans the list of operators
 	for (unsigned int i = 0; OperatorTable[i] != 0; i++)
 	{
 		if (OperatorTable[i]->GetName() == UppercaseName)
 		{
+			// Ignores PTR token (if found)
+			if ((dynamic_cast<const SizeCast<Expression> *> (OperatorTable[i]) != 0)
+				|| (dynamic_cast<const DistanceCast<Expression> *> (OperatorTable[i]) != 0))
+			{
+				string *s = inp.GetString();
+				if (s != 0)
+				{
+					string upper (*s);
+					UpperCase (upper);
+					if (upper == "PTR")
+						delete s;
+					else
+						inp.UngetString (s);
+				}
+			}
+
 			return new Operator (OperatorTable[i]);
 		}
 	}
@@ -44,10 +58,7 @@ const EncloserData<Expression> **Encloser::EncloserTable = 0;
 Encloser *Encloser::Read (const string &str, InputFile &inp) throw ()
 {
 	string UppercaseName(str);
-
-	// Gets a copy of the original string in uppercase
-	for (string::iterator i = UppercaseName.begin(); i < UppercaseName.end(); i++)
-		if ((*i <= 'z') && (*i >= 'a')) *i -= 32;
+	UpperCase (UppercaseName);
 
 	for (unsigned int i = 0; EncloserTable[i] != 0; i++)
 		if (EncloserTable[i]->GetName() == UppercaseName)
