@@ -43,3 +43,4 @@ void Directive::SetupDirectiveTable () throw ()
 	for (unsigned int i = 0; i < sizeof (Directives) / sizeof (Directive *); i++)
 		DirectiveTable.Insert (Directives[i]);
 }
+

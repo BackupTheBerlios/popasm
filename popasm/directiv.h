@@ -51,3 +51,4 @@ class DefinitionDirective : public Directive
 };
 
 #endif
+
