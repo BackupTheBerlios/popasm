@@ -54,6 +54,12 @@ UnexpectedToken::UnexpectedToken (const Token *tt) throw () : t(tt)
 	WhatString += t->Print();
 }
 
+CommandExpected::CommandExpected (const Token *tt) throw () : t(tt)
+{
+	WhatString = "Expected command, got ";
+	WhatString += t->Print();
+}
+
 const char *UnexpectedEnd::WhatString = "Unexpected end of expression reached.";
 
 enum StopCondition {END_REACHED, TERM_REACHED, ENCLOSER_REACHED};
@@ -234,7 +240,7 @@ vector<Byte> Parser::ParseLine ()
 
 				// The first token MUST be a symbol, otherwise we have a syntax error
 				sym = dynamic_cast<Symbol *> (*i);
-				if (sym == 0) throw 0;
+				if (sym == 0) throw CommandExpected (*i);
 
 				// Checks wheter we got a label or a command
 				cmd = dynamic_cast<const Command *> (sym->GetData());
@@ -243,7 +249,7 @@ vector<Byte> Parser::ParseLine ()
 
 			case LABEL:
 				// Checks if the user has specified more than one label
-				if (var != 0) throw 0;
+				if (var != 0) throw CommandExpected(sym);
 				var = sym->GetData();
 
 				State = INITIAL;

@@ -82,6 +82,19 @@ class UnexpectedEnd : public exception
 	const char *what() const throw () {return WhatString;}
 };
 
+// Thrown when a command is expected but something else was got
+class CommandExpected : public exception
+{
+	const Token *t;
+	string WhatString;
+
+	public:
+	CommandExpected (const Token *tt) throw ();
+	~CommandExpected () throw () {}
+
+	const char *what() const throw () {return WhatString.c_str();}
+};
+
 class Parser
 {
 	InputFile &Input;

@@ -31,6 +31,7 @@
 #include "type.h"
 
 class UnexpectedSegmentPrefix;
+class InvalidSizeCast;
 
 class Expression : BasicExpression<Number, Symbol>
 {
@@ -55,7 +56,7 @@ class Expression : BasicExpression<Number, Symbol>
 	const Expression *GetSegmentPrefix () const throw () {return SegmentPrefix;}
 
 	Type::Distance GetDistanceType () const throw () {return t.GetDistanceType();}
-	void SetDistanceType (Type::Distance dist);
+	void SetDistanceType (Type::Distance dist) throw (InvalidSizeCast);
 
 	unsigned int QuantityOfTerms () const throw () {return Terms.size();}
 
@@ -127,6 +128,13 @@ class NotAMember : public ExpressionException
 	public:
 	NotAMember (const string &s1, const string &s2) : ExpressionException (s2 + " is not a member of " + s1) {}
 	~NotAMember () {}
+};
+
+class InvalidSizeCast : public ExpressionException
+{
+	public:
+	InvalidSizeCast () throw () : ExpressionException ("Cannot size cast this expression. Must be a memory reference or immediate.") {}
+	~InvalidSizeCast () throw () {}
 };
 
 #endif

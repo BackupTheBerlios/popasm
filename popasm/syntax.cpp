@@ -100,6 +100,8 @@ bool Syntax::Match (vector<Argument *> &Arguments) const throw ()
 	return Result;
 }
 
+const char JumpOutOfRange::WhatString[] = "Transfer to an out of range destination attempted.";
+
 bool ZerarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ()
 {
 	// Verifies the type of each argument
@@ -126,7 +128,7 @@ UnarySyntax::UnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn
 	ArgumentTypes.push_back (arg2);
 }
 
-bool UnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ()
+bool UnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw (UnknownArgument)
 {
 	Byte dw = 0, mod_reg_rm = 0, SegmentPrefix = 0;
 	vector <Byte> TrailerOpcode;
@@ -173,7 +175,7 @@ bool UnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output)
 			{
 				// If neither immediate nor register, try memory
 				mem = dynamic_cast<const Memory *> (arg);
-				if (mem == 0) throw 0;
+				if (mem == 0) throw UnknownArgument (arg);
 
 				// Checks for the need of prefix
 				if ((CurrentAssembler->GetCurrentMode() == 16) != (mem->GetAddressSize() == 16)) Output.push_back (0x67);
@@ -220,7 +222,7 @@ bool AdditiveUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 	return true;
 }
 
-bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ()
+bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw (JumpOutOfRange)
 {
 	unsigned long int FinalOffset = Output.size();
 
@@ -241,7 +243,7 @@ bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 	{
 		RelativeDistance--;
 
-		if ((RelativeDistance < -128) || (RelativeDistance > 127)) throw 0;
+		if ((RelativeDistance < -128) || (RelativeDistance > 127)) throw JumpOutOfRange();
 		Output.push_back (static_cast<Byte> (RelativeDistance & 0xFF));
 	}
 	else
@@ -251,7 +253,7 @@ bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 
 		if (size == 16)
 		{
-			if ((RelativeDistance < -65535) || (RelativeDistance > 65535)) throw 0;
+			if ((RelativeDistance < -65535) || (RelativeDistance > 65535)) throw JumpOutOfRange();
 			RelativeDistance &= 0xFFFF;
 		}
 

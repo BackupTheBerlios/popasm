@@ -47,18 +47,18 @@ void Expression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) t
 	}
 }
 
-void Expression::SetDistanceType (Type::Distance dist)
+void Expression::SetDistanceType (Type::Distance dist) throw (InvalidSizeCast)
 {
 	if (t.GetCurrentType() != Type::STRONG_MEMORY)
 	{
 		// Must be a single term
-		if (QuantityOfTerms() != 1) throw 0;
+		if (QuantityOfTerms() != 1) throw InvalidSizeCast();
 
 		const pair<Number *, Symbol *> *x = TermAt (0);
 		if (x->second != 0)
 		{
 			// Cannot have "near ax"
-			if (dynamic_cast<const Register *> (x->second) != 0) throw 0;
+			if (dynamic_cast<const Register *> (x->second) != 0) throw InvalidSizeCast();
 		}
 	}
 

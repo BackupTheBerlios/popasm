@@ -20,7 +20,9 @@
 
 #include "type.h"
 
-string MultipleBrackets::WhatString = "Illegal: Multiple brackets.";
+const char MultipleBrackets::WhatString[] = "Illegal: Multiple brackets.";
+const char DistanceSizedMemory::WhatString[] = "Distance size qualifiers cannot be used inside brackets.";
+const char IncompatibleTypes::WhatString[] = "Error: Incompatible types that cannot be operated between them.";
 
 Type &Type::operator+= (const Type &t) throw (IncompatibleTypes)
 {
@@ -152,10 +154,10 @@ Type Type::operator- () throw (IncompatibleTypes)
 	return ~*this;
 }
 
-void Type::operator[] (int) throw (MultipleBrackets)
+void Type::operator[] (int) throw (MultipleBrackets, DistanceSizedMemory)
 {
 	// Cannot operate on SHORT, NEAR or FAR expressions
-	if (DistanceType != NONE) throw 0;
+	if (DistanceType != NONE) throw DistanceSizedMemory();
 	if (CurrentType == STRONG_MEMORY) throw MultipleBrackets();
 
 	CurrentType = STRONG_MEMORY;

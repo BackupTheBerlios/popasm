@@ -27,21 +27,37 @@
 // Thrown when types cannot be operated. E.g.: [5] + 1 = STRONG_MEMORY + SCALAR = error!
 class IncompatibleTypes : public exception
 {
+	static const char WhatString[];
+
 	public:
 	IncompatibleTypes () {}
 	~IncompatibleTypes () {}
+
+	const char *what() const throw() {return WhatString;}
 };
 
 // Thrown if user attempts to use brackets twice. E.g.: [[bx]]
 class MultipleBrackets : public exception
 {
-	static string WhatString;
+	static const char WhatString[];
 
 	public:
 	MultipleBrackets () throw () {}
 	~MultipleBrackets () throw () {}
 
-	const char *what() const throw() {return WhatString.c_str();}
+	const char *what() const throw() {return WhatString;}
+};
+
+// Thrown if user says something like [near ebx] instead of near[ebx]
+class DistanceSizedMemory : public exception
+{
+	static const char WhatString[];
+
+	public:
+	DistanceSizedMemory () throw () {}
+	~DistanceSizedMemory () throw () {}
+
+	const char *what() const throw() {return WhatString;}
 };
 
 class Type
@@ -89,7 +105,7 @@ class Type
 	bool operator!= (const Type &t) const throw ()
 		{return (Size != t.Size) || (CurrentType != t.CurrentType) || (DistanceType != t.DistanceType);}
 
-	void operator[] (int) throw (MultipleBrackets);
+	void operator[] (int) throw (MultipleBrackets, DistanceSizedMemory);
 };
 
 #endif

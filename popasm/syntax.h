@@ -18,7 +18,10 @@
 #ifndef SYNTAX_H
 #define SYNTAX_H
 
+#include <exception>
+#include <string>
 #include <vector>
+
 #include "argument.h"
 #include "opcode.h"
 #include "register.h"
@@ -58,6 +61,30 @@ class Syntax
 	virtual bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw () = 0;
 };
 
+// Caused by an internal error, when an argument is neither a register, nor a number, nor a memory location nor a full pointer
+class UnknownArgument : public exception
+{
+	string WhatString;
+
+	public:
+	UnknownArgument (const BasicArgument *a) throw () : WhatString (string("Unknown argument ") + a->Print()) {}
+	~UnknownArgument () throw () {}
+
+	const char *what() const throw () {return WhatString.c_str();}
+};
+
+// Thrown when the user attempts to transfer control to a label too far from the current position
+class JumpOutOfRange : public exception
+{
+	static const char WhatString[];
+
+	public:
+	JumpOutOfRange () throw () {}
+	~JumpOutOfRange () throw () {}
+
+	const char *what() const throw () {return WhatString;}
+};
+
 // Syntaxes of instructions that take no arguments
 class ZerarySyntax : public Syntax
 {
@@ -83,7 +110,7 @@ class UnarySyntax : public Syntax
 	UnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg1, BasicIdFunctor *arg2, Byte dwm = 0) throw ();
 	~UnarySyntax () throw () {}
 
-	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ();
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw (UnknownArgument);
 };
 
 // Syntaxes of instructions whose only argument is added to the basic encoding
@@ -106,7 +133,7 @@ class RelativeUnarySyntax : public UnarySyntax
 	RelativeUnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg) throw () : UnarySyntax (p, op, dep, arg) {}
 	~RelativeUnarySyntax () throw () {}
 
-	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ();
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw (JumpOutOfRange);
 };
 
 // Syntaxes of instructions that take two argument
