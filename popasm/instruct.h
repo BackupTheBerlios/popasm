@@ -42,19 +42,16 @@ class Instruction : public Command
 	void AddSyntax (const Syntax *s) throw () {Syntaxes.insert (s);}
 
 	public:
-	Instruction (const string &n) throw () : Command (n) {}
-	Instruction (const string &n, const Syntax *s) throw () : Command (n) {AddSyntax(s);}
-	Instruction (const string &n, const Syntax *s, const Syntax *s2) throw () : Command (n) {AddSyntax(s); AddSyntax(s2);}
-	Instruction (const string &n, const Syntax *s, const Syntax *s2, const Syntax *s3) throw () : Command (n)
-		{AddSyntax(s); AddSyntax(s2); AddSyntax(s3);}
-	Instruction (const string &n, const Syntax *s, const Syntax *s2, const Syntax *s3, const Syntax *s4) throw () : Command (n)
-		{AddSyntax(s); AddSyntax(s2); AddSyntax(s3); AddSyntax(s4);}
+	Instruction (const string &n,
+		const Syntax *s1  = 0, const Syntax *s2  = 0, const Syntax *s3  = 0, const Syntax *s4  = 0,
+		const Syntax *s5  = 0, const Syntax *s6  = 0, const Syntax *s7  = 0, const Syntax *s8  = 0,
+		const Syntax *s9  = 0, const Syntax *s10 = 0, const Syntax *s11 = 0, const Syntax *s12 = 0) throw ();
 	~Instruction () throw ();
 
 	static void SetupInstructionTable () throw ();
 	static BasicSymbol *Read (const string &str, InputFile &inp);
 
-	void Assemble (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding, unsigned int CurrentMode) const;
+	void Assemble (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding) const;
 };
 
 // Instructions that take two arguments. Any combination of register, memory and immediate are allowed.
