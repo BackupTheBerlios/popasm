@@ -46,6 +46,7 @@ const OperatorData<Expression> *PopAsm::OperatorTable[] =
 	new SizeCast<Expression> ("QWORD", 50, 0, 64),
 	new SizeCast<Expression> ("TBYTE", 50, 0, 80),
 	new SizeCast<Expression> ("TWORD", 50, 0, 80),
+	new SizeCast<Expression> ("OWORD", 50, 0, 128),
 	new DistanceCast<Expression> ("SHORT", 50, 0, Type::SHORT),
 	new DistanceCast<Expression> ("NEAR", 50, 0, Type::NEAR),
 	new DistanceCast<Expression> ("FAR", 50, 0, Type::FAR),
