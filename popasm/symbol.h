@@ -149,4 +149,11 @@ class Macro : public BasicSymbol
 	void Print () const;
 };
 */
+
+class HashFunctor
+{
+	public:
+	unsigned int operator() (BasicSymbol * const &sd);
+};
+
 #endif

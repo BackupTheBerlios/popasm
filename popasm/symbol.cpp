@@ -17,6 +17,16 @@
 
 #include "symbol.h"
 
+unsigned int HashFunctor::operator() (BasicSymbol * const &sd)
+{
+	unsigned int x = 0;
+
+	for (string::const_iterator i = (sd->GetName()).begin(); i != (sd->GetName()).end(); i++)
+		x += *i;
+
+	return x;
+}
+
 const Variable *Aggregate::FindMember (const string &v) const throw ()
 {
 	// Searches all members for the one named s
