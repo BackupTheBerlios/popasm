@@ -1048,8 +1048,8 @@ As the third line of the example above shows, constant constants cannot be
 redefined even if the value of the new definition is the same as the
 previous one.
 
-\section{Defining variable constants}
-Variable constants are constants that can be changed (redefined) in
+\section{Defining mutable constants}
+Mutable constants are the ones that can be changed (redefined) in
 assembly-time. They can be defined (and redefined) by the $=$ operator.
 Despite sounding paradoxal, this makes sense, as the next example shows:
 
@@ -1063,7 +1063,7 @@ MAX_RETRIES     =       10                      ; Redefinition ok.
 
 That is, the same constant is being used in different parts of the
 code. Such freedom may lead to bugs if misused, though. If all constants
-are made variable, one may accidentally redefine it thinking he would
+are made mutable, one may accidentally redefine it thinking he would
 be defining a new one. Because constant constants cannot be redefined,
 you will get an error message if you forget about an existing constant
 and attempt to redefine it. In short: always use constant constants,
@@ -1807,10 +1807,10 @@ ENDS
 
 EAX_CLONE       EAX_UNION <,,>
 
-                MOV     AL,EAX_UNION.SIMULATED_AL
-                MOV     AH,EAX_UNION.SIMULATED_AH
-                MOV     AX,EAX_UNION.SIMULATED_AX
-                MOV     EAX,EAX_UNION.SIMULATED_EAX
+                MOV     AL,EAX_CLONE.SIMULATED_AL
+                MOV     AH,EAX_CLONE.SIMULATED_AH
+                MOV     AX,EAX_CLONE.SIMULATED_AX
+                MOV     EAX,EAX_CLONE.SIMULATED_EAX
 \end{verbatim}
 
 \section{Namespace considerations\label{NAMESPACESEC}}
@@ -3692,7 +3692,7 @@ Valid Syntaxes               Example
 FLDPI (no arguments)         FLDPI
 \end{verbatim}
 
-\section{FLDLG2 --- LoaD $\log_10 2$}
+\section{FLDLG2 --- LoaD $\log_{10} 2$}
 \begin{verbatim}
 Valid Syntaxes               Example
 \end{verbatim}
@@ -6942,7 +6942,7 @@ Valid Syntaxes               Example
 \hrulefill
 \vspace{-0.3cm}
 \begin{verbatim}
-SYSEXIT (no arguments)       SYSENTER
+SYSEXIT (no arguments)       SYSEXIT
 \end{verbatim}
 
 \section{TEST --- logical compare}
