@@ -60,7 +60,11 @@ void Segment::DefineSymbol (BasicSymbol *s) throw (MultidefinedSymbol)
 				throw MultidefinedSymbol (s->GetName());
 			else
 			{
-				// Atualizar o valor do simbolo e pedir novo passo se necessario
+				// If the symbol changed since last pass request another one
+				if ((*sym)->Changed (s))
+					CurrentAssembler->RequestNewPass ();
+
+				delete s;
 			}
 		}
 	}
