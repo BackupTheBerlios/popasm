@@ -33,6 +33,7 @@ class UserDefined : public BasicSymbol, public Type
 
 	Dword GetOffset() const throw () {return Offset;}
 	Dword GetLine() const throw () {return Line;}
+	bool Changed (const BasicSymbol *s) throw ();
 };
 
 class Variable : public UserDefined
@@ -53,6 +54,7 @@ class Variable : public UserDefined
 	~Variable () {}
 
 	unsigned int GetLength() const throw () {return Length;}
+	void SetLength(unsigned int NewLength) throw () {Length = NewLength;}
 };
 
 class Label : public UserDefined

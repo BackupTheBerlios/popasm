@@ -30,6 +30,34 @@ UserDefined::UserDefined (const string &n, Dword off, const Type &t) throw () : 
 	Offset = off;
 }
 
+bool UserDefined::Changed (const BasicSymbol *s) throw ()
+{
+	bool answer = false;
+
+	const UserDefined *ud = dynamic_cast<const UserDefined *> (s);
+	if (ud == 0)
+	{
+		cout << "Internal error. Please send a bug report." << endl;
+		return false;
+	}
+
+	// Checks for changed in offset
+	if (Offset != ud->Offset)
+	{
+		answer = true;
+		Offset = ud->Offset;
+	}
+
+	// Checks for changes in typing info
+	if (Type::operator!= (*ud))
+	{
+		answer = true;
+		Type::operator= (*ud);
+	}
+
+	return answer;
+}
+
 const Variable *Aggregate::FindMember (const string &v) const throw ()
 {
 	// Searches all members for the one named s
