@@ -105,10 +105,14 @@ class Union : public Aggregate
 // Defines instantiations of aggregators, like structures and unions
 class AggregateInstance : public Variable
 {
+	const Aggregate *Father;
+
 	public:
 	AggregateInstance (const string &n, Dword off, const Aggregate *ag, unsigned int len) throw ()
 		: Variable (n, off, ag->GetSize(), len) {}
 	~AggregateInstance () {}
+
+	const Aggregate *GetFather() const throw () {return Father;}
 };
 
 class Segment : public BasicSymbol
