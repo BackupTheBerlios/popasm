@@ -101,15 +101,21 @@ class Parser
 	InputFile &Input;
 
 	public:
-	static void ReadLine (vector<Token *> &Tokens, InputFile &Input) throw ();
 	static Expression *EvaluateExpression (const vector<Token *> &v);
-	vector<Byte> ParseLine ();
-	static void ParseArguments (vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Argument *> &args);
+	static void ParseArguments (vector<Argument *> &args, vector<Token *>::iterator i, vector<Token *>::iterator j);
+
+	void ParseArguments (vector<Argument *> &args);
+	void ReadLine (vector<Token *> &Tokens) throw ();
+	Token *GetToken (Token::Context c) throw () {return Token::GetToken (Input, c);}
 
 	unsigned long int GetCurrentLine() const throw() {return Input.GetCurrentLine();}
+	void Reset () throw () {Input.Reset();}
+	operator bool () const throw () {return Input;}
 
 	Parser (InputFile &i) throw () : Input(i) {}
 	~Parser () throw () {}
+
+	vector<Byte> ParseLine ();
 };
 
 #endif

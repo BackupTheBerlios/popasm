@@ -27,6 +27,8 @@
 #include "instruct.h"
 #include "directiv.h"
 #include "lexsym.h"
+#include "asmer.h"
+#include "defs.h"
 
 EncloserMismatch::EncloserMismatch (const Encloser *op, const Encloser *cl) throw () : Opener(op), Closer(cl)
 {
@@ -65,7 +67,18 @@ Expression *MakeTerm (Token *t)
 		{
 			// If we have a forward reference, make it an unknown expression
 			if (typeid (*s->GetData()) == typeid (BasicSymbol))
+			{
 				exp = new Expression (0, s, Type(0, Type::UNKNOWN));
+
+				// If the symbol has not beed defined in the previous pass then we have an error
+				if (s->GetData()->GetDefinitionPass() != CurrentAssembler->GetCurrentPass())
+				{
+					throw UndefinedSymbol (s->GetName());
+				}
+
+				CurrentAssembler->DefineSymbol (new BasicSymbol (s->GetName()));
+				CurrentAssembler->RequestNewPass();
+			}
 			else
 				exp = new Expression (0, s);
 		}
@@ -237,17 +250,16 @@ Expression *Parser::EvaluateExpression (const vector<Token *> &v)
 	return Result;
 }
 
-void Parser::ReadLine (vector<Token *> &Tokens, InputFile &Input) throw ()
+void Parser::ReadLine (vector<Token *> &Tokens) throw ()
 {
 	Token *t;
 	Symbol *s;
-	Token::Context c = Token::COMMAND_EXPECTED;
 
 	// Reads all tokens and place them in a vector
 	while (true)
 	{
 		// Get the next token
-		t = Token::GetToken(Input, c);
+		t = Token::GetToken(Input, Token::ARGUMENT_EXPECTED);
 
 		// Checks for end-of-file
 		if (t == 0) break;
@@ -269,18 +281,13 @@ void Parser::ReadLine (vector<Token *> &Tokens, InputFile &Input) throw ()
 				Input.SkipLine ();
 				break;
 			}
-
-			// If a command has already been read, switch the lexical analyser to another context,
-			// to read its arguments
-			if (dynamic_cast<const Command *> (s->GetData()) != 0)
-				c = Token::ARGUMENT_EXPECTED;
 		}
 
 		Tokens.push_back (t);
 	}
 }
 
-void Parser::ParseArguments (vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Argument *> &args)
+void Parser::ParseArguments (vector<Argument *> &args, vector<Token *>::iterator i, vector<Token *>::iterator j)
 {
 	while (i != j)
 	{
@@ -310,20 +317,29 @@ void Parser::ParseArguments (vector<Token *>::iterator i, vector<Token *>::itera
 	}
 }
 
+void Parser::ParseArguments (vector<Argument *> &args)
+{
+	vector <Token *> Tokens;
+	ReadLine (Tokens);
+
+	vector<Token *>::iterator i = Tokens.begin();
+	vector<Token *>::iterator j = Tokens.end();
+	ParseArguments (args, i, j);
+}
+
 vector<Byte> Parser::ParseLine ()
 {
 	// Reads all tokens in the line to Tokens vector
 	vector<Token *> Tokens;
-	ReadLine (Tokens, Input);
-	vector<Token *>::iterator i = Tokens.begin();
-
 	vector<Byte> Encoding;
 	enum {INITIAL, LABEL, COMMAND, FINAL} State = INITIAL;
 
 	const Symbol *sym = 0;
-	const BasicSymbol *var = 0;
 	const Command *cmd = 0;
 	const Operator *op;
+
+	const Symbol *var = 0;
+	Token *NextToken = Token::GetToken (Input, Token::COMMAND_EXPECTED);
 
 	while (State != FINAL)
 	{
@@ -331,16 +347,18 @@ vector<Byte> Parser::ParseLine ()
 		{
 			// Beginning of line
 			case INITIAL:
+				// The first token MUST be a symbol, otherwise we have a syntax error
+				sym = dynamic_cast<Symbol *> (NextToken);
+				if (sym == 0)
+					throw CommandExpected (NextToken);
+
 				// Checks for end-of-line
-				if (i == Tokens.end())
+				if (sym->GetName() == "\n")
 				{
+					delete NextToken;
 					State = FINAL;
 					break;
 				}
-
-				// The first token MUST be a symbol, otherwise we have a syntax error
-				sym = dynamic_cast<Symbol *> (*i);
-				if (sym == 0) throw CommandExpected (*i);
 
 				// Checks wheter we got a label or a command
 				cmd = dynamic_cast<const Command *> (sym->GetData());
@@ -349,23 +367,27 @@ vector<Byte> Parser::ParseLine ()
 
 			case LABEL:
 				// Checks if the user has specified more than one label
-				if (var != 0) throw CommandExpected(sym);
-				var = sym->GetData();
-				i++;
+				if (var != 0)
+					throw CommandExpected(sym);
+				var = sym;
 
 				// Skips colon (if any)
-				op = dynamic_cast<const Operator *> (*i);
+				NextToken = Token::GetToken (Input, Token::COMMAND_EXPECTED);
+				op = dynamic_cast<const Operator *> (NextToken);
 				if (op != 0)
 					if (op->GetName() == ":")
-						i++;
+					{
+						delete NextToken;
+						NextToken = Token::GetToken (Input, Token::COMMAND_EXPECTED);
+					}
 
 				State = INITIAL;
 				break;
 
 			case COMMAND:
 				// Skips command name and assemble it
-				i++;
-				cmd->Assemble (var, i, Tokens.end(), Encoding);
+				cmd->Assemble (var, *this, Encoding);
+				delete NextToken;
 
 				State = FINAL;
 				break;
@@ -375,10 +397,10 @@ vector<Byte> Parser::ParseLine ()
 		}
 	}
 
-	// Delete temporary variable. var is inside it and is deleted as well.
-	delete sym;
+	// Test for orphan labels
+	if ((cmd == 0) && (var != 0))
+		CurrentAssembler->DefineSymbol (new Label (var->GetName()));
 
-	// Still pending: cleanup of tokens
-
+	delete var;
 	return Encoding;
 }
