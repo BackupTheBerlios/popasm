@@ -119,6 +119,26 @@ void Argument::TypeCheck (const vector<Argument *> &args, CheckType ct) throw (T
 
 		case BIT_NUMBER:
 		{
+			// If quantity of arguments is three, the two first ones must be checked for equality
+			if (args.size() == 3)
+			{
+				// If either argument has no defined size, match them
+				if (Sizes[0] == 0)
+				{
+					if (Sizes[1] == 0) throw UndefinedSize();
+					args[0]->SetSize (Sizes[1]);
+					Sizes[0] = Sizes[1];
+				}
+
+				if (Sizes[1] == 0)
+				{
+					args[1]->SetSize (Sizes[0]);
+					Sizes[1] = Sizes[0];
+				}
+
+				if (Sizes[0] != Sizes[1]) throw TypeMismatch (vector<Argument *> (args.begin(), args.begin()+2));
+			}
+
 			unsigned long int s = static_cast<const Immediate *> (args.back()->GetData())->GetLong();
 			if (Sizes[0] <= s) throw BitOutOfBounds (args[0]->GetData(), s);
 			break;
