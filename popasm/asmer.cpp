@@ -116,9 +116,12 @@ bool Assembler::PerformPass (InputFile &File) throw ()
 		}
 	}
 
-	if ((Segments.back()->IsOpen()) && (Segments.back()->GetName() != ""))
+	if (!Segments.empty())
 	{
-		cout << "Segment not ended - " << Segments.back()->GetName() << endl;
+		if ((Segments.back()->IsOpen()) && (Segments.back()->GetName() != ""))
+		{
+			cout << "Segment not ended - " << Segments.back()->GetName() << endl;
+		}
 	}
 
 	return false;
