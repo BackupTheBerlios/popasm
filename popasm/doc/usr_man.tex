@@ -2366,6 +2366,1881 @@ of the first argument. For example, if the first argument
 is 16-bits wide the immediate argument must be in the 0--15
 interval.
 
+\section{CALL --- CALL procedure}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CALL immed                   CALL    PRINT_NUMBER
+CALL reg16/mem16             CALL    BX
+CALL reg32/mem32/mem48       CALL    PWORD [SI]
+CALL farptr32                CALL    0FFFFh:0000h
+CALL farpre48                CALL    1234h:DWORD 5Ch
+\end{verbatim}
+
+\subsection{Notes}
+When in 16-bits mode \popasm\ expects 16-bits displacements.
+Using 32-bits displacements in 16-bits mode requires
+an explicit cast. Accordingly, in 32-bits mode all displacements
+are encoded in 32-bits, unless they are preceeded by a WORD
+size specifier. For example:
+
+\begin{verbatim}
+                BITS    16
+                CALL    1234h:0FFFFh            ; Ok
+                CALL    1234h:10000h            ; Error!
+                CALL    1234h:DWORD 10000h      ; Ok!
+
+                BITS    32
+                CALL    1234h:5Ch               ; 32-bits offset
+                CALL    1234h:WORD 5Ch          ; 16-bits offset
+\end{verbatim}
+
+Also, for convenience reasons, as well as for compatibility
+with \tasm\ DWORD memory variables are treated as FAR arguments,
+in 16-bits mode, unless such an assumption is overriden by a
+NEAR distance specifier. DWORD variables hold near address in
+32-bits mode, though. For example:
+
+\begin{verbatim}
+                BITS    16
+DWORD_VAR       DD      ?
+
+                CALL    [DWORD_VAR]             ; 16-bits far call
+                CALL    NEAR [DWORD_VAR]        ; 32-bits near call
+                CALL    WORD NEAR [DWORD_VAR]   ; 16-bits near call
+
+                BITS    32
+DWORD_VAR2      DD      ?
+
+                CALL    [DWORD_VAR2]            ; 32-bits near call
+                CALL    FAR [DWORD_VAR2]        ; 16-bits far call
+\end{verbatim}
+
+\section{CBW --- Convert Byte to Word}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CBW (no arguments)           CBW
+\end{verbatim}
+
+\section{CDQ --- Convert Doubleword to Quadword}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CDQ (no arguments)           CDQ
+\end{verbatim}
+
+\section{CLC --- CLear Carry flag}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CLC (no arguments)           CLC
+\end{verbatim}
+
+\section{CLD --- CLear Direction flag}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CLD (no arguments)           CLD
+\end{verbatim}
+
+\section{CLFLUSH --- Cache Line FLUSH}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CLFLUSH mem8                 CLFLUSH [VAR]
+\end{verbatim}
+
+\subsection{Notes}
+If the argument size is not specified \popasm\ assumes
+it is a byte variable, so both statements below are ok:
+
+\begin{verbatim}
+                CLFLUSH BYTE [BX]
+                CLFLUSH [BX]
+\end{verbatim}
+
+\section{CLI --- CLear Interrupt flag}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CLD (no arguments)           CLD
+\end{verbatim}
+
+\section{CLTS --- CLear Task Switched flag}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CLTS (no arguments)          CLTS
+\end{verbatim}
+
+\section{CMC --- CoMplement Carry flag}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CMC (no arguments)           CMC
+\end{verbatim}
+
+\section{CMOVcc --- Contidional MOVe}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CMOVcc reg16,reg16/mem16     CMOVcc  AX,[BX]
+CMOVcc reg32,reg32/mem32     CMOVcc  EAX,[BX]
+\end{verbatim}
+
+\subsection{Notes}
+CMOVcc is a generic name for a set of instructions. The
+supported variants are:
+
+\begin{itemize}
+\item CMOVA --- Move if above
+\item CMOVAE --- Move if above or equal to
+\item CMOVB --- Move if below
+\item CMOVBE --- Move if below or equal to
+\item CMOVC --- Move if carry
+\item CMOVE --- Move if equal
+\item CMOVG --- Move if greater
+\item CMOVGE --- Move if greater or equal
+\item CMOVL --- Move if less
+\item CMOVLE --- Move if less or equal
+\item CMOVNA --- Move if not above
+\item CMOVNAE --- Move if not above or equal
+\item CMOVNB --- Move if not below
+\item CMOVNBE --- Move if not below or equal
+\item CMOVNC --- Move if not carry
+\item CMOVNE --- Move if not equal
+\item CMOVNG --- Move if not greater
+\item CMOVNGE --- Move if not greater or equal
+\item CMOVNL --- Move if not less
+\item CMOVNLE --- Move if not less or equal
+\item CMOVNO --- Move if not overflow
+\item CMOVNP --- Move if not parity
+\item CMOVNS --- Move if not sign
+\item CMOVNZ --- Move if not zero
+\item CMOVO --- Move if overflow
+\item CMOVP --- Move if parity
+\item CMOVPE --- Move if parity even
+\item CMOVPO --- Move if parity odd
+\item CMOVS --- Move if sign
+\item CMOVZ --- Move if zero
+\end{itemize}
+
+Note that some of them have the same machine opcode (eg. CMOVA is
+the same as CMOVNBE).
+
+\section{CMP --- CoMPare two operands}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CMP reg,reg/mem              CMP     AX,BX
+CMP mem,reg                  CMP     [80h],DL
+CMP reg/mem,immed            CMP     BYTE [GS:WORD_VAR],18
+CMP reg/mem,signed8          CMP     ESI,-6
+\end{verbatim}
+
+\section{CMPPD --- CoMPare Packed Double-precision floating point values}
+\begin{verbatim}
+Valid Syntaxes                 Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CMPPD xmmreg,xmmreg,unsigned8  CMPPD   XMM,XMM1,2
+CMPPD xmmreg,mem128f,unsigned8 CMPPD   XMM3,OWORD [VAR32],7
+\end{verbatim}
+
+\subsection{Notes}
+The third argument for this instruction is an unsigned immediate value
+ranging from 0 thru 7. \popasm\ will check this and emit an error
+message if the third argument lies outside this boundary.
+
+Additionally, \popasm\ accepts the following two-argument alias
+for this instruction:
+
+\begin{itemize}
+\item CMPEQPD --- EQual. Implied third argument is 0.
+\item CMPLTPD --- Less Than. Implied third argument is 1.
+\item CMPLEPD --- Less Than or Equal. Implied third argument is 2.
+\item CMPUNORDPD --- UNORDered. Implied third argument is 3.
+\item CMPNEQPD --- Not EQual. Implied third argument is 4.
+\item CMPNLTPD --- Not Less Than. Implied third argument is 5.
+\item CMPNLEPD --- Not Less than Equal. Implied third argument is 6.
+\item CMPORDPD --- ORDered. Implied third argument is 7.
+\end{itemize}
+
+For example, the next two lines of code are assembled the same way:
+
+\begin{verbatim}
+                CMPPD   XMM3,XMM,0
+                CMPEQPD XMM3,XMM
+\end{verbatim}
+
+\section{CMPPS --- CoMPare Packed Single-precision floating point values}
+\begin{verbatim}
+Valid Syntaxes                 Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CMPPS xmmreg,xmmreg,unsigned8  CMPPS   XMM,XMM1,2
+CMPPS xmmreg,mem128f,unsigned8 CMPPS   XMM3,OWORD [VAR32],7
+\end{verbatim}
+
+\subsection{Notes}
+The third argument for this instruction is an unsigned immediate value
+ranging from 0 thru 7. \popasm\ will check this and emit an error
+message if the third argument lies outside this boundary.
+
+Additionally, \popasm\ accepts the following two-argument alias
+for this instruction:
+
+\begin{itemize}
+\item CMPEQPS --- EQual. Implied third argument is 0.
+\item CMPLTPS --- Less Than. Implied third argument is 1.
+\item CMPLEPS --- Less Than or Equal. Implied third argument is 2.
+\item CMPUNORDPS --- UNORDered. Implied third argument is 3.
+\item CMPNEQPS --- Not EQual. Implied third argument is 4.
+\item CMPNLTPS --- Not Less Than. Implied third argument is 5.
+\item CMPNLEPS --- Not Less than Equal. Implied third argument is 6.
+\item CMPORDPS --- ORDered. Implied third argument is 7.
+\end{itemize}
+
+For example, the next two lines of code are assembled the same way:
+
+\begin{verbatim}
+                CMPPS   XMM3,XMM,0
+                CMPEQPS XMM3,XMM
+\end{verbatim}
+
+\section{CMPS / CMPSB / CMPSW / CMPSD --- CoMPare Strings}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CMPS mem8,mem8               CMPS    BYTE [SI],[DI]
+CMPS mem16,mem16             CMPS    WORD GS:[SI],[BX]
+CMPS mem32,mem32             CMPS    DW_ARRAY,[DI]
+CMPSB (no arguments)         CMPSB
+CMPSW (no arguments)         CMPSW
+CMPSD (no arguments)         CMPSD
+\end{verbatim}
+
+\subsection{Notes}
+\popasm\ accepts a segment override prefix only for the first argument
+of CMPS instruction. Besides that restriction, any memory references are
+accepted as arguments, given their operand sizes match as well as their
+memory access modes. For example:
+
+\begin{verbatim}
+                CMPS    BYTE [SI],WORD [DI]     ; Type mismatch
+                CMPS    BYTE [SI],BYTE [EDI]    ; Mode mismatch
+                CMPS    BYTE [SI],BYTE GS:[EDI] ; Segment override not ok.
+\end{verbatim}
+
+\section{CMPSD --- CoMPare Scalar Double-precision floating point values}
+\begin{verbatim}
+Valid Syntaxes                Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CMPPD xmmreg,xmmreg,unsigned8 CMPSD   XMM,XMM1,2
+CMPPD xmmreg,mem64f,unsigned8 CMPSD   XMM3,QWORD [VAR32],7
+\end{verbatim}
+
+\subsection{Notes}
+The third argument for this instruction is an unsigned immediate value
+ranging from 0 thru 7. \popasm\ will check this and emit an error
+message if the third argument lies outside this boundary.
+
+Additionally, \popasm\ accepts the following two-argument alias
+for this instruction:
+
+\begin{itemize}
+\item CMPEQSD --- EQual. Implied third argument is 0.
+\item CMPLTSD --- Less Than. Implied third argument is 1.
+\item CMPLESD --- Less Than or Equal. Implied third argument is 2.
+\item CMPUNORDSD --- UNORDered. Implied third argument is 3.
+\item CMPNEQSD --- Not EQual. Implied third argument is 4.
+\item CMPNLTSD --- Not Less Than. Implied third argument is 5.
+\item CMPNLESD --- Not Less than Equal. Implied third argument is 6.
+\item CMPORDSD --- ORDered. Implied third argument is 7.
+\end{itemize}
+
+For example, the next two lines of code are assembled the same way:
+
+\begin{verbatim}
+                CMPSD   XMM3,XMM,0
+                CMPEQSD XMM3,XMM
+\end{verbatim}
+
+\section{CMPSS --- CoMPare Scalar Single-precision floating point values}
+\begin{verbatim}
+Valid Syntaxes                Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CMPSS xmmreg,xmmreg,unsigned8 CMPPS   XMM,XMM1,2
+CMPSS xmmreg,mem32f,unsigned8 CMPPS   XMM3,DWORD [VAR],7
+\end{verbatim}
+
+\subsection{Notes}
+The third argument for this instruction is an unsigned immediate value
+ranging from 0 thru 7. \popasm\ will check this and emit an error
+message if the third argument lies outside this boundary.
+
+Additionally, \popasm\ accepts the following two-argument alias
+for this instruction:
+
+\begin{itemize}
+\item CMPEQSS --- EQual. Implied third argument is 0.
+\item CMPLTSS --- Less Than. Implied third argument is 1.
+\item CMPLESS --- Less Than or Equal. Implied third argument is 2.
+\item CMPUNORDSS --- UNORDered. Implied third argument is 3.
+\item CMPNEQSS --- Not EQual. Implied third argument is 4.
+\item CMPNLTSS --- Not Less Than. Implied third argument is 5.
+\item CMPNLESS --- Not Less than Equal. Implied third argument is 6.
+\item CMPORDSS --- ORDered. Implied third argument is 7.
+\end{itemize}
+
+For example, the next two lines of code are assembled the same way:
+
+\begin{verbatim}
+                CMPSS   XMM3,XMM,0
+                CMPEQSS XMM3,XMM
+\end{verbatim}
+
+\section{CMPXCHG --- CoMPare and eXCHanGe}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CMPXCHG reg8/mem8,reg8       CMPXCHG FS:[EBP],AH
+CMPXCHG reg16/mem16,reg16    CMPXCHG AX,BX
+CMPXCHG reg32/mem32,reg32    CMPXCHG [DI],ECX
+\end{verbatim}
+
+\section{CMPXCHG8B --- CoMPare and eXCHanGe 8 Bytes}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CMPXCHG8B mem64i             CMPXCHG8B FS:[ECX+EBP*4]
+\end{verbatim}
+
+\subsection{Notes}
+If the argument size is undefined (as in the example above),
+\popasm\ assumes it is a 64-bits variable.
+
+\section{COMISD --- COMpare Scalar ordered Double-precision floating point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+COMISD xmm1,xmm2/mem64       COMISD XMM7,QWORD [MEM32]
+\end{verbatim}
+
+\section{COMISS --- COMpare Scalar ordered Single-precision floating point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+COMISS xmm1,xmm2/mem64       COMISS XMM7,QWORD [MEM32]
+\end{verbatim}
+
+\section{CPUID --- CPU IDentitication}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CPUID (no arguments)         CPUID
+\end{verbatim}
+
+\section{CVTDQ2PD --- ConVerT Packed Doubleword integers to Packed Double precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTDQ2PD xmmreg,xmmreg/mem64 CVTDQ2PD XMM,QWORD [BX]
+\end{verbatim}
+
+\section{CVTDQ2PS --- ConVerT Packed Doubleword integers to Packed Single precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes                Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTDQ2PD xmmreg,xmmreg/mem128 CVTDQ2PD XMM,OWORD [BX]
+\end{verbatim}
+
+\section{CVTPD2DQ --- ConVerT Packed Double precision floating-point values to Packed doubleword integers}
+\begin{verbatim}
+Valid Syntaxes                Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTPD2DQ xmmreg,xmmreg/mem128 CVTPD2DQ XMM,OWORD [BX]
+\end{verbatim}
+
+\section{CVTPD2PI --- ConVerT Packed Double precision floating-point values to Packed Doubleword Integers}
+\begin{verbatim}
+Valid Syntaxes                Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTPD2PI xmmreg,xmmreg/mem128 CVTPD2PI XMM,OWORD [BX]
+\end{verbatim}
+
+\section{CVTPD2PS --- ConVerT Packed Double precision floating-point values to Packed Single-precision floating-point}
+\begin{verbatim}
+Valid Syntaxes                Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTPD2PS xmmreg,xmmreg/mem128 CVTPD2PS XMM,OWORD [BX]
+\end{verbatim}
+
+\section{CVTPI2PD --- ConVerT Packed doubleword Integers to Packed Double precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTPI2PD xmmreg,xmmreg/mem64 CVTPI2PD XMM,QWORD [BX]
+\end{verbatim}
+
+\section{CVTPI2PS --- ConVerT Packed doubleword Integers to Packed Single precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTPI2PS xmmreg,xmmreg/mem64 CVTPI2PS XMM,QWORD [BX]
+\end{verbatim}
+
+\section{CVTPS2DQ --- ConVerT Packed Single precision floating-point values to Packed doubleword Integers}
+\begin{verbatim}
+Valid Syntaxes                Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTPS2DQ xmmreg,xmmreg/mem128 CVTPS2DQ XMM,OWORD [BX]
+\end{verbatim}
+
+\section{CVTPS2PD --- ConVerT Packed Single precision floating-point values to Packed Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTPS2PD xmmreg,xmmreg/mem64 CVTPS2PD XMM,QWORD [BX]
+\end{verbatim}
+
+\section{CVTPS2PI --- ConVerT Packed Single precision floating-point values to Packed doubleword Integers}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTPS2PI mmxreg,xmmreg/mem64 CVTPS2PI MM,QWORD [BX]
+\end{verbatim}
+
+\section{CVTSD2SI --- ConVerT Scalar Double-precision floating-point values to doubleword Integers}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTSD2SI reg32,xmmreg/mem64  CVTSD2SI ESI,QWORD [BX]
+\end{verbatim}
+
+\section{CVTSD2SS --- ConVerT Scalar Double precision floating-point values to Scalar Single-precision floating-point value}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTSD2SS mmxreg,xmmreg/mem64 CVTSD2SS XMM,QWORD [BX]
+\end{verbatim}
+
+\section{CVTSI2SD --- ConVerT doubleword Integer to Scalar Double-precision floating-point value}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTSI2SD mmxreg,reg32/mem32  CVTSI2SD XMM,DWORD [BX]
+\end{verbatim}
+
+\section{CVTSI2SS --- ConVerT doubleword Integer to Scalar Single-precision floating-point value}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTSI2SS mmxreg,reg32/mem32  CVTSI2SS XMM,DWORD [BX]
+\end{verbatim}
+
+\section{CVTSS2SD --- ConVerT Scalar Single precision floating-point value to Scalar Double-precision floating-point value}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTSS2SD xmmreg,xmmreg/mem32 CVTSS2SD XMM,DWORD [BX]
+\end{verbatim}
+
+\section{CVTSS2SI --- ConVerT Scalar Single precision floating-point value to doubleword Integer}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTSS2SI xmmreg,xmmreg/mem32 CVTSS2SI EBP,DWORD [BX]
+\end{verbatim}
+
+\section{CVTTPD2PI --- ConVerT with Truncation Packed Double-precision floating-point values to Packed doubleword Integers}
+\begin{verbatim}
+Valid Syntaxes                 Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTTPD2PI mmxreg,xmmreg/mem128 CVTPD2PS MM,OWORD [BX]
+\end{verbatim}
+
+\section{CVTTPD2DQ --- ConVerT with Truncation Packed Double-precision floating-point values to Packed doubleword Integers}
+\begin{verbatim}
+Valid Syntaxes                 Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTTPD2DQ mmxreg,xmmreg/mem128 CVTPD2PS XMM,OWORD [BX]
+\end{verbatim}
+
+\section{CVTTPS2DQ --- ConVerT with Truncation Packed Single-precision floating-point values to Packed doubleword Integers}
+\begin{verbatim}
+Valid Syntaxes                 Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTTPS2DQ xmmreg,xmmreg/mem128 CVTPD2PS XMM,OWORD [BX]
+\end{verbatim}
+
+\section{CVTTPS2PI --- ConVerT with Truncation Packed Single-precision floating-point values to Packed doubleword Integers}
+\begin{verbatim}
+Valid Syntaxes                Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTTPS2DQ mmxreg,xmmreg/mem64 CVTPD2PS MM,QWORD [BX]
+\end{verbatim}
+
+\section{CVTTSD2SI --- ConVerT with Truncation Scalar Double-precision floating-point value to Signed doubleword Integer}
+\begin{verbatim}
+Valid Syntaxes                Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTTPS2DQ reg32,xmmreg/mem64 CVTPD2PS EDX,QWORD [BX]
+\end{verbatim}
+
+\section{CVTTSS2SI --- ConVerT with Truncation Scalar Single-precision floating-point value to doubleword Integer}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CVTTPS2DQ reg32,xmmreg/mem32 CVTPD2PS EDX,DWORD [BX]
+\end{verbatim}
+
+\section{CWD --- Convert Word to Doubleword}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CWD (no arguments)           CWD
+\end{verbatim}
+
+\section{CWDE --- Convert Word to Dword in Eax}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+CWDE (no arguments)          CWDE
+\end{verbatim}
+
+\section{DAA --- Decimal Adjust after Addition}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+DAA (no arguments)           DAA
+\end{verbatim}
+
+\section{DAS --- Decimal Adjust after Subtraction}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+DAS (no arguments)           DAS
+\end{verbatim}
+
+\section{DEC --- DECrement by 1}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+DEC reg8/mem8                DEC     CH
+DEC reg16/mem16              DEC     WORD [BX]
+DEC reg32/mem32              DEC     EBP
+\end{verbatim}
+
+\subsection{Notes}
+As with most single argument instructions, the size of the
+argument must be defined, otherwise \popasm\ will emit an
+error message.
+
+\section{DIV --- unsigned DIVide}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+DIV reg8/mem8                DIV     CH
+DIV reg16/mem16              DIV     WORD [BX]
+DIV reg32/mem32              DIV     EBP
+\end{verbatim}
+
+\subsection{Notes}
+As with most single argument instructions, the size of the
+argument must be defined, otherwise \popasm\ will emit an
+error message.
+
+\section{DIVPD --- DIVide Packed Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+DIVPD xmmreg,xmmreg/mem128   DIVPD   XMM1,OWORD ES:[100h]
+\end{verbatim}
+
+\section{DIVPS --- DIVide Packed Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+DIVPS xmmreg,xmmreg/mem128   DIVPS   XMM1,OWORD ES:[100h]
+\end{verbatim}
+
+\section{DIVSD --- DIVide Scalar Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+DIVSD xmmreg,xmmreg/mem64    DIVSD   XMM1,QWORD ES:[100h]
+\end{verbatim}
+
+\section{DIVSS --- DIVide Scalar Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+DIVSS xmmreg,xmmreg/mem64    DIVSS   XMM1,QWORD ES:[100h]
+\end{verbatim}
+
+\section{EMMS --- Empty MMx State}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+EMMS (no arguments)          EMMS
+\end{verbatim}
+
+\section{ENTER --- make stack frame for procedure parameters}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+ENTER unsigned16,unsigned8   ENTER   64,0
+\end{verbatim}
+
+\subsection{Notes}
+The second argument must be in 0--31 interval. \popasm\ will issue
+an error message if the argument is out of that interval.
+
+\section{F2XM1 --- Compute $2^x - 1$}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+F2XM1 (no arguments)         F2XM1
+\end{verbatim}
+
+\section{FABS --- ABSolute value}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FABS (no arguments)          FABS
+\end{verbatim}
+
+\section{FADD --- ADD}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FADD mem32f                  FADD    [BRIGHTNESS]
+FADD mem64f                  FADD    ES:[LIGHT_SPEED]
+FADD ST,fpureg               FADD    ST,ST(1)
+FADD fpureg,ST               FADD    ST6,ST0
+\end{verbatim}
+
+\section{FADDP --- ADD and Pop}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FADDP (no arguments)         FADDP
+FADDP fpureg,ST              FADDP   ST(5),ST0
+\end{verbatim}
+
+\section{FIADD --- Integer ADD}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FIADD mem16i                 FIADD   [QTY_APPLES]
+FIADD mem32i                 FIADD   FS:[POPULATION]
+\end{verbatim}
+
+\section{FBLD --- Bcd LoaD}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FIADD mem80bcd               FBLD    [HUGE_VAL]
+\end{verbatim}
+
+\section{FBSTP --- Bcd STore and Pop}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FBSTP mem80bcd               FBSTP   [HUGE_VAL]
+\end{verbatim}
+
+\section{FCHS --- CHange Sign}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FCHS (no arguments)          FCHS
+\end{verbatim}
+
+\section{FCLEX / FNCLEX --- CLEar eXceptions}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FCLEX (no arguments)         FCLEX
+FNCLEX (no arguments)        FNCLEX
+\end{verbatim}
+
+\section{FCMOVcc --- Floating-point Conditional MOVe}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FCMOVcc ST,fpureg            FCMOVcc ST0,ST2
+\end{verbatim}
+
+\subsection{Notes}
+FCMOVcc actually refers to a set of instructions that
+check for different conditions. Suportted variants are:
+
+\begin{itemize}
+\item FCMOVB --- Move if below
+\item FCMOVE --- Move if equal
+\item FCMOVBE --- Move if below or equal
+\item FCMOVU --- Move if unordered
+\item FCMOVNB --- Move if not below
+\item FCMOVNE --- Move if not equal
+\item FCMOVNBE --- Move if not below or equal
+\item FCMOVNU --- Move if not unordered
+\end{itemize}
+
+\section{FCOM --- COMpare}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FCOM (no arguments)          FCOM
+FCOM fpureg                  FCOM    ST(4)
+FCOM mem32f                  FCOM    [SALARY]
+FCOM mem64f                  FCOM    [PARSEC]
+\end{verbatim}
+
+\section{FCOMP --- COMpare and Pop}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FCOMP (no arguments)         FCOMP
+FCOMP fpureg                 FCOMP   ST(4)
+FCOMP mem32f                 FCOMP   [SALARY]
+FCOMP mem64f                 FCOMP   [PARSEC]
+\end{verbatim}
+
+\section{FCOMPP --- COMpare and Pop twice}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FCOMPP (no arguments)        FCOMPP
+\end{verbatim}
+
+\section{FCOMI --- COMpare and set eflags}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FCOMI ST,fpureg              FCOMI   ST(0),ST(4)
+\end{verbatim}
+
+\section{FCOMIP --- COMpare, set eflags and Pop}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FCOMIP ST,fpureg             FCOMIP  ST(0),ST(4)
+\end{verbatim}
+
+\section{FUCOMI --- COMpare, check for ordered and set eflags}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FUCOMI ST,fpureg             FUCOMI  ST(0),ST(4)
+\end{verbatim}
+
+\section{FUCOMIP --- COMpare, check for ordered, set eflags and Pop}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FUCOMIP ST,fpureg            FUCOMIP ST(0),ST(4)
+\end{verbatim}
+
+\section{FCOS --- COSine}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FCOS (no arguments)          FCOS
+\end{verbatim}
+
+\section{FDECSTP --- DECrement Stack-Top Pointer}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FDECSTP (no arguments)       FDECSTP
+\end{verbatim}
+
+\section{FDIV --- DIVide}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FDIV ST,fpureg               FDIV    ST0,ST(4)
+FDIV fpureg,ST               FDIV    ST0,ST(4)
+FDIV mem32f                  FDIV    [SALARY]
+FDIV mem64f                  FDIV    [PARSEC]
+\end{verbatim}
+
+\section{FDIVP --- DIVide and Pop}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FDIVP (no arguments)         FDIVP
+FDIVP fpureg,ST              FDIVP   ST(4),ST
+\end{verbatim}
+
+\section{FIDIV --- Integer DIVide}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FIDIV mem16i                 FIDIV   [QTY_APPLES]
+FIDIV mem32i                 FIDIV   [POPULATION]
+\end{verbatim}
+
+\section{FDIVR --- Reverse DIVide}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FDIVR ST,fpureg              FDIVR   ST0,ST(4)
+FDIVR fpureg,ST              FDIVR   ST0,ST(4)
+FDIVR mem32f                 FDIVR   [SALARY]
+FDIVR mem64f                 FDIVR   [PARSEC]
+\end{verbatim}
+
+\section{FDIVP --- Reverse DIVide and Pop}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FDIVRP (no arguments)        FDIVRP
+FDIVRP fpureg,ST             FDIVRP  ST(4),ST
+\end{verbatim}
+
+\section{FIDIV --- Reverse Integer DIVide}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FIDIVR mem32i                FIDIVR  [QTY_APPLES]
+FIDIVR mem64i                FIDIVR  [POPULATION]
+\end{verbatim}
+
+\section{FFREE --- FREE floating-point register}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FFREE fpureg                 FFREE ST6
+\end{verbatim}
+
+\section{FICOM --- Integer COMpare}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FICOM mem16i                 FICOM   [QTY_APPLES]
+FICOM mem32i                 FICOM   [POPULATION]
+\end{verbatim}
+
+\section{FICOMP --- Integer COMpare and Pop}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FICOMP mem16i                FICOMP  [QTY_APPLES]
+FICOMP mem32i                FICOMP  [POPULATION]
+\end{verbatim}
+
+\section{FILD --- Integer LoaD}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FILD mem16i                  FILD    [QTY_APPLES]
+FILD mem32i                  FILD    [POPULATION]
+FILD mem64i                  FILD    [QTY_STARS]
+\end{verbatim}
+
+\section{FINCSTP --- INCrement Stack-Top Pointer}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FINCSTP (no arguments)       FINCSTP
+\end{verbatim}
+
+\section{FINIT / FNINIT --- INITialize fpu}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FINIT (no arguments)         FINIT
+FNINIT (no arguments)        FNINIT
+\end{verbatim}
+
+\section{FIST --- STore Integer}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FIST mem16i                  FIST    [QTY_APPLES]
+FIST mem32i                  FIST    [POPULATION]
+\end{verbatim}
+
+\section{FISTP --- STore Integer and Pop}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FISTP mem16i                 FISTP   [QTY_APPLES]
+FISTP mem32i                 FISTP   [POPULATION]
+FISTP mem64i                 FISTP   [QTY_STARS]
+\end{verbatim}
+
+\section{FLD --- LoaD floating-point value}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FLD mem32f                   FLD     [SALARY]
+FLD mem64f                   FLD     [PARSEC]
+FLD mem80f                   FLD     TBYTE [BX]
+\end{verbatim}
+
+\section{FLD1 --- LoaD 1}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FLD1 (no arguments)          FLD1
+\end{verbatim}
+
+\section{FLDL2T --- LoaD $\log_2 10$}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FLDL2T (no arguments)        FLDL2T
+\end{verbatim}
+
+\section{FLDL2E --- LoaD $\log_2 e$}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FLDL2E (no arguments)        FLDL2E
+\end{verbatim}
+
+\section{FLDPI --- LoaD $\pi$}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FLDPI (no arguments)         FLDPI
+\end{verbatim}
+
+\section{FLDLG2 --- LoaD $\log_10 2$}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FLDLG2 (no arguments)        FLDLG2
+\end{verbatim}
+
+\section{FLDLN2 --- LoaD $\ln 2$}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FLDLN2 (no arguments)        FLDLN2
+\end{verbatim}
+
+\section{FLDZ --- LoaD Zero}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FLDZ (no arguments)          FLDZ
+\end{verbatim}
+
+\section{FLDCW --- LoaD Control Word}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FLDCW mem16                  FLDCW   WORD [BX]
+\end{verbatim}
+
+\section{FLDENV --- LoaD fpu ENVironment}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FLDENV  mem112/mem224        FLDENV  [BUFFER]
+\end{verbatim}
+
+\subsection{Notes}
+Because \popasm\ has no direct support for 112- and 224-bits
+data types, \emph{any} memory reference will be accepted as
+argument for this command.
+
+\section{FMUL --- MULtiply}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FMUL ST,fpureg               FMUL    ST0,ST(4)
+FMUL fpureg,ST               FMUL    ST0,ST(4)
+FMUL mem32f                  FMUL    [SALARY]
+FMUL mem64f                  FMUL    [PARSEC]
+\end{verbatim}
+
+\section{FMULP --- MULtiply and Pop}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FMULP (no arguments)         FMULP
+FMULP fpureg,ST              FMULP   ST(4),ST
+\end{verbatim}
+
+\section{FIMUL --- Integer MULtiply}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FIMUL mem16i                 FIMUL   [QTY_APPLES]
+FIMUL mem32i                 FIMUL   [POPULATION]
+\end{verbatim}
+
+\section{FNOP --- No OPeration}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FNOP (no arguments)          FNOP
+\end{verbatim}
+
+\section{FPATAN --- Partial ArcTANgent}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FPATAN (no arguments)        FPATAN
+\end{verbatim}
+
+\section{FPREM --- Partial REMainer}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FPREM (no arguments)         FPREM
+\end{verbatim}
+
+\section{FPREM1 --- Partial REMainer}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FPREM1 (no arguments)        FPREM1
+\end{verbatim}
+
+\section{FPTAN --- Partial TANgent}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FPTAN (no arguments)         FPTAN
+\end{verbatim}
+
+\section{FRNDINT --- RouND to INTeger}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FRNDINT (no arguments)       FRNDINT
+\end{verbatim}
+
+\section{FRSTOR --- ReSToRe fpu state}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FRSTOR mem752/mem864         FRSTOR  [EBP]
+\end{verbatim}
+
+\subsection{Notes}
+Because \popasm\ has no direct support for 752- and 864-bits
+data types, \emph{any} memory reference will be accepted as
+argument for this command.
+
+\section{FSAVE / FNSAVE --- SAVE fpu state}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FSAVE mem752/mem864          FSAVE   [EBP]
+FNSAVE mem752/mem864         FNSAVE  [EBP]
+\end{verbatim}
+
+\subsection{Notes}
+Because \popasm\ has no direct support for 752- and 864-bits
+data types, \emph{any} memory reference will be accepted as
+argument for this command.
+
+\section{FSCALE --- Scale}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FSCALE (no arguments)        FSCALE
+\end{verbatim}
+
+\section{FSIN --- SINe}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FSIN (no arguments)          FSIN
+\end{verbatim}
+
+\section{FSINCOS --- SINe and COSine}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FSINCOS (no arguments)       FSINCOS
+\end{verbatim}
+
+\section{FSQRT --- SQuare RooT}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FSQRT (no arguments)         FSQRT
+\end{verbatim}
+
+\section{FST --- STore floating point value}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FST fpureg                   FST     ST(2)
+FST mem32f                   FST     [SALARY]
+FST mem64f                   FST     FS:[STAR_MASS]
+\end{verbatim}
+
+\section{FSTP --- STore floating point value and Pop}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FSTP fpureg                  FSTP    ST(2)
+FSTP mem32f                  FSTP    [SALARY]
+FSTP mem64f                  FSTP    FS:[STAR_MASS]
+FSTP mem80f                  FSTP    GS:[HUGE_VALUE]
+\end{verbatim}
+
+\section{FSTCW / FNSTCW --- STore Control Word}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FSTCW mem16                  FSTCW   WORD [BX]
+FNSTCW mem16                 FNSTCW  WORD [BX]
+\end{verbatim}
+
+\section{FSTENV / FNSTENV --- STore fpu ENVironment}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FSTENV  mem112/mem224        FSTENV  [BUFFER]
+FNSTENV  mem112/mem224       FNSTENV [BUFFER]
+\end{verbatim}
+
+\subsection{Notes}
+Because \popasm\ has no direct support for 112- and 224-bits
+data types, \emph{any} memory reference will be accepted as
+argument for this command.
+
+\section{FSTSW / FNSTSW --- STore fpu Status Word}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FSTSW   AX                   FSTSW  AX
+FSTSW   mem16                FSTSW  [BUFFER]
+FNSTSW  AX                   FNSTSW AX
+FNSTSW  mem16                FNSTSW [BUFFER]
+\end{verbatim}
+
+\section{FSUB --- SUBtract}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FSUB mem32f                  FSUB    [BRIGHTNESS]
+FSUB mem64f                  FSUB    ES:[LIGHT_SPEED]
+FSUB ST,fpureg               FSUB    ST,ST(1)
+FSUB fpureg,ST               FSUB    ST6,ST0
+\end{verbatim}
+
+\section{FSUBP --- SUBtract and Pop}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FSUBP (no arguments)         FSUBP
+FSUBP fpu_reg,ST             FSUBP   ST(3),ST
+\end{verbatim}
+
+\section{FISUB --- Integer SUBtract}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FISUB mem16i                 FISUB   [QTY_APPLES]
+FISUB mem32i                 FISUB   FS:[POPULATION]
+\end{verbatim}
+
+\section{FSUBR--- Reverse SUBtract}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FSUBR mem32f                 FSUBR   [BRIGHTNESS]
+FSUBR mem64f                 FSUBR   ES:[LIGHT_SPEED]
+FSUBR ST,fpureg              FSUBR   ST,ST(1)
+FSUBR fpureg,ST              FSUBR   ST6,ST0
+\end{verbatim}
+
+\section{FSUBRP --- Reverse SUBtract and Pop}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FSUBRP (no arguments)        FSUBRP
+FSUBRP fpu_reg,ST            FSUBRP  ST(3),ST
+\end{verbatim}
+
+\section{FISUBR --- Reverse Integer SUBtract}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FISUBR mem16i                FISUBR  [QTY_APPLES]
+FISUBR mem32i                FISUBR  FS:[POPULATION]
+\end{verbatim}
+
+\section{FTST --- TeST}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FTST (no arguments)          FTST
+\end{verbatim}
+
+\section{FUCOM --- Unordered COMpare}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FUCOM (no arguments)         FUCOM
+FUCOM fpureg                 FUCOM   ST4
+\end{verbatim}
+
+\section{FUCOMP --- Unordered COMpare and Pop}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FUCOMP (no arguments)        FUCOMP
+FUCOMP fpureg                FUCOMP  ST4
+\end{verbatim}
+
+\section{FUCOMPP --- Unordered COMpare and Pop twice}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FUCOMPP (no arguments)       FUCOMPP
+\end{verbatim}
+
+\section{FWAIT --- WAIT}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FWAIT (no arguments)         FWAIT
+\end{verbatim}
+
+\section{FXAM --- eXAMine}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FXCH (no arguments)          FXCH
+\end{verbatim}
+
+\section{FXCH --- eXCHange register contents}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FXCH (no arguments)          FXCH
+FXCH flureg                  FXCH    ST4
+\end{verbatim}
+
+\section{FXRSTOR --- ResTORe fpu, mmX, sse and ss2 state}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FXRSTOR mem4096              FXRSTOR ES:[SI]
+\end{verbatim}
+
+\subsection{Notes}
+Because \popasm\ has no direct support for 4096-bits
+data types, \emph{any} memory reference will be accepted as
+argument for this command.
+
+\section{FXSAVE --- SAVE fpu, mmX, sse and ss2 state}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FXSAVE mem4096               FXSAVE  ES:[SI]
+\end{verbatim}
+
+\subsection{Notes}
+Because \popasm\ has no direct support for 4096-bits
+data types, \emph{any} memory reference will be accepted as
+argument for this command.
+
+\section{FXTRACT --- eXTRACT exponent and significand}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FXTRACT (no arguments)       FXTRACT
+\end{verbatim}
+
+\section{FYL2X --- computes $y \times \log_2 x$}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FYL2X (no arguments)         FYL2X
+\end{verbatim}
+
+\section{FYL2XP1 --- computes $y \times \log_2 (x + 1)$}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+FYL2XP1 (no arguments)       FYL2XP1
+\end{verbatim}
+
+\section{HLT --- HaLT}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+HLT (no arguments)           HLT
+\end{verbatim}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 To be continued.
 
 \include{contact}
