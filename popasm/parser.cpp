@@ -22,6 +22,8 @@
 #include "argument.h"
 #include "parser.h"
 #include "command.h"
+#include "instruct.h"
+#include "directiv.h"
 #include "lexsym.h"
 
 EncloserMismatch::EncloserMismatch (const Encloser *op, const Encloser *cl) throw () : Opener(op), Closer(cl)
@@ -252,14 +254,42 @@ void Parser::ReadLine (vector<Token *> &Tokens, InputFile &Input) throw ()
 	}
 }
 
+void Parser::ParseArguments (vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Argument *> &args)
+{
+	while (i != j)
+	{
+		vector<Token *>::iterator k = i;
+
+		// Seeks the comma or the rest of the line
+		while (k != j)
+		{
+			Operator *op = dynamic_cast <Operator *> (*k);
+			if (op != 0)
+			{
+				// If it is a comma the end of argument has been found
+				if (op->GetName() == ",") break;
+			}
+
+			k++;
+		}
+
+		// Converts the tokens into an argument
+		Expression *e = EvaluateExpression (vector<Token *> (i, k));
+		args.push_back (Argument::MakeArgument (*e));
+		delete e;
+
+		// Skips the comma
+		if (k != j) k++;
+		i = k;
+	}
+}
+
 vector<Byte> Parser::ParseLine ()
 {
 	// Reads all tokens in the line to Tokens vector
 	vector<Token *> Tokens;
 	ReadLine (Tokens, Input);
 	vector<Token *>::iterator i = Tokens.begin();
-
-	vector<Argument *> Arguments;
 
 	vector<Byte> Encoding;
 	enum {INITIAL, LABEL, COMMAND, FINAL} State = INITIAL;
@@ -299,48 +329,9 @@ vector<Byte> Parser::ParseLine ()
 				break;
 
 			case COMMAND:
-				// Skips command name
+				// Skips command name and assemble it
 				i++;
-
-				// Gets all command arguments
-				while (i != Tokens.end())
-				{
-					vector<Token *>::iterator j = i;
-
-					// Seeks the comma or the rest of the line
-					while (j != Tokens.end())
-					{
-						Operator *op = dynamic_cast <Operator *> (*j);
-						if (op != 0)
-						{
-							// If it is a comma, delete it
-							if (op->GetName() == ",")
-							{
-								delete *j;
-								break;
-							}
-						}
-
-						j++;
-					}
-
-					// Converts the tokens into an argument
-					Expression *e = EvaluateExpression (vector<Token *> (i, j));
-					Arguments.push_back (Argument::MakeArgument (*e));
-					delete e;
-
-					// Skips the comma
-					if (j != Tokens.end()) j++;
-					i = j;
-				}
-
-				// Assemble the command
-				cmd->Assemble (var, Arguments, Encoding);
-
-				// Delete what was used during parsing. var needs not be deleted because it's within sym
-				delete sym;
-				for (vector<Argument *>::iterator i = Arguments.begin(); i != Arguments.end(); i++)
-					delete *i;
+				cmd->Assemble (var, i, Tokens.end(), Encoding);
 
 				State = FINAL;
 				break;
@@ -349,6 +340,11 @@ vector<Byte> Parser::ParseLine ()
 				break;
 		}
 	}
+
+	// Delete temporary variable. var is inside it and is deleted as well.
+	delete sym;
+
+	// Still pending: cleanup of tokens
 
 	return Encoding;
 }

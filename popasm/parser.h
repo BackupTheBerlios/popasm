@@ -30,6 +30,7 @@
 #include "lexop.h"
 #include "inp_file.h"
 #include "defs.h"
+#include "argument.h"
 
 // Thrown when a pair of enclosers do not match. Eg. "(2 + 2]"
 class EncloserMismatch : public exception
@@ -103,6 +104,9 @@ class Parser
 	static void ReadLine (vector<Token *> &Tokens, InputFile &Input) throw ();
 	static Expression *EvaluateExpression (const vector<Token *> &v);
 	vector<Byte> ParseLine ();
+	static void ParseArguments (vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Argument *> &args);
+
+	unsigned long int GetCurrentLine() const throw() {return Input.GetCurrentLine();}
 
 	Parser (InputFile &i) throw () : Input(i) {}
 	~Parser () throw () {}
