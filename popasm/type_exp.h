@@ -53,6 +53,7 @@ class Expression : BasicExpression<Number, Symbol>
 	unsigned int GetSize () const throw () {return t.GetSize();}
 	void SetSize (unsigned int s, Number::NumberType nt = Number::ANY) throw (InvalidSize, CastFailed, CastConflict);
 	Type::TypeName GetType () const throw () {return t.GetCurrentType();}
+	void SetType (Type::TypeName tt) throw () {t.SetCurrentType (tt);}
 	const Expression *GetSegmentPrefix () const throw () {return SegmentPrefix;}
 
 	int GetDistanceType () const throw () {return t.GetDistanceType();}
