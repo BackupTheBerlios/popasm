@@ -35,6 +35,14 @@ NaturalNumber::NaturalNumber (Dword d = 0) throw ()
 	if (d != 0) push_back (static_cast<Word> (d));
 }
 
+Dword NaturalNumber::SizeInBytes() const throw ()
+{
+	Dword answer = size() * 2;
+	if (answer == 0) return 0;
+	if (back() < 256) answer--;
+	return answer;
+}
+
 // Gets a numeric string and strips leading and trailing underscores and radices. Also checks for the
 // first digit being 0-9
 string SimplifyString (const string &s, Word &Base, bool *Negative = 0) throw (InvalidNumber)
@@ -194,6 +202,21 @@ string NaturalNumber::Print (Word Base = 10) const throw ()
 	// Digits came from least to most significant. Order must be adjusted.
 	reverse(s.begin(), s.end());
 	return s;
+}
+
+// Writes the number in little-endian form, using n bytes, padding using the given byte
+void NaturalNumber::Write (vector<Byte> &Output, unsigned int n, Byte pad) const
+{
+	NaturalNumber temp(*this);
+
+	while ((!temp.Zero()) && (n != 0))
+	{
+		Output.push_back (static_cast<Byte> (*temp.begin()));
+		temp.BaseShiftRight (256);
+		n--;
+	}
+
+	Output.insert (Output.end(), n, pad);
 }
 
 // Multiply a number by its own base
@@ -1379,6 +1402,15 @@ bool IntegerNumber::Zero() const throw (LeadingZero)
 	return AbsoluteValue.Zero();
 }
 
+void IntegerNumber::Write (vector<Byte> &Output, unsigned int n) const
+{
+	NaturalNumber x (Abs());
+	if (LesserThanZero()) x.TwosComplement();
+
+	// Writes the number in two's complement if negative
+	x.Write (Output, n, LesserThanZero() ? 0xFF : 0);
+}
+
 const IntegerNumber IntegerNumber::Divide (const IntegerNumber &n, IntegerNumber *Remainer = 0) const throw (DivisionByZero)
 {
 	IntegerNumber Quotient;
@@ -1596,6 +1628,19 @@ string RealNumber::Print (Word Base = 10, Dword n = 8) const throw ()
 	}
 
 	return s;
+}
+
+void RealNumber::Write (vector<Byte> &Output, unsigned int n) const
+{
+	if (GetInteger())
+	{
+		(Mantissa * NaturalNumber (10).Power(Exponent.Abs())).Write (Output, n);
+	}
+	else
+	{
+		// Floating point Write() method still missing.
+		throw (0);
+	}
 }
 
 void RealNumber::Adjust (RealNumber &n) throw ()

@@ -65,6 +65,7 @@ class NaturalNumber : vector <Word>
 
 	// Returns the size of the underlying vector
 	Dword Size() const throw () {return size();}
+	Dword SizeInBytes() const throw ();
 
 	void MatchSize (const NaturalNumber &n, Word w) throw ();
 
@@ -139,6 +140,8 @@ class NaturalNumber : vector <Word>
 
 	// Prints the number in any base. Default is 10.
 	string Print (Word Base = 10) const throw ();
+	// Writes the number in little-endian form, using n bytes, padding using the given byte
+	void Write (vector<Byte> &Output, unsigned int n, Byte pad) const;
 	// Detects if a number is zero
 	bool Zero() const throw (LeadingZero);
 	// Returns the value of the number as an unsigned long int
@@ -221,12 +224,14 @@ class IntegerNumber
 	bool operator== (const IntegerNumber &n) const throw ();
 	bool operator!= (const IntegerNumber &n) const throw ();
 
-	// Prints the number
+	// Returns the number in its string form
 	string Print (Word Base = 10) const throw ();
+	// Writes the number in little-endian form, using n bytes
+	void Write (vector<Byte> &Output, unsigned int n) const;
 	// Detects if the number is zero
 	bool Zero() const throw (LeadingZero);
 	// Gets the absolute value of the number
-	const NaturalNumber Abs() const throw () {return AbsoluteValue;}
+	const NaturalNumber &Abs() const throw () {return AbsoluteValue;}
 	// Returns the value of the number as a signed long int
 	long int GetValue (bool CheckSign) const throw (Overflow);
 
@@ -285,6 +290,7 @@ class RealNumber
 	Dword Size () const {return Mantissa.Size();}
 	const RealNumber Abs() const throw () {return RealNumber (Mantissa.Abs(), Exponent);}
 	int Compare (const RealNumber &n) const throw ();
+	void Write (vector<Byte> &Output, unsigned int n) const;
 
 	// Unary minus
 	const RealNumber operator- () const throw () {return RealNumber (-Mantissa, Exponent);}
