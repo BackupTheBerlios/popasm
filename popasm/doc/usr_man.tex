@@ -4384,13 +4384,982 @@ IRET (no arguments)          IRET
 IRETD (no arguments)         IRETD
 \end{verbatim}
 
+\section{Jcc --- Jump if condition is met}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+JCC rel8/rel16/rel32         JCC     NEXT_STEP
+\end{verbatim}
 
+\subsection{Notes}
+Jcc is actually a reference to a set of instructions where \emph{cc}
+is replaced by the condition to test for. Suported variants are:
 
+\begin{itemize}
+\item JA --- Jump if Above
+\item JAE --- Jump if Above or Equal
+\item JB --- Jump if Below
+\item JBE --- Jump if Below or Equal
+\item JC --- Jump if Carry
+\item JE --- Jump if Equal
+\item JG --- Jump if Greater
+\item JGE --- Jump if Greater or Equal
+\item JL --- Jump if Less
+\item JLE --- Jump if Less or Equal
+\item JNA --- Jump if Not Above
+\item JNAE --- Jump if Not Above or Equal
+\item JNB --- Jump if Not Below
+\item JNBE --- Jump if Not Below or Equal
+\item JNC --- Jump if Not Carry
+\item JNE --- Jump if Not Equal
+\item JNG --- Jump if Not Greater
+\item JNGE --- Jump if Not Greater or Equal
+\item JNL --- Jump if Not Less
+\item JNLE --- Jump if Not Less or Equal
+\item JNO --- Jump if Not Overflow
+\item JNP --- Jump if Not Parity
+\item JNS --- Jump if Not Sign
+\item JNZ --- Jump if Not Zero
+\item JO --- Jump if Overflow
+\item JP --- Jump if Parity
+\item JPE --- Jump if Parity Even
+\item JPO --- Jump if Parity Odd
+\item JS --- Jump if Sign
+\item JZ --- Jump if Zero
+\end{itemize}
 
+The short version of these instructions is used by default. Whenever the target
+is too far for a short jump the near version for the current assembly mode is
+then used. Note that this behavior can be changed by size and distance specifiers,
+as shown in the next example:
 
+\begin{verbatim}
+               JA       $+10                    ; 8-bits displacement
 
+               BITS     16
+               JA       NEAR $+10               ; 16-bits displacement
+               JA       DWORD $+10              ; 32-bits displacement
 
+               BITS     32
+               JA       NEAR $+10               ; 32-bits displacement
+               JA       WORD $+10               ; 16-bits displacement
+\end{verbatim}
 
+\section{JCXZ / JECXZ --- Jump if CX / ECX is zero}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+JCXZ rel8                    JCXZ    LOOP_EXIT
+JECXZ rel8                   JECXZ   LOOP_EXIT
+\end{verbatim}
+
+\section{JMP --- JuMP}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+JMP rel8/reg16/rel32         JMP     PROC_EXIT
+JMP reg16/mem16              JMP     BX
+JMP reg32/mem32/mem48        JMP     PWORD [SI]
+JMP farptr32                 JMP     0FFFFh:0000h
+JMP farptr48                 JMP     1234h:DWORD 5Ch
+\end{verbatim}
+
+\subsection{Notes}
+When in 16-bits mode \popasm\ expects 16-bits displacements.
+Using 32-bits displacements in 16-bits mode requires
+an explicit cast. Accordingly, in 32-bits mode all displacements
+are encoded in 32-bits, unless they are preceeded by a WORD
+size specifier. For example:
+
+\begin{verbatim}
+                BITS    16
+                JMP     1234h:0FFFFh            ; Ok
+                JMP     1234h:10000h            ; Error!
+                JMP     1234h:DWORD 10000h      ; Ok!
+
+                BITS    32
+                JMP     1234h:5Ch               ; 32-bits offset
+                JMP     1234h:WORD 5Ch          ; 16-bits offset
+\end{verbatim}
+
+Also, for convenience reasons, as well as for compatibility
+with \tasm\ DWORD memory variables are treated as FAR arguments,
+in 16-bits mode, unless such an assumption is overriden by a
+NEAR distance specifier. DWORD variables hold near address in
+32-bits mode, though. For example:
+
+\begin{verbatim}
+                BITS    16
+DWORD_VAR       DD      ?
+
+                JMP     [DWORD_VAR]             ; 16-bits far jmp
+                JMP     NEAR [DWORD_VAR]        ; 32-bits near jmp
+                JMP     WORD NEAR [DWORD_VAR]   ; 16-bits near jmp
+
+                BITS    32
+DWORD_VAR2      DD      ?
+
+                JMP     [DWORD_VAR2]            ; 32-bits near jmp
+                JMP     FAR [DWORD_VAR2]        ; 16-bits far jmp
+\end{verbatim}
+
+\section{LAHF --- Load AH with Flags}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LAHF (no arguments)          LAHF
+\end{verbatim}
+
+\section{LAR --- Load Access Rights}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LAR reg16,reg16/mem16        LAR     CX,SI
+LAR reg32,reg32/mem32        LAR     EBX,SS:[DWORD_VAR]
+\end{verbatim}
+
+\section{LDMXCSR --- Load MXCSR register}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LDMXCSR mem32                LDMXCSR [DWORD_VAR]
+\end{verbatim}
+
+\section{Lxx --- Load far pointer}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LXX reg16,mem32              LXX     CX,[SI]
+LXX reg32,mem48              LXX     EBX,ES:[ENTRY_POINT]
+\end{verbatim}
+
+\subsection{Notes}
+Lxx actually refer to a set of instructions that load far
+pointers. Suported variants are:
+
+\begin{itemize}
+\item LDS --- Load DS:dest
+\item LES --- Load ES:dest
+\item LFS --- Load FS:dest
+\item LGS --- Load GS:dest
+\item LSS --- Load SS:dest
+\end{itemize}
+
+\section{LEA --- Load Effective Address}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LEA reg16/reg32,mem16/mem32  LEA     ECX,[EAX + EBX*4 + 200h]
+\end{verbatim}
+
+\section{LEAVE --- LEAVE}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LEAVE (no arguments)         LEAVE
+\end{verbatim}
+
+\section{LFENCE --- Load FENCE}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LFENCE (no arguments)        LFENCE
+\end{verbatim}
+
+\section{LGDT --- Load GDTr}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LGDT mem48                   LGDT    [INITIAL_GDTR]
+\end{verbatim}
+
+\section{LIDT --- Load IDTr}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LIDT mem48                   LGDT    [INITIAL_IDTR]
+\end{verbatim}
+
+\section{LLDT --- Load LDTr}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LLDT reg16/mem16             LLDT    AX
+\end{verbatim}
+
+\section{LMSW --- Load Machine Status Word}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LMSW reg16/mem16             LMSW    AX
+\end{verbatim}
+
+\section{LOCK --- assert LOCK signal prefix}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LOCK (no arguments)          LOCK
+LOCK statement               LOCK    XCHG    AX,[BX]
+\end{verbatim}
+
+\section{LODS / LODSB / LODSW / LODSD --- LOaD String}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LODS mem8/mem16/mem32        LODS    BYTE ES:[ESI]
+LODSB (no arguments)         LODSB
+LODSW (no arguments)         LODSW
+LODSD (no arguments)         LODSD
+\end{verbatim}
+
+\section{LOOP / LOOPCC --- LOOP according to cx / ecx}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LOOP rel8                    LOOP    PRINT_STRING
+LOOPCC rel8                  LOOPCC  NEXT_STEP
+\end{verbatim}
+
+\subsection{Notes}
+LOOPCC refers to a set of instructions that test for
+particular conditions. Suported variants are:
+
+\begin{itemize}
+\item LOOPE --- LOOP if Equal
+\item LOOPNE --- LOOP if Not Equal
+\item LOOPNZ --- LOOP if Not Zero
+\item LOOPZ --- LOOP if Zero
+\end{itemize}
+
+\section{LSL --- Load Segment Limits}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LSL reg16,reg16/mem16        LSL     CX,SI
+LSL reg32,reg32/mem32        LSL     EBX,SS:[DWORD_VAR]
+\end{verbatim}
+
+\section{LTR --- Load Task Register}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+LTR reg16/mem16              LTR     CX
+\end{verbatim}
+
+\section{MASKMOVDQU --- store selected bytes of Double Quadword}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MASKMOVDQU xmmreg,xmmreg     MASKMOVDQU XMM4,XMM1
+\end{verbatim}
+
+\section{MASKMOVQ --- store selected bytes of Quadword}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MASKMOVQ mmreg,mmreg         MASKMOVQ MM4,MM1
+\end{verbatim}
+
+\section{MAXPD --- return MAXimum Packed Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MAXPD xmmreg,xmmreg/mem128   MAXPD   XMM,[OWORD_VAR]
+\end{verbatim}
+
+\section{MAXPS --- return MAXimum Packed Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MAXPS xmmreg,xmmreg/mem128   MAXPS   XMM,[OWORD_VAR]
+\end{verbatim}
+
+\section{MAXSD --- return MAXimum Scalar Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MAXSD xmmreg,xmmreg/mem64    MAXSD   XMM,[QWORD_VAR]
+\end{verbatim}
+
+\section{MAXSS --- return MAXimum Scalar Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MAXSS xmmreg,xmmreg/mem64    MAXSS   XMM,[DWORD_VAR]
+\end{verbatim}
+
+\section{MFENCE --- Memory FENCE}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MFENCE (no arguments)        MFENCE
+\end{verbatim}
+
+\section{MINPD --- return MINimum Packed Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MINPD xmmreg,xmmreg/mem128   MINPD   XMM,[OWORD_VAR]
+\end{verbatim}
+
+\section{MINPS --- return MINimum Packed Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MINPS xmmreg,xmmreg/mem128   MINPS   XMM,[OWORD_VAR]
+\end{verbatim}
+
+\section{MINSD --- return MINimum Scalar Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MINSD xmmreg,xmmreg/mem64    MINSD   XMM,[QWORD_VAR]
+\end{verbatim}
+
+\section{MINSS --- return MINimum Scalar Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MINSS xmmreg,xmmreg/mem64    MINSS   XMM,[DWORD_VAR]
+\end{verbatim}
+
+\section{MOV --- MOVe}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOV reg,reg/mem              MOV     AX,BX
+MOV mem,reg                  MOV     [80h],DL
+MOV reg/mem,immed            MOV     BYTE [GS:WORD_VAR],18
+MOV segreg,reg16/mem16       MOV     ES,[2Ch]
+MOV reg16/mem16,segreg       MOV     AX,DS
+MOV creg/treg/dreg,reg32     MOV     CR0,EAX
+MOV reg32,creg/treg/dreg     MOV     ECX,DR5
+\end{verbatim}
+
+\section{MOVAPD --- MOVe Aligned Packed Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVAPD xmmreg,xmmreg/mem128  MOVAPD  XMM3,FS:[BP+SI-40]
+MOVAPD xmmreg/mem128,xmmreg  MOVAPD  XMM6,XMM2
+\end{verbatim}
+
+\section{MOVAPS --- MOVe Aligned Packed Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVAPS xmmreg,xmmreg/mem128  MOVAPS  XMM3,FS:[BP+SI-40]
+MOVAPS xmmreg/mem128,xmmreg  MOVAPS  XMM6,XMM2
+\end{verbatim}
+
+\section{MOVD --- MOVe Doubleword}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVD mmreg,reg32/mem32       MOVD    MM3,DWORD_VAR[ECX*4]
+MOVD reg32/mem32,mmreg       MOVD    MM3,MM
+MOVD xmmreg,reg32/mem32      MOVD    XMM3,DWORD_VAR[ECX*4]
+MOVD reg32/mem32,xmmreg      MOVD    XMM3,XMM
+\end{verbatim}
+
+\section{MOVDQA --- MOVe Aligned Double Quadword}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVDQA xmmreg,xmmreg/mem128  MOVDQA  XMM3,OWORD_VAR[ECX*4]
+MOVDQA xmmreg/mem128,xmmreg  MOVDQA  XMM3,XMM
+\end{verbatim}
+
+\section{MOVDQU --- MOVe Unaligned Double Quadword}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVDQU xmmreg,xmmreg/mem128  MOVDQU  XMM3,OWORD_VAR[ECX*4]
+MOVDQU xmmreg/mem128,xmmreg  MOVDQU  XMM3,XMM
+\end{verbatim}
+
+\section{MOVDQ2Q --- MOVe Quadword from xmm to mmx register}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVQ2Q mmreg,xmmreg          MOVQ2Q  MM3,XMM4
+\end{verbatim}
+
+\section{MOVHLPS --- MOVe Packed Single-precision floating-point values High to Low}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVHLPS xmmreg,xmmreg        MOVHLPS XMM3,XMM4
+\end{verbatim}
+
+\section{MOVHPD --- MOVe High Packed Double-precision floating-point value}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVHPD xmmreg,mem64          MOVHPD  XMM0,[QWORD_VAR]
+MOVHPD mem64,xmmreg          MOVHPD  [QWORD_VAR],XMM7
+\end{verbatim}
+
+\section{MOVHPS --- MOVe High Packed Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVHPS xmmreg,mem64          MOVHPS  XMM0,[QWORD_VAR]
+MOVHPS mem64,xmmreg          MOVHPS  [QWORD_VAR],XMM7
+\end{verbatim}
+
+\section{MOVLHPS --- MOVe Packed Single-precision floating-point values Low to High}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVLHPS xmmreg,xmmreg        MOVLHPS XMM3,XMM4
+\end{verbatim}
+
+\section{MOVLPD --- MOVe Low Packed Double-precision floating-point value}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVLPD xmmreg,mem64          MOVLPD  XMM0,[QWORD_VAR]
+MOVLPD mem64,xmmreg          MOVLPD  [QWORD_VAR],XMM7
+\end{verbatim}
+
+\section{MOVLPS --- MOVe Low Packed Single-precision floating-point value}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVLPS xmmreg,mem64          MOVLPS  XMM0,[QWORD_VAR]
+MOVLPS mem64,xmmreg          MOVLPS  [QWORD_VAR],XMM7
+\end{verbatim}
+
+\section{MOVMSKPD --- extract Packed Double-precision floating-point sign mask}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVMSKPD reg32,xmmreg        MOVMSKPD ESI,XMM5
+\end{verbatim}
+
+\section{MOVMSKPS --- extract Packed Single-precision floating-point sign mask}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVMSKPS reg32,xmmreg        MOVMSKPS ESI,XMM5
+\end{verbatim}
+
+\section{MOVNTDQ --- store Double Quadword using Non-Temporal hint}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVLHPS mem128,xmmreg        MOVLHPS [OWORD_VAR],XMM4
+\end{verbatim}
+
+\section{MOVNTI --- store Doubleword using Non-Temporal hint}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVNTI mem32,reg32           MOVNTI  [DWORD_VAR],ESP
+\end{verbatim}
+
+\section{MOVNTPD --- store Packed Double-precision floating-point values using Non-Temporal hint}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVNTPD mem128,xmmreg        MOVNTPD XMM_DATA[16],XMM3
+\end{verbatim}
+
+\section{MOVNTPS --- store Packed Single-precision floating-point values using Non-Temporal hint}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVNTPS mem128,xmmreg        MOVNTPS XMM_DATA[16],XMM3
+\end{verbatim}
+
+\section{MOVNTQ --- store Quadword using Non-Temporal hint}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVNTQ mem128,xmmreg         MOVNTQ  ES:MM_DATA[16],MM3
+\end{verbatim}
+
+\section{MOVQ --- MOVe Quadword}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVQ mmreg,reg32/mem32       MOVQ    MM3,DWORD_VAR[ECX*4]
+MOVQ reg32/mem32,mmreg       MOVQ    MM3,MM
+MOVQ xmmreg,reg32/mem32      MOVQ    XMM3,DWORD_VAR[ECX*4]
+MOVQ reg32/mem32,xmmreg      MOVQ    XMM3,XMM
+\end{verbatim}
+
+\section{MOVQ2DQ --- MOVe Quadword from mmx to xmm Register}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVQ2DQ xmmreg,mmxreg        MOVQ2DQ XMM3,MM6
+\end{verbatim}
+
+\section{MOVS / MOVSB / MOVSW / MOVSD --- MOVe Strings}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVS mem8,mem8               MOVS    BYTE [DI],[SI]
+MOVS mem16,mem16             MOVS    WORD [DI],FS:[BX]
+MOVS mem32,mem32             MOVS    DW_ARRAY,[SI]
+MOVSB (no arguments)         MOVSB
+MOVSW (no arguments)         MOVSW
+MOVSD (no arguments)         MOVSD
+\end{verbatim}
+
+\subsection{Notes}
+\popasm\ accepts a segment override prefix only for the second argument
+of MOVS instruction. Besides that restriction, any memory references are
+accepted as arguments, given their operand sizes match as well as their
+memory access modes. For example:
+
+\begin{verbatim}
+                MOVS    BYTE [DI],WORD [SI]     ; Type mismatch
+                MOVS    BYTE [DI],BYTE [ESI]    ; Mode mismatch
+                MOVS    BYTE GS:[DI],BYTE [ESI] ; Segment override not ok.
+\end{verbatim}
+
+\section{MOVSD --- MOVe Scalar Double-precision floating-point value}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVSD xmmreg,xmmreg/mem64    MOVSD   XMM5,[LIGHT_SPEED]
+MOVSD xmmreg/mem64,xmmreg    MOVSD   [QWORD_VAR],XMM4
+\end{verbatim}
+
+\section{MOVSS --- MOVe Scalar Single-precision floating-point value}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVSS xmmreg,xmmreg/mem32    MOVSD   XMM5,[SALARY]
+MOVSS xmmreg/mem32,xmmreg    MOVSD   [DWORD_VAR],XMM4
+\end{verbatim}
+
+\section{MOVSX --- MOVe with Sign-eXtension}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVSX reg16/reg32,reg8/mem8  MOVSX   CX,BYTE [80h]
+MOVSX reg32,reg16/mem16      MOVSX   EAX,DX
+\end{verbatim}
+
+\section{MOVUPD --- MOVe Unaligned Packed Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVUPD xmmreg,xmmreg/mem128  MOVUPD  XMM3,OWORD_VAR[ECX*4]
+MOVUPD xmmreg/mem128,xmmreg  MOVUPD  XMM3,XMM
+\end{verbatim}
+
+\section{MOVZX --- MOVe with Zero-eXtension}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVZX reg16/reg32,reg8/mem8  MOVZX   CX,BYTE [80h]
+MOVZX reg32,reg16/mem16      MOVZX   EAX,DX
+\end{verbatim}
+
+\section{MOVUPS --- MOVe Unaligned Packed Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MOVUPS xmmreg,xmmreg/mem128  MOVUPS  XMM3,OWORD_VAR[ECX*4]
+MOVUPS xmmreg/mem128,xmmreg  MOVUPS  XMM3,XMM
+\end{verbatim}
+
+\section{MUL --- unsigned MULtiply}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MUL reg8/mem8                MUL     CH
+MUL reg16/mem16              MUL     WORD [BX]
+MUL reg32/mem32              MUL     EBP
+\end{verbatim}
+
+\section{MULPD --- MULtiply Packed Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MULPD xmmreg,xmmreg/mem128   MULPD   XMM2,XMM7
+\end{verbatim}
+
+\section{MULPS --- MULtiply Packed Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MULPS xmmreg,xmmreg/mem128   MULPS   XMM2,[EBX]
+\end{verbatim}
+
+\section{MULSD --- MULtiply Scalar Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MULSD xmmreg,xmmreg/mem64    MULSD   XMM2,[EBX]
+\end{verbatim}
+
+\section{MULSS --- MULtiply Scalar Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+MULSS xmmreg,xmmreg/mem32    MULSS   XMM2,[EBX]
+\end{verbatim}
+
+\section{NEG --- two's complement NEGation}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+NEG reg8/mem8                NEG     CH
+NEG reg16/mem16              NEG     WORD [BX]
+NEG reg32/mem32              NEG     EBP
+\end{verbatim}
+
+\section{NOP --- No OPeration}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+NOP (no arguments)           NOP
+\end{verbatim}
+
+\section{NOT --- one's complement negation}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+NOT reg8/mem8                NOT     CH
+NOT reg16/mem16              NOT     WORD [BX]
+NOT reg32/mem32              NOT     EBP
+\end{verbatim}
+
+\section{OR --- logical inclusive OR}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+OR reg,reg/mem               OR      AX,BX
+OR mem,reg                   OR      [80h],DL
+OR reg/mem,immed             OR      BYTE [GS:WORD_VAR],18
+OR reg/mem,signed8           OR      ESI,-6
+\end{verbatim}
+
+\section{ORPD --- bitwise logical OR of Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+ORPD xmmreg,xmmreg/mem128    ORPD    XMM2,[EBX]
+\end{verbatim}
+
+\section{ORPS --- bitwise logical OR of Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+ORPS xmmreg,xmmreg/mem128    ORPS    XMM2,[EBX]
+\end{verbatim}
+
+\section{OUT --- OUTput to port}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+OUT unsigned8,accum          OUT     42h,AL
+OUT DX,accum                 OUT     DX,EAX
+\end{verbatim}
+
+\section{OUTS / OUTSB / OUTSW / OUTSD --- OUTput String}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+OUTS DX,mem8/mem16/mem32     OUTS    DX,[MY_NAME]
+OUTSB (no arguments)         OUTSB
+OUTSW (no arguments)         OUTSW
+OUTSD (no arguments)         OUTSD
+\end{verbatim}
 
 To be continued.
 
