@@ -254,6 +254,26 @@ class BinaryShiftRight : public OperatorData<T>
 };
 
 template <class T = int>
+class UnsignedDivision : public OperatorData<T>
+{
+	public:
+	UnsignedDivision (const string &n, unsigned int p0, unsigned int p1) throw () : OperatorData (n, p0, p1) {}
+	~UnsignedDivision () throw () {}
+
+	T &operator() (T &x, T &y) const {return x.UnsignedDivision(y);}
+};
+
+template <class T = int>
+class UnsignedModulus : public OperatorData<T>
+{
+	public:
+	UnsignedModulus (const string &n, unsigned int p0, unsigned int p1) throw () : OperatorData (n, p0, p1) {}
+	~UnsignedModulus () throw () {}
+
+	T &operator() (T &x, T &y) const {return x.UnsignedModulus(y);}
+};
+
+template <class T = int>
 class SizeCast : public OperatorData<T>
 {
 	unsigned int Size;

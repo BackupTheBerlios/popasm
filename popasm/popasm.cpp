@@ -30,6 +30,8 @@ const OperatorData<Expression> *PopAsm::OperatorTable[] =
 	new DividesEqual<Expression> ("/", 0, 500),
 	new ModEqual<Expression> ("MOD", 0, 500),
 	new ModEqual<Expression> ("%", 0, 500),
+	new UnsignedDivision<Expression> ("//", 0, 500),
+	new UnsignedModulus<Expression> ("%%", 0, 500),
 	new Colon<Expression> (":", 0, 900),
 	new Period<Expression> (".", 0, 1000),
 	new OperatorData<Expression> (",", 0, 0),
