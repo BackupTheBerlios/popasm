@@ -140,6 +140,8 @@ class Period : public OperatorData<T>
 	public:
 	Period (const string &n, unsigned int p0, unsigned int p1) throw () : OperatorData (n, p0, p1) {}
 	~Period () throw () {}
+
+	T &operator() (T &x, T &y) const {return x.MemberSelect(y);}
 };
 
 template <class T = int>
@@ -251,6 +253,16 @@ class SizeCast : public OperatorData<T>
 	~SizeCast () throw () {}
 
 	T &operator() (T &x) const {x.SetSize(Size); return x;}
+};
+
+template <class T = int>
+class Colon : public OperatorData<T>
+{
+	public:
+	Colon (const string &n, unsigned int p0, unsigned int p1) throw () : OperatorData (n, p0, p1) {}
+	~Colon () throw () {}
+
+	T &operator() (T &x, T &y) const {return x.Compose(y);}
 };
 
 //------- Exceptions
