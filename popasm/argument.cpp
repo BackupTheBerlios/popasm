@@ -20,6 +20,7 @@
  ***************************************************************************/
 
 #include <iostream>
+#include <typeinfo>
 
 #include "argument.h"
 #include "memory.h"
@@ -212,6 +213,9 @@ Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, e
 
 		case Type::STRONG_MEMORY:
 			return MakeMemory (e);
+
+		case Type::UNKNOWN:
+			return new Argument (0, false, true);
 	}
 
 	return 0;

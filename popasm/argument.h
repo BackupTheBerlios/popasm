@@ -31,10 +31,7 @@
 #include "type_exp.h"
 #include "functors.h"
 
-class BasicArgument;
 class Argument;
-
-typedef UnaryFunction<const BasicArgument *, bool> BasicIdFunctor;
 
 class BasicArgument : public Type
 {
@@ -47,11 +44,7 @@ class BasicArgument : public Type
 
 	virtual string Print () const throw () = 0;
 
-	class IdFunctor : public BasicIdFunctor
-	{
-		public:
-		virtual bool operator() (const BasicArgument *arg) = 0;
-	};
+	typedef UnaryFunction<Argument &, bool> IdFunctor;
 };
 
 class UndefinedSize : public exception
@@ -102,23 +95,34 @@ class Argument
 {
 	const BasicArgument *Data;
 	bool Owner;
+	bool Undefined;
 
 	static Argument *MakeMemory (const Expression &e);
 
 	public:
-	Argument (const BasicArgument *d, bool own) : Data(d), Owner(own) {}
+	Argument (const BasicArgument *d = 0, bool own = true, bool undef = false) : Data(d), Owner(own), Undefined(undef) {}
 	~Argument () {if (Owner) delete Data;}
 
 	const BasicArgument *GetData () const throw () {return Data;}
+	void SetData (const BasicArgument *NewData, bool own = true) throw ()
+	{
+		if (Owner)
+			delete Data;
+
+		Data = NewData;
+		Owner = own;
+	}
+
 	static Argument *MakeArgument (const Expression &e) throw (InvalidArgument, exception);
 
-	bool Match (BasicIdFunctor *arg) const {return (*arg)(Data);}
+	bool Match (BasicArgument::IdFunctor *arg) {return (*arg)(*this);}
 
 	enum CheckType {NONE, EQUAL, GREATER, HALF, MINUS_16BITS, BIT_NUMBER};
 	static void TypeCheck (const vector<Argument *> &args, CheckType ct) throw (TypeMismatch, BitOutOfBounds, UndefinedSize);
 
 	unsigned int GetSize () const throw () {return Data->GetSize();}
 	void SetSize (unsigned int sz) const {Data->SetSize(sz);}
+	bool IsUndefined () const throw () {return Undefined;}
 
 	string Print () const throw () {return Data->Print();}
 };
