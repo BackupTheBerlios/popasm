@@ -39,10 +39,23 @@ class Register : public BasicSymbol, public BasicArgument
 	static Register *Read (const string &str, InputFile &inp) throw ();
 	unsigned int GetCode () const throw () {return Code;}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const Register * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const Register * const> (ptr) != 0;}
+	class IdFunctor : public BasicArgument::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const Register *> (arg) != 0;}
+	};
+
+	template <unsigned int n>
+	class CompareCodeFunctor : public BasicArgument::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg)
+		{
+			const Register *reg = dynamic_cast<const Register *> (arg);
+			if (reg == 0) return false;
+			return reg->GetCode() == n;
+		}
+	};
 
 	virtual string Print () const throw () {return BasicSymbol::Print();}
 };
@@ -61,10 +74,11 @@ class SegmentRegister : public Register
 
 	unsigned int GetPrefixCode () const throw () {return PrefixCode;}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const SegmentRegister * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const SegmentRegister * const> (ptr) != 0;}
+	class IdFunctor : public Register::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const SegmentRegister *> (arg) != 0;}
+	};
 
 	// Attempts to read a register from the given string. Gets more from inp if necessary. Returns 0 if failed.
 	static Register *Read (const string &str, InputFile &inp) throw ();
@@ -75,34 +89,37 @@ class GPRegister : public Register
 {
 	public:
 	GPRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
-	GPRegister (const GPRegister &gpr) throw () : Register (gpr) {}
 	~GPRegister () throw () {};
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const GPRegister * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const GPRegister * const> (ptr) != 0;}
+	class IdFunctor : public Register::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const GPRegister *> (arg) != 0;}
+	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
-
+/*
 class Accumulator : public GPRegister
 {
-	public:
-	Accumulator (const GPRegister &gpr) : GPRegister (gpr) {if (gpr.GetCode() != 0) throw 0;}
+	// Makes constructor private, so no one can build it
 	Accumulator () throw () : GPRegister ("", 0, 0) {}
+
+	public:
 	~Accumulator () {}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const Accumulator * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
+	class IdFunctor : public Register::IdFunctor
 	{
-		const GPRegister * const gpr = dynamic_cast<const GPRegister * const> (ptr);
-		if (gpr == 0) return false;
-		return gpr->GetCode() == 0;
-	}
+		public:
+		bool operator() (const BasicArgument *arg)
+		{
+			const GPRegister *gpr = dynamic_cast<const GPRegister * const> (arg);
+			if (gpr == 0) return false;
+			return gpr->GetCode() == 0;
+		}
+	};
 };
-
+*/
 class GPRegister8Bits : public GPRegister
 {
 	static GPRegister8Bits RegisterTable[];
@@ -111,10 +128,11 @@ class GPRegister8Bits : public GPRegister
 	GPRegister8Bits (const string &n, unsigned int s, unsigned int c) throw () : GPRegister (n, s, c) {}
 	~GPRegister8Bits () throw () {}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const GPRegister8Bits * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const GPRegister8Bits * const> (ptr) != 0;}
+	class IdFunctor : public Register::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const GPRegister8Bits *> (arg) != 0;}
+	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
@@ -127,10 +145,11 @@ class GPRegister16Bits : public GPRegister
 	GPRegister16Bits (const string &n, unsigned int s, unsigned int c) throw () : GPRegister (n, s, c) {}
 	~GPRegister16Bits () throw () {}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const GPRegister16Bits * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const GPRegister16Bits * const> (ptr) != 0;}
+	class IdFunctor : public Register::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const GPRegister16Bits *> (arg) != 0;}
+	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
@@ -143,10 +162,11 @@ class GPRegister32Bits : public GPRegister
 	GPRegister32Bits (const string &n, unsigned int s, unsigned int c) throw () : GPRegister (n, s, c) {}
 	~GPRegister32Bits () throw () {}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const GPRegister32Bits * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const GPRegister32Bits * const> (ptr) != 0;}
+	class IdFunctor : public Register::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const GPRegister32Bits *> (arg) != 0;}
+	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
@@ -162,10 +182,11 @@ class BaseRegister : public GPRegister16Bits
 		: GPRegister16Bits (n, s, c), BaseCode (bc), BaseIndexCode (bic) {}
 	~BaseRegister () {}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const BaseRegister * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const BaseRegister * const> (ptr) != 0;}
+	class IdFunctor : public Register::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const BaseRegister *> (arg) != 0;}
+	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
@@ -181,10 +202,11 @@ class IndexRegister : public GPRegister16Bits
 		: GPRegister16Bits (n, s, c), BaseCode (bc), IndexCode (ic) {}
 	~IndexRegister () {}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const IndexRegister * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const IndexRegister * const> (ptr) != 0;}
+	class IdFunctor : public Register::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const IndexRegister *> (arg) != 0;}
+	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
@@ -198,10 +220,11 @@ class ControlRegister : public Register
 	ControlRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~ControlRegister () throw () {}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const ControlRegister * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const ControlRegister * const> (ptr) != 0;}
+	class IdFunctor : public Register::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const ControlRegister *> (arg) != 0;}
+	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
@@ -215,10 +238,11 @@ class TestRegister : public Register
 	TestRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~TestRegister () throw () {}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const TestRegister * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const TestRegister * const> (ptr) != 0;}
+	class IdFunctor : public Register::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const TestRegister *> (arg) != 0;}
+	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
@@ -232,10 +256,11 @@ class DebugRegister : public Register
 	DebugRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~DebugRegister () throw () {}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const DebugRegister * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const DebugRegister * const> (ptr) != 0;}
+	class IdFunctor : public Register::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const DebugRegister *> (arg) != 0;}
+	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
@@ -249,10 +274,11 @@ class MMXRegister : public Register
 	MMXRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~MMXRegister () throw () {}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const MMXRegister * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const MMXRegister * const> (ptr) != 0;}
+	class IdFunctor : public Register::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const MMXRegister *> (arg) != 0;}
+	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
@@ -266,10 +292,11 @@ class XMMRegister : public Register
 	XMMRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~XMMRegister () throw () {}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const XMMRegister * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const XMMRegister * const> (ptr) != 0;}
+	class IdFunctor : public Register::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const XMMRegister *> (arg) != 0;}
+	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
@@ -282,10 +309,11 @@ class FPURegister : public Register
 	FPURegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~FPURegister () throw () {}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const FPURegister * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const FPURegister * const> (ptr) != 0;}
+	class IdFunctor : public Register::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const FPURegister *> (arg) != 0;}
+	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
