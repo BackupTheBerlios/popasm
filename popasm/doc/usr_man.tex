@@ -4,7 +4,6 @@
 \author{Helcio B. de Mello}
 \date{\today}
 
-
 \newcommand{\popasm}{\emph{PopAsm}}
 \newcommand{\nasm}{\emph{NASM}}
 \newcommand{\tasm}{\emph{TASM}}
@@ -119,72 +118,67 @@ or just write the good old raw assembly code;
 Due to the reasons discussed above, this assembler was named the
 ``Popular Assembler''.
 
-\chapter{Compiling and Installing PopAsm}
+\chapter{Compiling and Installing \popasm}
 This chapter explains how to compile and install \popasm\ under
-Linux or other UNIX-like
-platforms and DOS. If you have already done that you may safely skip to
-the next chapter.
-                          
-\section{Compiling PopAsm sources under UNIX
-enviroments\label{COMPILING}}
+Linux or other UNIX-like platforms and DOS/Windows. If you have
+already done that you may safely skip to the next chapter.
+
+\section{UNIX environments}
+
+This section describes compiling \& installing info under UNIX-like
+operating systems (such as Linux).
+
+\subsection{Compiling PopAsm sources\label{COMPUNIX}}
 In order to compile \popasm\ sources, you will need an ANSI C++
-compiler and its standard
-libraries\footnote{For the curious, I use egcs 2.91.66}. You will also
-need \popasm\ source
-code, which you should already have. If not, please go to
-\emph{http://popasm.sourceforge.net/}
-and download it. You will get an archive containing the source code to
-be built. Unpack it
-anywhere you like, using the appropriate software (e.g. if you
-downloaded a .tar.gz file, you
-should run \emph{tar xvzf popasm-x.y.z.tar.gz}, where $x$, $y$ and $z$
-are the version numbers
-of the package you got). At this point, a directory containing the
-source code will be created.
+compiler and its standard libraries\footnote{For the curious, I
+use egcs 2.91.66}. You will also need \popasm\ source code, which
+you should already have. If not, please go to
+\emph{http://popasm.sourceforge.net/} and download it. You will
+get an archive containing the source code to be built.
+
+Unpack it anywhere you like, using the appropriate software (e.g.
+if you downloaded a .tar.gz file, you should run
+\emph{tar xvzf popasm-x.y.z.tar.gz}, where $x$, $y$ and $z$ are
+the version numbers of the package you got). At this point, a
+directory containing the source code will be created.
 
 Now, you should enter the directory containing the sources. e.g.
-\emph{/tmp/popasm-0.0.1}. Please
-do not mistake it for something like \emph{/tmp/popasm-0.0.1/src}. You
-should be in \popasm
+\emph{/tmp/popasm-0.0.1}. Please do not mistake it for something
+like \emph{/tmp/popasm-0.0.1/src}. You should be in \popasm
 source code root directory, as in the example above.
 
 \popasm\ relies on \emph{Autoconf}\cite{AUTOCONF} and
-\emph{Automake}\cite{AUTOMAKE} to probe
-your system for the necessary resources and generate the resulting
-\emph{Makefile}. This file will
-tell the \emph{Make}\cite{MAKE} utility how to compile \popasm\ sources.
-First, type
+\emph{Automake}\cite{AUTOMAKE} to probe your system for the
+necessary resources and generate the resulting \emph{Makefile}.
+This file will tell the \emph{Make}\cite{MAKE} utility how to
+compile \popasm\ sources. First, type
 
 \begin{verbatim}
 ./configure
 \end{verbatim}
 
 to perform the necessary checks. If everything is ok, you should have a
-\emph{Makefile}. The next
-step is to compile the sources. Just type
+\emph{Makefile}. The next step is to compile the sources. Just type
 
 \begin{verbatim}
 make
 \end{verbatim}
 
 and the \emph{Make} utility will do the rest, but might take a few
-minutes. There should be no
-warnings and no errors. If you got any, please check whether your
-compiler is ANSI compliant. If
-it is, please let me know (contacting information can be found in this
+minutes. There should be no warnings and no errors. If you got any,
+please check whether your compiler is ANSI compliant. If it is,
+please let me know (contacting information can be found in this
 document).
 
-\section{Installing PopAsm under UNIX enviroments}
+\subsection{Installing \popasm}
 
 There is basically two ways of installing \popasm: either from
-the source code or from a
-RPM file.
+the source code or from a RPM file.
 
-\subsection{Installing from Source Code}
-You should compile \popasm\ as in section \ref{COMPILING}. Remain
-in the directory you built
-\popasm\ and issue the command (you will need to be \emph{root} to
-do that):
+\subsubsection{Installing from Source Code}
+You should compile \popasm\ as in section \ref{COMPUNIX}. Remain
+in the directory you built \popasm\ and issue the command (you will
+need to be \emph{root} to do that):
 
 \begin{verbatim}
 make install
@@ -192,31 +186,31 @@ make install
 
 This will install the binary file, documentation, etc.
 
-\subsection{Installing from RPM files}
-The easiest way to install \popasm\ is to use RPM files. Get one
-from
-\emph{http://popasm.sourceforge.net/} if you do not have done so yet.
-Login as \emph{root} and
-type:
+\subsubsection{Installing from RPM files}
+The easiest way to install \popasm\ is to use RPM files. Get one from
+\emph{http://popasm.sourceforge.net/} if you have not done so yet.
+Login as \emph{root} and type:
 
 \begin{verbatim}
 rpm -ivh popasm-x.y.z.rpm
 \end{verbatim}
 
-replacing $x$, $y$ and $z$ for the appropriate values. That's it,
-you're done.
+replacing $x$, $y$ and $z$ for the appropriate version numbers. That's
+it, you're done.
 
-\section{Compiling PopAsm sources under DOS}
+\section{DOS and Windows environments}
 To be written.
 
-\section{Installing PopAsm under DOS}
+\subsection{Compiling PopAsm sources\label{COMPDOS}}
 To be written.
 
-\chapter{Running PopAsm}
+\subsection{Installing \popasm}
+To be written.
+
+\chapter{Running PopAsm\label{CMDLINE}}
 
 This chapter tackles the usage of \popasm\ under command line. Arguments,
-options and
-environment variables are discussed in detail.
+options and environment variables are discussed in detail.
 
 To be written.
 
@@ -224,55 +218,142 @@ To be written.
 
 One of \popasm's major goals is compatibility with existing code.
 \popasm\ syntax is very similar to the ones supported by \tasm\ and
-\nasm. This chapter discusses \popasm\ syntax in detail, showing
-the differences from other assemblers as well.
+\nasm. This chapter discusses \popasm\ basic syntax. The next chapters
+go into more detail in each syntax component (numbers, registers, etc.).
 
-\section{Expressions}
+As stated in chapter \ref{CMDLINE}, \popasm\ takes one or more source
+files as inputs, each one containing assembly-language statements. These
+statements, in turn, have the following general form:
 
-An expression may be either a single term or a sequence of terms
-connected
-by operators. A term, in turn, can be a number or a symbol. This
-section
-explains how \popasm\ performs assembly-time arithmetics and works with
-numbers.
+\begin{verbatim}
+label:          CMD     arguments               ; comments
+\end{verbatim}
 
-\subsection{Numbers}
+where:
+
+\begin{itemize}
+\item{\emph{label}} is an identifier that marks an offset into the current
+   memory segment, so it can be referenced elsewhere in the code. The colon
+   (:) after the label is optional, but recommended, as discussed in section
+   \ref{NOTELABEL}.
+\item{\emph{CMD}} is either a x86 instruction (such as MOV, ADD, etc.) or a
+   \popasm\ internal command (ORG, DB, etc.). Command names are
+   case-insensitive (MOV, mov and Mov are all accepted).
+\item{\emph{arguments}} is a comma-separated list of arguments for the CMD
+   command used in this line. An argument is any sort of \emph{expression}
+   (see chapter \ref{EXPR}). Some commands neither require nor accept arguments.
+\item{\emph{comments}} is whatever you want to write to make your code easier
+   to read and maintain. Comments are placed after a semicolon, and
+   \popasm\ ignores them altogether.
+\end{itemize}
+
+For example:
+
+\begin{verbatim}
+MULTIPLY:       IMUL    CX,BX,5                 ; CX = BX * 5
+\end{verbatim}
+
+\noindent is a valid statement. MULTIPLY is a label (followed by the
+optional colon), IMUL is a x86 instruction, and CX, BX and 5 are
+arguments for the IMUL instruction. The string following the semicolon
+is a comment, and is thus ignored.
+
+None of the items above are mandatory, except that you cannot specify
+arguments for a command without issuing it first. So,
+
+\begin{verbatim}
+                MOV     AX,BX
+\end{verbatim}
+
+\noindent is a valid statement, but
+
+\begin{verbatim}
+                AX,BX
+\end{verbatim}
+
+\noindent is obviously not.
+
+\popasm\ imposes no tabbing restrictions; white spaces and tabs are
+ignored. This document uses a 1--16--24--48 tabbing scheme (that is,
+labels at column 1, commands at column 16, arguments at column 24 and
+comments at column 48).
+
+\section{Notes on labels\label{NOTELABEL}}
+
+Valid labels are strings of letters (a--z or A--Z), digits (0--9 )or any
+of the following characters:
+
+\begin{center}
+\_ @ \$ ?
+\end{center}
+
+\noindent except that the first character cannot be a digit, otherwise the
+label would be treated as a number, as discussed in chapter \ref{NUMCHAP}.
+
+\popasm\ is by default case-insensitive\footnote{Due to compatibility with
+\tasm.}. Such behavior may be changed by command line options and environment
+variables (see chapter \ref{CMDLINE}). This document uses uppercase letters.
+
+As already mentioned, the use of a colon after a label is optional,
+but recommended. For example, suppose you issue a LODSB command, but
+mistype it for LOADSB instead. As a result, the mistyped command would
+be treated as an ordinary label, and thus not compiled properly. \nasm\ 
+calls these ``orphan labels'', and offers a command line option to
+warn you about that.
+
+But let's check the code below:
+
+\begin{verbatim}
+I_LOVE_USING_LONG_LABELS_THROUGHOUT_MY_CODE
+                LOADSB
+                OR      AL,AL
+                JNZ     I_LOVE_USING_LONG_LABELS_THROUGHOUT_MY_CODE
+\end{verbatim}
+
+The first line is a rather long label, and the developer decided
+to place it alone in its line of code. The next line is the mistyped
+command. If the developer decides to enable the orphan-label warning,
+an annoying message will always bother him, saying the long label
+is orphan. Using the colon, this problem is solved.
+
+Another good reason to use the optional colon is to have an additional
+mark to make it clear, to the ones reading your code, that the label is,
+indeed, a label, instead of, say, a macro name. Of course, this can
+also be achieved with an indentation pattern.
+
+\chapter{Numbers\label{NUMCHAP}}
 \popasm\ accepts numbers in a variety of ways. A number is a sequence
 of as many digits as you want\footnote{There is no practical limit to
 number sizes in \popasm. If you want to write a 1,000,000-digits long
 number, \popasm\ will accept it gladly (well, if you have patience to
-type such a number...). Other assemblers are limited to 32-bit integer
-operations, such as \nasm\ v0.98.} in any base or separators, in any
-order, except that:
+type such a number...). Some other assemblers are limited to 32-bit
+integer operations.} or separators, in any order, except that:
 
 \begin{itemize}
 \item{The first digit must be a 0--9 digit\footnote{Note that if the
-first
-digit is not decimal, \popasm\ (and other assemblers) will treat the
-string
-as a symbol, not a number. For instance, AH is a register, but 0AH is
-a number (10 in hex notation).}}
-\item{All digits must be valid in the number base}
+   first digit is not decimal, \popasm\ (and other assemblers) will treat
+   the string as a symbol, not a number. For instance, AH is a register,
+   but 0AH is a number (10 in hex notation).}}
+\item{All digits must be valid in the number base.} For example, ``3'' is
+   not a valid digit in binary notation.
 \end{itemize}
 
 A separator is an underline (\_) character that may appear anywhere
-among
-the number digits. They are ignored by \popasm, but help people read
-long
-numbers.
+among the number digits, except that it cannot be the first character.
+They are ignored by \popasm, but help people read long numbers.
 
 Examples:
 
 \begin{itemize}
 \item{12345678} is a valid number, because all of its digits are in the
-range 0--9
+   range 0--9
 \item{12\_345\_678} is the same as above. Note how separators play the
-same role
-as a comma (that is, as a human being would write 12,345,678 to make
-it more readable)
+   same role as a comma (that is, as a human being would write 12,345,678
+   to make it more readable)
 \item{12\_34\_5\_67\_\_\_8} also works, and is \emph{exactly} as the
-other two
-numbers above, despite looking weird and not being very useful.
+   other two numbers above, despite looking weird and not being very useful.
+\item{\_12\_345\_678} is not a number because the first character is not
+   a digit.
 \end{itemize}
 
 Typical uses for separators include separating binary fields of bit
@@ -296,21 +377,20 @@ Bits & Description\\
 Thanks to the separators, the programmer can now write:
 
 \begin{verbatim}
-                 ; p  snd recv
-        MOV     AL,11_000_010_B
+                         ; p  snd recv
+                MOV     AL,11_000_010_B
 \end{verbatim}
 
 That is, a priority $p = 11 (binary) = 3$, a sender whose ID is $snd
 = 000 (binary) = 0$ and a receiver whose ID is $recv = 010 (binary)
 = 2$ are clearly encoded within AL. More complicated examples may
 look messy without separators. The B suffix appended to that
-number stands for ``binary'', as discussed in the next subsection.
+number stands for ``binary'', as discussed in the next section.
 
-\subsubsection{Using other bases}
+\section{Using other bases}
 As can be seen in the last example, \popasm\ allows one to specify a
-number in many bases
-simply by appending a suffix. Bases and suffixes supported by \popasm\
-are:
+number in many bases simply by appending a suffix. Bases and suffixes
+supported by \popasm\ are:
 
 \begin{table}[h]
 \begin{center}
@@ -333,14 +413,20 @@ h or H & Hex (base 16)  & 0--9, A--F and a--f\protect{\footnotemark}\\
 There are two other ways of declaring a number as hex:
 
 \begin{itemize}
-\item{Using the 0x or 0X prefix}, like in C language. If you use this prefix,
-the hex number that follows it does not need to begin with a decimal digit,
-that is, both 0xA and 0x0A are ok.
+\item{Using the 0x or 0X prefix}, like in C language. If you use this
+   prefix, the hex number that follows it does not need to begin with
+   a decimal digit, that is, both 0xA and 0x0A are ok.
 \item{Using the \$ prefix}, which may be dangerous. Mistaking -\$70 (-70h)
-with \$-70 (current offset minus 70) will surely lead to disaster.
+   with \$-70 (current offset minus 70) will surely lead to disaster.
 \end{itemize}
 
-\subsubsection{Real numbers}
+It is important to note that if you do not explicitly specify a number
+as binary, octal, decimal or hex, \popasm\ will use the current radix
+value, which defaults to 10. That is, unless you specify otherwise, all
+numbers will be read in decimal notation. See section \ref{RADIXCMD} if
+you want to change the default radix.
+
+\section{Real numbers}
 Real numbers can be written in two forms:
 
 \begin{itemize}
@@ -355,7 +441,7 @@ on both integer and real numbers. Real numbers have no storage limit either.
 \popasm\ has also the advantage of neither rounding nor truncating real numbers.
 They have their exact values stored as long as possible.
 
-\subsection{Operators}
+\chapter{Operators}
 \popasm\ can perform several arithmetic operations on numbers and symbols. The
 operators currently supported, in increasing order of precedence, are listed in
 table \ref{OPTAB}.
@@ -385,7 +471,7 @@ Lowest precedence  & OWORD & Oct WORD --- 128-bit qualifier\\
                    & AND \& & Boolean AND\\
 \hline
                    & + & Addition\\
-                   & - & subtraction\\
+                   & - & Subtraction\\
 \hline
                    & * & Multiplication\\
                    & / & Division\\
@@ -409,7 +495,7 @@ To be continued.
 
 \footnotetext{Due to compatibility with \nasm.}
 
-\section{Registers}
+\chapter{Registers}
 \popasm\ supports all registers present in each x86 CPU, except the ones
 added in IA-64 architecture:
 
@@ -430,44 +516,51 @@ compatibility with \nasm. ST is an alias for ST(0).
 Register names are case insensitive (i.e. AX, ax, aX and Ax are all the
 same thing).
 
-\section{Memory references}
-Memory references can be specified using square brackets [] around an expression.
+\chapter{Expressions\label{EXPR}}
+
+An expression may be either a single term or a sequence of terms
+connected by operators. A term, in turn, can be a number or a symbol.
+This section explains how \popasm\ performs assembly-time arithmetics
+and works with numbers.
+
+\chapter{Memory references}
+Memory references can be specified using square brackets [ ] around an expression.
 For instance:
 
 \begin{verbatim}
-        MOV     AX,1234
+                MOV     AX,1234
 \end{verbatim}
 
-writes the value $1234$ in AX, but
+\noindent writes the value $1234$ in AX, but
 
 \begin{verbatim}
-        MOV     AX,[1234]
+                MOV     AX,[1234]
 \end{verbatim}
 
-writes the word pointed to by $1234$ in AX. In this case, DS is used as the
+\noindent writes the word pointed to by $1234$ in AX. In this case, DS is used as the
 default segment register. If you wanted to use another segment register (say,
 ES), you would write:
 
 \begin{verbatim}
-        MOV     AX,ES:[1234]
+                MOV     AX,ES:[1234]
 \end{verbatim}
 
-or
+\noindent or
 
 \begin{verbatim}
-        MOV     AX,[ES:1234]     ; same as above
+                MOV     AX,[ES:1234]     ; same as above
 \end{verbatim}
 
 This latter form was added for compatibility with \nasm\ and \tasm\ ideal mode.
 This document uses the former syntax throughoutly, though.
 
-\subsection{Weak and strong memory references}
+\section{Weak and strong memory references}
 Programmers usually need to store data in variables. Those variables can then
 be referenced by their names. For example, if VALUE is a word variable, its
 contens can be copied to CX by the following command:
 
 \begin{verbatim}
-        MOV     CX,VALUE         ; CX = VALUE's contents
+                MOV     CX,VALUE         ; CX = VALUE's contents
 \end{verbatim}
 
 Unfortunately, different assemblers may give different meanings to the line
@@ -483,14 +576,14 @@ a variable's offset, you should use the \emph{OFFSET} keyword. The example
 above would be rewritten as:
 
 \begin{verbatim}
-        MOV     CX,OFFSET VALUE  ; CX = VALUE's offset
+                MOV     CX,OFFSET VALUE  ; CX = VALUE's offset
 \end{verbatim}
 
 On the other hand, a \bf{strong memory reference} is always enclosed within a
 pair of matching square brackets. Example:
 
 \begin{verbatim}
-        MOV     CX,[VALUE]       ; CX = VALUE's contents
+                MOV     CX,[VALUE]       ; CX = VALUE's contents
 \end{verbatim}
 
 The reader is strongly encouraged to avoid weak memory references, for its
@@ -501,6 +594,65 @@ that way, your code will rely neither on \popasm's default behavior, nor the
 presence/absence of command-line options.
 
 To be continued.
+
+\chapter{\popasm\ commands}
+\section{.RADIX\label{RADIXCMD}}
+This command allows the developer to change the default radix of numbers
+from the point the command is issued until the next .RADIX command or
+end-of-file is found. \popasm\ sets the default radix to 10 at the start
+of each pass.
+
+\subsection{Syntax}
+
+\begin{verbatim}
+                .RADIX  expression
+\end{verbatim}
+
+\noindent where \emph{expression} is a constant integer numeric expression
+that evaluates to 2, 8, 10 or 16. \emph{expression} cannot be affected by
+.RADIX commands, that is, its default radix is always decimal regardless
+of previous commands.
+
+\subsection{Examples}
+
+Our first example writes the same number in binary, using the ``B'' suffix
+and the .RADIX command.
+
+\begin{verbatim}
+BINARY_NUMBER   DB      11000111B             ; 'B' means binary
+
+                .RADIX  2
+                ; Numbers default to be binary from now on
+
+BINARY_NUMBER2  DB      11000111              ; same as above
+
+                .RADIX  10
+                ; Numbers default to be decimal again
+
+DECIMAL_NUMBER  DD      11000111              ; decimal!
+\end{verbatim}
+
+It is still possible to use other bases when the default radix is not
+decimal, but special care should be taken when numbers default to be hex.
+In the next example, the developer changes the default radix to be 16
+and attempts to define a variable whose value is 12 in decimal.
+
+\begin{verbatim}
+                .RADIX  16
+                ; Numbers default to be hex from now on
+
+AMBIGUOUS       DD      12D                   ; What does 'D' mean?
+DECIMAL_NUMBER  DD      12T                   ; 'T' means decimal
+HEX_NUMBER      DD      12                    ; 12h
+\end{verbatim}
+
+Note that 'D' is a valid digit in hex notation. This means that ``12D''
+is interpreted as ``12Dh'', not 12 in decimal notation. In order to
+avoid this ambiguity, \popasm\ also accepts ``T'' as a suffix for
+decimal notation. It can be used no matter what the current radix is.
+The same remarks hold for the binary suffixes ``B'' and ``Y'': ``11B''
+is an hex number when the current radix is 16, but ``11Y'' is always
+binary.
 
 \begin{thebibliography}{12}
 \bibitem{UFES} Federal University of Esp\'{\i}rito Santo -- ES -- Brazil.
