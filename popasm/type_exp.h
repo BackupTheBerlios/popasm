@@ -35,26 +35,27 @@ class UnexpectedSegmentPrefix;
 class Expression : BasicExpression<Number, Symbol>
 {
 	Type t;								// Expression type
-	unsigned int Size;				// Explicit size in bits, if any. Must be multiple of 8. Zero means no size restrictions
 	Expression *SegmentPrefix;		// Segment prefix (0 if none)
 
 	public:
-	Expression () throw () : t(Type::SCALAR), Size(0), SegmentPrefix(0) {}
+	Expression () throw () : t(0, Type::SCALAR, Type::NONE), SegmentPrefix(0) {}
 	Expression (Number *n, Symbol *s) throw ();
 	Expression (const Expression &e) : BasicExpression<Number, Symbol> (e)
 	{
 		t = e.t;
-		Size = e.Size;
 		SegmentPrefix = (e.SegmentPrefix == 0) ? 0 : e.SegmentPrefix->Clone();
 	}
 
 	~Expression () throw () {delete SegmentPrefix;}
 	virtual Expression *Clone() const {return new Expression(*this);}
 
-	unsigned int GetSize () const throw () {return Size;}
+	unsigned int GetSize () const throw () {return t.GetSize();}
 	void SetSize (unsigned int s, Number::NumberType nt = Number::ANY) throw (InvalidSize, CastFailed);
 	Type::TypeName GetType () const throw () {return t.GetCurrentType();}
 	const Expression *GetSegmentPrefix () const throw () {return SegmentPrefix;}
+
+	Type::Distance GetDistanceType () const throw () {return t.GetDistanceType();}
+	void SetDistanceType (Type::Distance dist);
 
 	unsigned int QuantityOfTerms () const throw () {return Terms.size();}
 

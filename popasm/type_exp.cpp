@@ -15,6 +15,7 @@
  *                                                                         *
  ***************************************************************************/
 
+#include "register.h"
 #include "type_exp.h"
 #include "symbol.h"
 #include <algorithm>
@@ -42,14 +43,28 @@ void Expression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) t
 	else
 	{
 		// STRONG or WEAK memory. The user is allowed to change the Size at will
-		Size = s;
+		t.SetSize(s);
 	}
+}
+
+void Expression::SetDistanceType (Type::Distance dist)
+{
+	// Must be a single term
+	if (QuantityOfTerms() != 1) throw 0;
+
+	const pair<Number *, Symbol *> *x = TermAt (0);
+	if (x->second != 0)
+	{
+		// Cannot have "near ax"
+		if (dynamic_cast<const Register *> (x->second) != 0) throw 0;
+	}
+
+	t.SetDistanceType(dist);
 }
 
 Expression::Expression (Number *n, Symbol *s) throw () : BasicExpression<Number, Symbol> (n, s)
 {
-	t = Type::SCALAR;
-	Size = 0;
+	t = Type (0, Type::SCALAR, Type::NONE);
 	SegmentPrefix = 0;
 }
 
@@ -72,7 +87,6 @@ Expression &Expression::operator=  (const Expression &e) throw ()
 		SegmentPrefix = e.SegmentPrefix->Clone();
 
 	t = e.t;
-	Size = e.Size;
 	return *this;
 }
 
@@ -86,7 +100,6 @@ Expression &Expression::operator+= (const Expression &e)
 
 	BasicExpression<Number, Symbol>::operator+= (e);
 	t += e.t;
-	Size = 0;
 	return *this;
 }
 
@@ -97,7 +110,6 @@ Expression &Expression::operator-= (const Expression &e)
 	BasicExpression<Number, Symbol>::operator-= (e);
 
 	t -= e.t;
-	Size = 0;
 	return *this;
 }
 
@@ -108,7 +120,6 @@ Expression &Expression::operator*= (const Expression &e)
 	BasicExpression<Number, Symbol>::operator*= (e);
 
 	t *= e.t;
-	Size = 0;
 	return *this;
 }
 
@@ -119,7 +130,6 @@ Expression &Expression::operator/= (const Expression &e)
 	BasicExpression<Number, Symbol>::operator/= (e);
 
 	t /= e.t;
-	Size = 0;
 	return *this;
 }
 
@@ -130,7 +140,6 @@ Expression &Expression::operator%= (const Expression &e)
 	BasicExpression<Number, Symbol>::operator%= (e);
 
 	t %= e.t;
-	Size = 0;
 	return *this;
 }
 
@@ -139,7 +148,6 @@ Expression &Expression::operator- ()
 	BasicExpression<Number, Symbol>::operator- ();
 
 	t = -t;
-	Size = 0;
 	return *this;
 }
 
@@ -148,7 +156,6 @@ Expression &Expression::operator~ ()
 	BasicExpression<Number, Symbol>::operator~ ();
 
 	t = ~t;
-	Size = 0;
 	return *this;
 }
 
@@ -159,7 +166,6 @@ Expression &Expression::operator&= (const Expression &e)
 	BasicExpression<Number, Symbol>::operator&= (e);
 
 	t &= e.t;
-	Size = 0;
 	return *this;
 }
 
@@ -170,7 +176,6 @@ Expression &Expression::operator|= (const Expression &e)
 	BasicExpression<Number, Symbol>::operator|= (e);
 
 	t |= e.t;
-	Size = 0;
 	return *this;
 }
 
@@ -181,7 +186,6 @@ Expression &Expression::operator^= (const Expression &e)
 	BasicExpression<Number, Symbol>::operator^= (e);
 
 	t ^= e.t;
-	Size = 0;
 	return *this;
 }
 
@@ -192,7 +196,6 @@ Expression &Expression::operator<<= (const Expression &e)
 	BasicExpression<Number, Symbol>::operator<<= (e);
 
 	t <<= e.t;
-	Size = 0;
 	return *this;
 }
 
@@ -203,7 +206,6 @@ Expression &Expression::operator>>= (const Expression &e)
 	BasicExpression<Number, Symbol>::operator>>= (e);
 
 	t >>= e.t;
-	Size = 0;
 	return *this;
 }
 
