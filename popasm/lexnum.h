@@ -99,22 +99,24 @@ class Number : public Token
 	bool operator== (const Number &x) const throw () {return (n == x.n);}
 	bool operator!= (const Number &x) const throw () {return (n != x.n);}
 
-	string Print () const throw ()
+	static string PrintSize (unsigned int Size) throw ()
 	{
-		string s;
-
 		switch (Size)
 		{
-			case 8: s = "byte "; break;
-			case 16: s = "word "; break;
-			case 32: s = "dword "; break;
-			case 48: s = "pword "; break;
-			case 64: s = "qword "; break;
-			case 80: s = "tbyte "; break;
-			default: break;
+			case 8: return "byte";
+			case 16: return "word";
+			case 32: return "dword";
+			case 48: return "pword";
+			case 64: return "qword";
+			case 80: return "tbyte";
 		}
 
-		return s + n.Print();
+		return string();
+	}
+
+	string Print () const throw ()
+	{
+		return PrintSize (Size) + " " + n.Print();
 	}
 
 	virtual Number *Clone() const throw () {return new Number (*this);}
