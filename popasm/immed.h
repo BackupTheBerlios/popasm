@@ -118,7 +118,7 @@ class RelativeArgument : public Immediate::IdFunctor
 
 	public:
 	RelativeArgument (int dist) throw () : RelativeDistance(dist) {}
-	~RelativeArgument () throw () {}
+	virtual ~RelativeArgument () throw () {}
 
 	int GetRelativeDistance () const throw () {return RelativeDistance;}
 
