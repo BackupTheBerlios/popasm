@@ -17,3 +17,33 @@
 
 #include "symbol.h"
 
+const Variable *Aggregate::FindMember (const string &v) const throw ()
+{
+	// Searches all members for the one named s
+	for (vector<const Variable *>::const_iterator i = Members.begin(); i != Members.end(); i++)
+		if (v == (*i)->GetName()) return *i;
+
+	return 0;
+}
+
+Aggregate::~Aggregate () throw ()
+{
+	for (vector<const Variable *>::const_iterator i = Members.begin(); i != Members.end(); i++)
+		delete *i;
+}
+
+void Structure::AddMember (const Variable *v) throw ()
+{
+	// New members in a structure always increase its size
+	Aggregate::AddMember (v);
+	Size += v->GetSize() * v->GetLength();
+}
+
+void Union::AddMember (const Variable *v) throw ()
+{
+	unsigned int NewSize = v->GetSize() * v->GetLength();
+
+	// The size of an union is always the size of the greatest member
+	Aggregate::AddMember (v);
+	if (NewSize > Size) Size = NewSize;
+}
