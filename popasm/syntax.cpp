@@ -209,8 +209,18 @@ bool AdditiveUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 	// Writes the operand size prefix if necessary
 	WriteOperandSizePrefix (Arguments, Output);
 
-	// Gets the register
-	reg = dynamic_cast<const Register *> (Arguments[0]->GetData());
+
+	// Gets the relevant argument for type specification
+	switch (OperandSizePrefixUsage)
+	{
+		case SECOND_ARGUMENT:
+			reg = dynamic_cast<const Register *> (Arguments[1]->GetData());
+			break;
+
+		default:
+			reg = dynamic_cast<const Register *> (Arguments[0]->GetData());
+			break;
+	}
 
 	// Writes the encoding, added by the register code
 	(Encoding | Opcode (reg->GetCode())).Write (Output);
@@ -483,15 +493,12 @@ bool StringSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 	// Gets the relevant argument for type specification
 	switch (OperandSizePrefixUsage)
 	{
-		case FIRST_ARGUMENT:
-			mem = dynamic_cast<const Memory *> (Arguments[0]->GetData());
-			break;
-
 		case SECOND_ARGUMENT:
 			mem = dynamic_cast<const Memory *> (Arguments[1]->GetData());
 			break;
 
 		default:
+			mem = dynamic_cast<const Memory *> (Arguments[0]->GetData());
 			break;
 	}
 
