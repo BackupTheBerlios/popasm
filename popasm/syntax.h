@@ -21,31 +21,87 @@
 #include <vector>
 #include "argument.h"
 #include "opcode.h"
+#include "register.h"
 
 class Syntax
 {
-	Opcode Encoding;
-
-	enum {MaximumArity = 3};
-	const BasicArgument *ArgumentTypes[MaximumArity];
-
-	// Says if the order of the types of the arguments can be exchanged
-	bool Interchangeable;
-	// Type check to be performed
-	Argument::CheckType Check;
+	protected:
 	// Precedence (priority) of this syntax. The ones above OptimizedPrecedence
 	// should not throw exceptions if they fail
-	unsigned int Precedence;
+	const unsigned int Precedence;
 	enum {OptimizedPrecedence = 10000};
+
+	// Instruction basic encoding
+	const Opcode Encoding;
+
+	// Arguments accepted by this syntax
+	vector<BasicIdFunctor *> ArgumentTypes;
+	// Says if the order of the types of the arguments can be exchanged
+	bool Interchangeable;
+
+	public:
+	enum OperandSizeDependsOn {FIRST_ARGUMENT, SECOND_ARGUMENT, THIRD_ARGUMENT, NOTHING, MODE_16BITS, MODE_32BITS};
+
+	protected:
+	OperandSizeDependsOn OperandSizePrefixUsage;
+	void WriteOperandSizePrefix (vector<Argument *> &Arguments, vector<Byte> &Output, unsigned int CurrentMode) const throw ();
+	void WriteOperandSizePrefix (Argument *arg, vector<Byte> &Output, unsigned int CurrentMode) const throw ();
+
+	bool Match (vector<Argument *> &Arguments) const throw ();
+
+	public:
+	Syntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, bool i = false) throw ()
+		: Precedence(p), Encoding(op), Interchangeable(i), OperandSizePrefixUsage(dep) {}
+	virtual ~Syntax () throw ();
+
+	bool operator< (const Syntax &s) const throw() {return Precedence < s.Precedence;}
+	virtual bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output, unsigned int CurrentMode) const throw () = 0;
+};
+
+// Syntaxes of instructions that take no arguments
+class ZerarySyntax : public Syntax
+{
+	public:
+	ZerarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep) throw () : Syntax (p, op, dep) {}
+	ZerarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg) throw ()
+		: Syntax (p, op, dep) {ArgumentTypes.push_back (arg);}
+	~ZerarySyntax () throw () {}
+
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output, unsigned int CurrentMode) const throw ();
+};
+
+// Syntaxes of instructions that take one argument
+class UnarySyntax : public Syntax
+{
+	// Bits affected by direction and word bits
+	Byte dw_mask;
+
+	public:
+	UnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, Byte dwm = 0) throw ();
+	~UnarySyntax () throw () {}
+
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output, unsigned int CurrentMode) const throw ();
+};
+
+// Syntaxes of instructions whose only argument is added to the basic encoding
+class AdditiveUnarySyntax : public UnarySyntax
+{
+	public:
+	AdditiveUnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, Byte dwm = 0)
+		throw () : UnarySyntax (p, op, dep, arg, dwm) {}
+	~AdditiveUnarySyntax () throw () {}
+
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output, unsigned int CurrentMode) const throw ();
+};
+
+// Syntaxes of instructions that take two argument
+class BinarySyntax : public Syntax
+{
+	// Type check to be performed
+	Argument::CheckType Check;
 
 	// Bits affected by direction and word bits
 	Byte dw_mask;
-	// Argument that defines the operand-size prefix (0 = first, 1 = second, -1 = none)
-	int SizeArgument;
-
-	// Operating mode the instruction works on by default. Eg. PUSHA works in 16 bits mode, while PUSHAD in 32.
-	// Useful only by zerary syntaxes
-	unsigned int DefaultMode;
 
 	// States the usage of the mod_reg_r/m byte. ABSENT means it does not exist at all, PARTIAL
 	// means the reg field is an extension of the opcode, and PRESENT means the byte is a function
@@ -55,18 +111,21 @@ class Syntax
 	private:
 	ModRegRM_Usage mrr_usage;
 
-	bool Match (vector<Argument *> &Arguments) const throw ();
-	unsigned int GetArity () const throw ();
-
 	public:
-	Syntax (unsigned int p, const Opcode &op, Byte dwm, int szarg = -1, unsigned int dm = 16) throw ();
-	Syntax (unsigned int p, const Opcode &op, const BasicArgument *t0, Byte dwm, ModRegRM_Usage usage, int szarg = 0) throw ();
-	Syntax (unsigned int p, const Opcode &op, const BasicArgument *t0, const BasicArgument *t1,
-		Argument::CheckType ct, bool i, Byte dwm, ModRegRM_Usage usage, int szarg = 0) throw ();
+	BinarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, bool i,
+	              Argument::CheckType chk, Byte dwm, ModRegRM_Usage usage,
+	              BasicIdFunctor *arg1, BasicIdFunctor *arg2) throw ();
+	~BinarySyntax () throw () {}
 
-	~Syntax () throw () {}
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output, unsigned int CurrentMode) const;
+};
 
-	bool operator< (const Syntax &s) const throw() {return Precedence < s.Precedence;}
+class FPUBinarySyntax : public Syntax
+{
+	public:
+	FPUBinarySyntax (unsigned int p, const Opcode &op, BasicIdFunctor *arg1, BasicIdFunctor *arg2) throw ();
+	~FPUBinarySyntax () {}
+
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output, unsigned int CurrentMode) const;
 };
 
