@@ -25,6 +25,8 @@
 #include <string>
 #include <algorithm>
 
+#include "asmer.h"
+
 // typedefs used here to save some typing and increase portability
 typedef unsigned char Byte;
 typedef unsigned short int Word;
@@ -41,5 +43,7 @@ Dword SHR (Dword d, int n) throw ();
 Dword SAR (Dword d, int n) throw ();
 
 string Print (unsigned long int i) throw ();
+
+extern Assembler *CurrentAssembler;
 
 #endif
