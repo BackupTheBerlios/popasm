@@ -79,6 +79,8 @@ PopAsm::PopAsm (unsigned int InitialMode) throw () : Assembler (InitialMode)
 	Instruction::SetupInstructionTable ();
 	PrefixInstruction::SetupPrefixTable ();
 	Directive::SetupDirectiveTable ();
+
+	WeakMemoryTranslation = Type::STRONG_MEMORY;
 }
 
 PopAsm::~PopAsm () throw ()

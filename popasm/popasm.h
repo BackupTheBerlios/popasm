@@ -32,9 +32,13 @@ class PopAsm : public Assembler
 	static const OperatorData<Expression> *OperatorTable[];
 	static const EncloserData<Expression> *EncloserTable[];
 
+	Type::TypeName WeakMemoryTranslation;
+
 	public:
 	PopAsm (unsigned int InitialMode) throw ();
 	~PopAsm () throw ();
+
+	Type::TypeName TranslateWeakMemory() throw () {return WeakMemoryTranslation;}
 };
 
 #endif
