@@ -25,6 +25,7 @@
 #include <exception>
 #include "argument.h"
 #include "number.h"
+#include "defs.h"
 
 class UnknownImmediateSize : public exception
 {
@@ -37,6 +38,20 @@ class UnknownImmediateSize : public exception
 	const char *what () const throw () {return WhatString;}
 };
 
+class UnexpectedSize : public exception
+{
+	string WhatString;
+
+	public:
+	UnexpectedSize (unsigned long int expected, unsigned long int got) throw () : WhatString ("Unexpected immediate size. Expected ")
+	{
+		WhatString += Print(expected) + " bits got " + Print(got) + " bits.";
+	}
+	~UnexpectedSize () throw () {}
+
+	const char *what () const throw () {return WhatString.c_str();}
+};
+
 class Immediate : public BasicArgument
 {
 	RealNumber Value;
@@ -47,6 +62,7 @@ class Immediate : public BasicArgument
 	~Immediate () throw () {}
 
 	const RealNumber &GetValue() const throw () {return Value;}
+	bool IsInteger () const throw () {return Value.IsInteger();}
 	void SetSize (unsigned int sz, Number::NumberType t = Number::ANY) const throw (InvalidSize, CastFailed);
 
 	// Returns the value of the number as an unsigned long int
@@ -70,7 +86,7 @@ class Immediate : public BasicArgument
 	string Print() const throw() {return Number::PrintSize(GetSize()) + " " + Value.Print();}
 };
 
-template <long int n>
+template <int sz, long int n>
 class ImmedEqual : public UnaryFunction<const BasicArgument *, bool>
 {
 	public:
@@ -78,8 +94,25 @@ class ImmedEqual : public UnaryFunction<const BasicArgument *, bool>
 	{
 		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
 		if (immed == 0) return false;
-		if ((arg->GetSize() != 0) || (!immed->GetValue().GetInteger())) return false;
-		return immed->GetValue() == RealNumber (n);
+		if (!MatchSize (sz, immed->GetSize())) return false;
+		if (!immed->IsInteger()) return false;
+		return immed->GetLong() == n;
+	}
+};
+
+template <int sz, long int a, long int b>
+class ImmedRange : public UnaryFunction<const BasicArgument *, bool>
+{
+	public:
+	result_type operator() (argument_type arg)
+	{
+		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
+		if (immed == 0) return false;
+		if (!MatchSize (sz, immed->GetSize())) return false;
+		if (!immed->IsInteger()) return false;
+
+		long int x = immed->GetLong();
+		return (x >= a) && (x <= b);
 	}
 };
 
@@ -92,24 +125,26 @@ class Immed : public UnaryFunction<const BasicArgument *, bool>
 		// Checks whether we have an integer immediate value
 		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
 		if (immed == 0) return false;
-		if (immed->GetSize() != 0)
-		{
-			// If the size is the same but the type is different, throw exception.
-			if (immed->GetSize() != n)
-				return 0;
-			else
-				immed->SetSize (n, t);
+		if (!immed->IsInteger()) throw IntegerExpected (immed->GetValue());
 
-			return true;
+		// If the size is the same but the type is different, throw exception.
+		if ((immed->GetSize() != n) && (immed->GetSize() != 0))
+		{
+			if (ThrowExceptions)
+				throw UnexpectedSize (n, immed->GetSize());
+			else
+				return false;
 		}
 
+		// Attempts to convert argument
 		try
 		{
 			immed->SetSize (n, t);
 		}
 		catch (...)
 		{
-			if (ThrowExceptions) throw;
+			// Rethrows exception or return false depending on the last template argument
+			if (ThrowExceptions || (immed->GetSize() == n)) throw;
 			return false;
 		}
 
