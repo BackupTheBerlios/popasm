@@ -20,13 +20,13 @@
 
 #include <set>
 #include <string>
-#include <typeinfo>
 
 #include "argument.h"
 #include "command.h"
 #include "hashtab.h"
 #include "inp_file.h"
 #include "memory.h"
+#include "opcode.h"
 #include "register.h"
 #include "syntax.h"
 
@@ -48,14 +48,14 @@ class Instruction : public Command
 	static void SetupInstructionTable () throw ();
 	static BasicSymbol *Read (const string &str, InputFile &inp);
 
-	void Assemble (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding) const;
+	void Assemble (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding, unsigned int CurrentMode) const;
 };
 
 // Instructions that take no arguments
 class ZeraryInstruction : public Instruction
 {
 	public:
-	ZeraryInstruction (const string &nm, unsigned int n, Byte b0, Byte b1, Byte b2) throw ();
+	ZeraryInstruction (const string &nm, const Opcode &op) throw ();
 	~ZeraryInstruction () throw () {}
 };
 
@@ -63,18 +63,27 @@ class ZeraryInstruction : public Instruction
 class ZeraryUnaryInstruction : public Instruction
 {
 	public:
-	ZeraryUnaryInstruction (const string &nm,
-		unsigned int n0, Byte b00, Byte b01, Byte b02,
-		unsigned int n1, Byte b10, Byte b11, Byte b12, const type_info *t1) throw ();
+	ZeraryUnaryInstruction (const string &nm, const Opcode &op0, const Opcode &op1, const BasicArgument * const t0) throw ();
 	~ZeraryUnaryInstruction () throw () {}
 };
 
-// Instructions that take two arguments. Any combination of register, memory and immediate are allowed.
-class BinaryInstruction : public Instruction
+// ARPL-like instruction
+class ARPLInstruction : public Instruction
 {
 	public:
-	BinaryInstruction (const string &nm, Byte Accum, Byte Immed, Byte Immed8, Byte ConstReg, Byte RegMem) throw ();
-	~BinaryInstruction () throw () {}
+	ARPLInstruction (const string &nm, const Opcode &op) throw ();
+	~ARPLInstruction () throw () {}
+};
+
+// Instructions that take two arguments. Any combination of register, memory and immediate are allowed.
+// Byte immediate values can be signed extended and accumulators have special optimized opcode.
+// Classical examples are ADC, ADD, AND, etc.
+class OptimizedBinaryInstruction : public Instruction
+{
+	public:
+	OptimizedBinaryInstruction (const string &nm, const Opcode &Accum, const Opcode &Immed,
+		const Opcode &Immed8, const Opcode &RegMem, Byte ConstReg) throw ();
+	~OptimizedBinaryInstruction () throw () {}
 };
 
 #endif
