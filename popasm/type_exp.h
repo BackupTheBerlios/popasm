@@ -85,9 +85,9 @@ class Expression
 	Expression &UnsignedModulus (const Expression &e);
 
 	Expression &MemberSelect (const Expression &e);
-	Expression &Compose (const Expression &e);
-	Expression &AddToList (const Expression &e);
-	Expression &DUP (const Expression &e);
+	Expression &Compose (Expression &e);
+	Expression &AddToList (Expression &e);
+	Expression &DUP (Expression &e);
 
 	const SimpleExpression *GetSimpleExpression() const throw ();
 	const DupExpression *GetDupExpression() const throw ();
@@ -131,9 +131,12 @@ class ExpressionData : public Type
 	virtual ExpressionData &UnsignedModulus (const ExpressionData &e) {Type::operator%= (e); return *this;}
 
 	virtual ExpressionData &MemberSelect (const ExpressionData &e) {Type::operator= (e); return *this;}
-	virtual ExpressionData &Compose (const ExpressionData &e) {Type::operator= (e); return *this;}
+	virtual ExpressionData *Compose (ExpressionData &e) {Type::operator= (e); return this;}
+
 	const SimpleExpression *GetSimpleExpression() const throw ();
+	SimpleExpression *GetSimpleExpression() throw ();
 	const DupExpression *GetDupExpression() const throw ();
+	DupExpression *GetDupExpression() throw ();
 };
 
 class SimpleExpression : public ExpressionData
@@ -186,9 +189,7 @@ class SimpleExpression : public ExpressionData
 	SimpleExpression &UnsignedModulus (const ExpressionData &e);
 
 	SimpleExpression &MemberSelect (const ExpressionData &e);
-	SimpleExpression &Compose (const ExpressionData &e);
-	static void AddToList (Expression &e1, const Expression &e2);
-	static void DUP (Expression &e1, const Expression &e2);
+	SimpleExpression *Compose (ExpressionData &e);
 
 	string Print () const throw ()
 	{
@@ -243,9 +244,10 @@ class DupExpression : public ExpressionData
 	DupExpression &UnsignedModulus (const ExpressionData &e);
 
 	DupExpression &MemberSelect (const ExpressionData &e);
-	DupExpression &Compose (const ExpressionData &e);
+	DupExpression *Compose (ExpressionData &e);
 
-	static void AddToList (Expression &e1, const Expression &e2);
+	static ExpressionData *AddToList (ExpressionData *e1, ExpressionData *e2);
+	static ExpressionData *DUP (ExpressionData *e1, ExpressionData *e2);
 };
 
 class UnexpectedSegmentPrefix : public ExpressionException

@@ -224,37 +224,25 @@ Expression &Expression::MemberSelect (const Expression &e)
 	return *this;
 }
 
-Expression &Expression::Compose (const Expression &e)
+Expression &Expression::Compose (Expression &e)
 {
-	Data->Compose (*e.Data);
+	Data = Data->Compose (*e.Data);
+	e.Data = 0;
 	return *this;
 }
 
 // This method must check compatibility between types before doing anything else
-Expression &Expression::AddToList (const Expression &e)
+Expression &Expression::AddToList (Expression &e)
 {
-/*
-	DupExpression *dexp = GetDupExpression ();
-
-	if (dexp == 0)
-	{
-		ReferenceCount<ExpressionData> *temp = Data;
-		Data = new ReferenceCount<ExpressionData> (new DupExpression());
-		Data->GetData().AddToList (temp);
-	}
-
-	Data->GetData().AddToList (e.Data);
-*/
+	Data = DupExpression::AddToList (Data, e.Data);
+	e.Data = 0;
 	return *this;
 }
 
-Expression &Expression::DUP (const Expression &e)
+Expression &Expression::DUP (Expression &e)
 {
-/*
-	ReferenceCount<ExpressionData> *NewData = GetData().DUP (e);
-	kill (Data);
-	Data = NewData;
-*/
+	Data = DupExpression::DUP (Data, e.Data);
+	e.Data = 0;
 	return *this;
 }
 
@@ -275,9 +263,19 @@ const SimpleExpression *ExpressionData::GetSimpleExpression() const throw ()
 	return dynamic_cast <const SimpleExpression *> (this);
 }
 
+SimpleExpression *ExpressionData::GetSimpleExpression() throw ()
+{
+	return dynamic_cast <SimpleExpression *> (this);
+}
+
 const DupExpression *ExpressionData::GetDupExpression() const throw ()
 {
 	return dynamic_cast <const DupExpression *> (this);
+}
+
+DupExpression *ExpressionData::GetDupExpression() throw ()
+{
+	return dynamic_cast <DupExpression *> (this);
 }
 
 SimpleExpression::SimpleExpression (Number *n, Symbol *s, const Type &tt) throw () : ExpressionData (tt), Value (n, s)
@@ -674,28 +672,17 @@ SimpleExpression &SimpleExpression::MemberSelect (const ExpressionData &exp)
 	return *this;
 }
 
-SimpleExpression &SimpleExpression::Compose (const ExpressionData &exp)
+SimpleExpression *SimpleExpression::Compose (ExpressionData &exp)
 {
-	const SimpleExpression *e = exp.GetSimpleExpression();
+	SimpleExpression *e = exp.GetSimpleExpression();
 	if (e == 0)
 		throw 0;
 
 	if ((SegmentPrefix != 0) || (e->SegmentPrefix != 0))
 		throw UnexpectedSegmentPrefix (*e);
 
-	SimpleExpression *seg = Clone();
-	(*this) = *e;
-	SegmentPrefix = seg;
-
-	return *this;
-}
-
-void SimpleExpression::AddToList (Expression &e1, const Expression &e2)
-{
-}
-
-void SimpleExpression::DUP (Expression &e1, const Expression &e2)
-{
+	e->SegmentPrefix = this;
+	return e;
 }
 
 DupExpression::DupExpression (const Type &t) throw () : ExpressionData(t)
@@ -889,12 +876,56 @@ DupExpression &DupExpression::MemberSelect (const ExpressionData &e)
 	return *this;
 }
 
-DupExpression &DupExpression::Compose (const ExpressionData &e)
+DupExpression *DupExpression::Compose (ExpressionData &e)
 {
 	throw 0;
-	return *this;
+	return this;
 }
 
-void DupExpression::AddToList (Expression &e1, const Expression &e2)
+ExpressionData *DupExpression::AddToList (ExpressionData *e1, ExpressionData *e2)
 {
+	DupExpression *dexp = e1->GetDupExpression();
+
+	if (dexp != 0)
+	{
+		// If there is no Count, just append e2 contents to the sequence
+		if (dexp->Count == 0)
+		{
+			dexp->DupList.push_back (e2);
+			return dexp;
+		}
+	}
+
+	// Replace e1 contents with a DupExpression containing the former data
+	dexp = new DupExpression (*e1);
+	dexp->DupList.push_back (e1);
+
+	// Adds the second expression and returns
+	dexp->DupList.push_back (e2);
+	return dexp;
+}
+
+ExpressionData *DupExpression::DUP (ExpressionData *e1, ExpressionData *e2)
+{
+	// First argument must be a SimpleExpression
+	SimpleExpression *sexp = e1->GetSimpleExpression();
+	if (sexp == 0)
+		throw 0;
+
+	// If Count is NULL, use it to store the counter
+	DupExpression *dexp = e2->GetDupExpression();
+	if (dexp != 0)
+	{
+		if (dexp->Count == 0)
+		{
+			dexp->Count = sexp;
+			return dexp;
+		}
+	}
+
+	// If we do not have a DupExpression or its Count is not NULL, create another one.
+	dexp = new DupExpression (*e2);
+	dexp->DupList.push_back (e2);
+	dexp->Count = sexp;
+	return dexp;
 }
