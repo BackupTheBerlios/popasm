@@ -213,7 +213,7 @@ class Memory : public BasicArgument
 			if (MatchSize (size, mem->GetSize()))
 				return Match (dist, mem->GetDistanceType()) && Match (type, mem->GetType());
 			else
-				if (size == UNDEFINED) throw UndefinedMemorySize();
+				if (mem->GetSize() == 0) throw UndefinedMemorySize();
 
 			return false;
 		}
