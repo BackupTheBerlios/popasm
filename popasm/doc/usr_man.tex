@@ -1888,7 +1888,71 @@ The second MOV instruction shows the prefered way of doing what
 the line before it does in other assemblers.
 
 \chapter{Macros}
-To be written.
+This chapter shows how macros can be defined and used. A macro is
+like a procedure, but there is a main difference: macros are
+expanded (``interpreted'') at assembly time; procedures are
+executed at run-time.
+
+Macros can be seen as an implicit way of performing ``cut-and-paste''
+of portions of code or data. Some of them are built-in and ready
+for use. Others are defined by the developer.
+
+\section{Built-in macros}
+The suported built-in macros are described in the next subsections.
+
+\subsection{REPT --- REPeaT}
+This macro allows one to repeat a block of statements several times.
+It's syntax is:
+
+\begin{verbatim}
+REPT n
+                Block of statements
+ENDM
+\end{verbatim}
+
+\noindent where $n$ is the number of times the block of statements
+must be repeated. It can be any numeric expression that evaluates to
+an integer number greater than or equal to zero. Note that if $n$
+equals to zero the block will be ignored. Example:
+
+\begin{verbatim}
+REPT 10
+                DB      1
+                DB      2, 3
+ENDM
+
+                DB      10 DUP (1, 2, 3)        ; Same as above
+\end{verbatim}
+
+This macro also supports nesting, that is, it is allowed to use REPT
+inside another REPT block.
+
+\subsection{TIMES --- repeat $n$ TIMES}
+Use this macro to repeat \emph{a single statement} several times.
+If you need to repeat several statements use the REPT macro instead.
+Its syntax is:
+
+\begin{verbatim}
+TIMES n         statement
+\end{verbatim}
+
+\noindent where $n$ is the number of times the statement must be
+repeated. It can be any numeric expression that evaluates to an
+integer number greater or equal to zero. Note that if $n$ equals
+to zero the statement will be ignored. Example:
+
+\begin{verbatim}
+TIMES 10        DB      1, 2, 3
+                DB      10 DUP (1, 2, 3)        ; Same as above
+\end{verbatim}
+
+
+\section{Defining your own macros}
+Because \popasm\ is compatible with \tasm\ and \nasm, both syntaxes
+for defining macros are supported.
+
+\subsection{\tasm\ syntax}
+\subsection{\nasm\ syntax}
 
 \appendix
 
