@@ -29,7 +29,7 @@ enum {BYTE = 2, WORD = 4, DWORD = 8, PWORD = 16, QWORD = 32, TBYTE = 64, OWORD =
 enum {SHORT = 2, NEAR = 4, FAR = 8};
 enum {INTEGER = 2, FLOAT = 4, BCD = 8};
 bool Match (int Restriction, int i) throw ();
-bool MatchSize (int sz);
+bool MatchSize (int SizeRestriction, int sz);
 
 // Thrown when types cannot be operated. E.g.: [5] + 1 = STRONG_MEMORY + SCALAR = error!
 class IncompatibleTypes : public exception

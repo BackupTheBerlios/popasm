@@ -168,13 +168,13 @@ bool Match (int Restriction, int i) throw ()
 	return (Restriction & i) != 0;
 }
 
-bool MatchSize (int Restriction, int i)
+bool MatchSize (int Restriction, int x)
 {
 	static const char Sizes[] = {0, 8, 16, 32, 48, 64, 80, 128};
 
-	for (int i = 0; i < 8; i++)
+	for (unsigned int i = 0; i < sizeof (Sizes); i++)
 	{
-		if (Sizes[i] == rest)
+		if (Sizes[i] == x)
 		{
 			return (Restriction & (1 << i)) != 0;
 		}
