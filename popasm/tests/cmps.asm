@@ -6,3 +6,4 @@ cmps [bx],fs:[di]
 bits 32
 cmps word fs:[bx],es:[di]
 cmps dword gs:[bx],[di]
+cmps byte gs:[bx],[edi]

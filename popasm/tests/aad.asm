@@ -8,5 +8,5 @@ aad word 6
 aad byte 12h
 aad near ax
 aad byte [cx]
-add byte [bx]
-add [bx]
+aad byte [bx]
+aad [bx]

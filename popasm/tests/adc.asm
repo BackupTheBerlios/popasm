@@ -15,4 +15,5 @@ adc [200h],5
 adc byte [200h],5
 adc byte [200h],byte 5
 adc [200h],byte 5
-
+adc byte [100h], word [200h]
+adc al,oword [bx]
