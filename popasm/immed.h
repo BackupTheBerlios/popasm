@@ -94,7 +94,7 @@ class Immediate : public BasicArgument
 		Value.Write(Output, GetSize() / 8);
 	}
 
-	string Print() const throw() {return Number::PrintSize(GetSize()) + " " + Value.Print();}
+	string Print() const throw() {return Type::PrintSize(GetSize()) + " " + Value.Print();}
 };
 
 template <int sz, long int n>
@@ -187,7 +187,13 @@ class RelativeArgument : public Immediate::IdFunctor
 		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
 		if (immed == 0) return false;
 
-		return (arg->GetDistanceType() == UNDEFINED) || (arg->GetDistanceType() == RelativeDistance);
+		if (arg->GetDistanceType() != RelativeDistance)
+			if (arg->GetDistanceType() == UNDEFINED)
+				return Type::CombineSD (arg->GetSize(), RelativeDistance);
+			else
+				return false;
+
+		return true;
 	}
 };
 
