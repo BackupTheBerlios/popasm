@@ -79,18 +79,6 @@ class JumpOutOfRange : public exception
 	const char *what() const throw () {return WhatString;}
 };
 
-class TypeMismatch : public exception
-{
-	string WhatString;
-
-	public:
-	TypeMismatch (const BasicArgument *a, const BasicArgument *b) throw ()
-		: WhatString (string("Type mismatch between ") + a->Print() + " and " + b->Print()) {}
-	~TypeMismatch () throw () {}
-
-	const char *what() const throw () {return WhatString.c_str();}
-};
-
 class InvalidSegmentOverride : public exception
 {
 	static const char WhatString[];
@@ -177,27 +165,6 @@ class BinarySyntax : public Syntax
 	~BinarySyntax () throw () {}
 
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
-};
-
-class OptimizedBinarySyntax : public BinarySyntax
-{
-	public:
-	OptimizedBinarySyntax (const Opcode &op, OperandSizeDependsOn dep, bool i,
-		Argument::CheckType chk, Byte dwm, ModRegRM_Usage usage,
-		BasicIdFunctor *arg1, BasicIdFunctor *arg2, BasicIdFunctor *arg3 = 0) throw ()
-		: BinarySyntax (op, dep, i, chk, dwm, usage, arg1, arg2, arg3) {}
-	~OptimizedBinarySyntax () throw () {}
-
-	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
-	{
-		try
-		{
-			return BinarySyntax::Assemble (Arguments, Output);
-		}
-		catch (...) {}
-
-		return false;
-	}
 };
 
 class FPUBinarySyntax : public Syntax

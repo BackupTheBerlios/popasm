@@ -290,12 +290,9 @@ bool BinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 	const Memory *mems[3] = {0, 0, 0};
 	const Immediate *immeds[3] = {0, 0, 0};
 
-	if (Arguments.size() >= 2)
-		if (!Arguments[0]->TypeCheck (*Arguments[1], Check))
-			throw TypeMismatch(Arguments[0]->GetData(), Arguments[1]->GetData());
-
-	// Verifies the type of each argument
+	// Verifies whether the combination of arguments is valid and their types match
 	if (!Match (Arguments)) return false;
+	if (Arguments.size() >= 2) Argument::TypeCheck (Arguments, Check);
 
 	// Writes the operand size prefix if necessary
 	WriteOperandSizePrefix (Arguments, Output);
@@ -465,9 +462,7 @@ bool StringSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 
 	// Performs type checking
 	if (Arguments.size() == 2)
-	{
-		if (!Arguments[0]->TypeCheck (*Arguments[1], Check)) throw TypeMismatch(Arguments[0]->GetData(), Arguments[1]->GetData());
-	}
+		Argument::TypeCheck (Arguments, Check);
 
 	// Gets the relevant argument for type specification
 	switch (OperandSizePrefixUsage)
