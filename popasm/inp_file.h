@@ -42,7 +42,7 @@ class UngetOverflow : public exception
 };
 
 // Input files are like input streams, but return tokens instead
-class InputFile : public ifstream
+class InputFile : ifstream
 {
 	typedef pair<string *, char> UngotString;
 
@@ -58,6 +58,9 @@ class InputFile : public ifstream
 	public:
 	InputFile (const char *FileName) throw () : ifstream (FileName), NextChar(0), CurrentLine(1) {}
 	~InputFile () throw () {}
+
+	bool operator! () const throw () {return ifstream::operator!();}
+	void ResetFile () throw ();
 
 	// Return the next string found in input file. Returns 0 if EOF is reached.
 	string *GetString () throw ();

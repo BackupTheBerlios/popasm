@@ -23,6 +23,20 @@
 
 string UngetOverflow::WhatString = "Carriage return ungot from line 1.";
 
+void InputFile::ResetFile () throw ()
+{
+	// Gets rid of pending ungot strings
+	while (!UngotStrings.empty())
+	{
+		UngotString &us = UngotStrings.top();
+		delete us.first;
+		UngotStrings.pop();
+	}
+
+	// Resets the file get pointer
+	seekg (0, ios::beg);
+}
+
 string *InputFile::GetString () throw ()
 {
 	string *s;
