@@ -31,7 +31,7 @@ class Immediate : public BasicArgument
 
 	public:
 	Immediate () {}
-	Immediate (const Number &n) throw () : BasicArgument(n.GetSize()), Value(n.GetValue()) {}
+	Immediate (const Number &n, Distance dist) throw () : BasicArgument(n.GetSize(), dist), Value(n.GetValue()) {}
 	~Immediate () throw () {}
 
 	const RealNumber &GetValue() const throw () {return Value;}
@@ -78,6 +78,26 @@ class Immed : public UnaryFunction<const BasicArgument *, bool>
 		catch (...) {return false;}
 
 		return true;
+	}
+};
+
+class RelativeArgument : public Immediate::IdFunctor
+{
+	Type::Distance RelativeDistance;
+
+	public:
+	RelativeArgument (Type::Distance dist) throw () : RelativeDistance(dist) {}
+	~RelativeArgument () throw () {}
+
+	Type::Distance GetRelativeDistance () const throw () {return RelativeDistance;}
+
+	result_type operator() (argument_type arg)
+	{
+		// Checks whether we have an integer immediate value
+		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
+		if (immed == 0) return false;
+
+		return (arg->GetDistanceType() == Type::NONE) || (arg->GetDistanceType() == RelativeDistance);
 	}
 };
 
