@@ -225,6 +225,9 @@ bool AdditiveUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 
 bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
 {
+	// Verifies the type of each argument
+	if (!Match (Arguments)) return false;
+
 	unsigned long int FinalOffset = Output.size();
 
 	// Writes the operand size prefix (if necessary) and the encoding
