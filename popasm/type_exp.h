@@ -51,12 +51,12 @@ class Expression : BasicExpression<Number, Symbol>
 	virtual Expression *Clone() const {return new Expression(*this);}
 
 	unsigned int GetSize () const throw () {return t.GetSize();}
-	void SetSize (unsigned int s, Number::NumberType nt = Number::ANY) throw (InvalidSize, CastFailed);
+	void SetSize (unsigned int s, Number::NumberType nt = Number::ANY) throw (InvalidSize, CastFailed, CastConflict);
 	Type::TypeName GetType () const throw () {return t.GetCurrentType();}
 	const Expression *GetSegmentPrefix () const throw () {return SegmentPrefix;}
 
 	int GetDistanceType () const throw () {return t.GetDistanceType();}
-	void SetDistanceType (int dist) throw (InvalidSizeCast);
+	void SetDistanceType (int dist) throw (InvalidSizeCast, CastConflict);
 
 	unsigned int QuantityOfTerms () const throw () {return Terms.size();}
 

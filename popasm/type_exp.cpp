@@ -20,9 +20,12 @@
 #include "symbol.h"
 #include <algorithm>
 
-void Expression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) throw (InvalidSize, CastFailed)
+void Expression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) throw (InvalidSize, CastFailed, CastConflict)
 {
-	if (t == Type::SCALAR)
+	if (!Type::CombineSD (s, t.GetDistanceType()))
+		throw CastConflict (Type::PrintDistance(t.GetDistanceType()), Type::PrintSize(s));
+
+	if (t.GetCurrentType() == Type::SCALAR)
 	{
 		// Searches the constant term in the expression and set its size. This is necessary to
 		// make [BYTE eax+3] be the same as [eax + BYTE 3]
@@ -31,6 +34,7 @@ void Expression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) t
 			if ((*i)->Constant())
 			{
 				(*i)->first->SetSize (s, nt);
+				t.SetSize (s);
 				return;
 			}
 		}
@@ -39,6 +43,7 @@ void Expression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) t
 		Number *dummy = new Number (0);
 		dummy->SetSize (s, nt);
 		BasicExpression<Number, Symbol>::operator+= (BasicExpression<Number, Symbol> (dummy, 0));
+		t.SetSize (s);
 	}
 	else
 	{
@@ -47,8 +52,11 @@ void Expression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) t
 	}
 }
 
-void Expression::SetDistanceType (int dist) throw (InvalidSizeCast)
+void Expression::SetDistanceType (int dist) throw (InvalidSizeCast, CastConflict)
 {
+	if (!Type::CombineSD (t.GetSize(), dist))
+		throw CastConflict (Type::PrintSize(t.GetSize()), Type::PrintDistance(dist));
+
 	if (t.GetCurrentType() != Type::STRONG_MEMORY)
 	{
 		// Must be a single term
