@@ -66,7 +66,7 @@ class FullPointer : public BasicArgument
 	Dword Offset;
 
 	public:
-	FullPointer (unsigned int sz = 0, Word seg = 0, Dword off = 0) throw (InvalidFullPointer, OffsetOverflow);
+	FullPointer (unsigned int sz = 0, Dword seg = 0, Dword off = 0) throw (InvalidFullPointer, OffsetOverflow);
 	~FullPointer () throw () {}
 
 	void Write (vector<Byte> &Output) const throw ();
