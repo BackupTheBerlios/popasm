@@ -84,7 +84,11 @@ string SimplifyString (const string &s, Word &Base, bool *Negative = 0) throw (I
 					if (!(((s[k] >= '0') && (s[k] <= '9')) || (s[k] == '_'))) throw InvalidNumber(s);
 					i = k;
 				}
+				else
+					i--;
 			}
+			else
+				i--;
 		}
 	}
 
@@ -249,46 +253,46 @@ const NaturalNumber NaturalNumber::Power (const NaturalNumber &n) const throw ()
 }
 
 // Shifts left whole words n times.
-void NaturalNumber::WordShiftLeft (Dword n) throw ()
+void NaturalNumber::WordShiftLeft (NaturalNumber n) throw ()
 {
 	// Something to shift?
-	if (empty()) return;
+	if (Zero() || n.Zero()) return;
 
-	// Makes room for the most significant words
-	resize (size() + n, 0);
+	// Shifts the first n[0] words
+	if (n[0] != 0) insert (begin(), static_cast<long int> (n[0]), 0);
+	n.erase(n.begin());
 
-	iterator x = end();
-	iterator y = x - n;
-
-	// Moves each word n positions left
-	while (y > begin())
+	// Shifts the remaining words
+	while (!n.Zero())
 	{
-		x--; y--;
-		*x = *y;
-	}
-
-	// Fill all opened positions with zero
-	while (x > begin())
-	{
-		x--;
-		*x = 0;
+		insert (begin(), static_cast<long int> (65536), 0);
+		n--;
 	}
 }
 
 // Shifts right whole words n times.
-void NaturalNumber::WordShiftRight (Dword n) throw ()
+void NaturalNumber::WordShiftRight (NaturalNumber n) throw ()
 {
-	unsigned int i, j;
+	// Shifting more words than we have?
+	if (n >= size())
+	{
+		clear();
+		return;
+	}
 
-	iterator x = begin();
-	iterator y = x + n;
+	// Something to shift?
+	if (n.Zero()) return;
 
-	// Shifts right each word by n positions
-	for (; y < end(); x++, y++) *x = *y;
+	// Shifts the first n[0] words
+	if (n[0] != 0) erase (begin(), begin() + n[0]);
+	n.erase(n.begin());
 
-	// Pops the quantity of shifted words or the whole vector, whichever is lesser
-	j = n < size() ? n : size();
-	for (i = 0; i < j; i++) pop_back();
+	// Shifts the remaining words
+	while (!n.Zero())
+	{
+		remove (begin(), begin() + 65536, 0);
+		n--;
+	}
 }
 
 // Compares two numbers and returns +1 if *this is the greatest one, 0 if equal and -1 otherwise
@@ -461,6 +465,50 @@ const NaturalNumber NaturalNumber::operator-- (int) throw ()
 	return copy;
 }
 
+void NaturalNumber::MatchSize (const NaturalNumber &n, Word w) throw ()
+{
+	if (size() < n.size())
+		resize (n.size(), w);
+}
+
+NaturalNumber &NaturalNumber::operator~ () throw ()
+{
+	NaturalNumber answer (*this);
+	return answer.OnesComplement();
+}
+
+NaturalNumber &NaturalNumber::OnesComplement () throw ()
+{
+	if (empty())
+	{
+		push_back (0xFFFF);
+	}
+	else
+	{
+		// Toggles all bits
+		for (iterator i = begin(); i != end(); i++)
+			*i ^= 0xFFFF;
+	}
+
+	// Skips leading zeroes
+	while (!empty())
+	{
+		if (back() == 0) pop_back();
+		else break;
+	}
+
+	return *this;
+}
+
+NaturalNumber &NaturalNumber::TwosComplement () throw ()
+{
+	if (empty()) return *this;
+
+	OnesComplement();
+	Increment();
+	return *this;
+}
+
 // Divides this by Divisor and returns the result. Optionally the remainer can
 // be returned by a pointer specified by the caller
 const NaturalNumber NaturalNumber::Divide (const NaturalNumber &n, NaturalNumber *Remainer = 0) const throw (DivisionByZero)
@@ -605,42 +653,43 @@ NaturalNumber &NaturalNumber::operator%= (const NaturalNumber &n) throw (Divisio
 	return *this;
 }
 
-NaturalNumber &NaturalNumber::operator<<= (Dword n) throw ()
+NaturalNumber &NaturalNumber::operator<<= (const NaturalNumber &n) throw ()
 {
+	if (n.Zero()) return *this;
+
 	Dword carry = 0;
+	Word p = n[0] & 0xF;
 
-	// Assures all shifts will be within the Word boundary
-	WordShiftLeft (SHR (n, 4));
-	n &= 0xF;
-
-	// Shifts all words
+	// First Shifts all words n % 16
 	for (iterator i = begin(); i != end(); i++)
 	{
-		carry |= ZeroExtend (*i) << n;
+		carry |= ZeroExtend (*i) << p;
 		*i = static_cast <Word> (carry);
 		carry = SHR (carry, 16);
 	}
 
 	if (carry != 0) push_back (static_cast<Word> (carry));
+
+	// Now shifts the remaining n & 0xFF...FF0 bits
+	WordShiftLeft (n >> 4);
 	return *this;
 }
 
-NaturalNumber &NaturalNumber::operator>>= (Dword n) throw ()
+NaturalNumber &NaturalNumber::operator>>= (const NaturalNumber &n) throw ()
 {
+	if (n.Zero()) return *this;
+
 	Dword carry = 0;
+	Word p = n[0] & 0xF;
 
-	// Assures all shifts will be within the Word boundary
-	WordShiftRight (SHR (n, 4));
-	n &= 0xF;
-
-	// Shifts each word
+	// Shifts each word n % 16
 	iterator i = end();
 	while (i != begin())
 	{
 		i--;
 		carry |= *i;
-		*i = SHR (carry, n);
-		carry &= (1 << n) - 1;
+		*i = SHR (carry, p);
+		carry &= (1 << p) - 1;
 		carry <<= 16;
 	}
 
@@ -648,6 +697,62 @@ NaturalNumber &NaturalNumber::operator>>= (Dword n) throw ()
 	if (!empty())
 	{
 		if (back() == 0) pop_back();
+	}
+
+	// Now shifts the remaining n & 0xFF...FF0 bits
+	if ((n.Size() > 1) || (n[0] > 15)) WordShiftRight (n >> 4);
+	return *this;
+}
+
+NaturalNumber &NaturalNumber::operator&= (const NaturalNumber &n) throw ()
+{
+	// If the first term is larger (in 16-bit words), resize it to be the same size of the other number
+	if (size() > n.size()) resize (n.size(), 0);
+
+	// Performs bitwise AND operation
+	const_iterator j = n.begin();
+	for (iterator i = begin(); i != end(); i++, j++)
+		*i &= *j;
+
+	// Skip leading zeroes
+	while (!empty())
+	{
+		if (back() == 0) pop_back();
+		else break;
+	}
+
+	return *this;
+}
+
+NaturalNumber &NaturalNumber::operator|= (const NaturalNumber &n) throw ()
+{
+	// If the first term is smaller (in 16-bit words), resize it to be the same size of the other number
+	if (size() < n.size()) resize (n.size(), 0);
+
+	// Performs the bitwise OR operation
+	iterator i = begin();
+	for (const_iterator j = n.begin(); j != n.end(); i++, j++)
+		*i |= *j;
+
+	// No possible leading zeroes to skip, so return now
+	return *this;
+}
+
+NaturalNumber &NaturalNumber::operator^= (const NaturalNumber &n) throw ()
+{
+	// If the first term is smaller (in 16-bit words), resize it to be the same size of the other number
+	if (size() < n.size()) resize (n.size(), 0);
+
+	// Performs the bitwise XOR operation
+	iterator i = begin();
+	for (const_iterator j = n.begin(); j != n.end(); i++, j++)
+		*i ^= *j;
+
+	// Skip leading zeroes
+	while (!empty())
+	{
+		if (back() == 0) pop_back();
+		else break;
 	}
 
 	return *this;
@@ -710,16 +815,34 @@ const NaturalNumber NaturalNumber::operator% (const NaturalNumber &n) const thro
 	return Remainer;
 }
 
-const NaturalNumber NaturalNumber::operator<< (Dword n) const throw ()
+const NaturalNumber NaturalNumber::operator<< (const NaturalNumber &n) const throw ()
 {
 	NaturalNumber answer(*this);
 	return answer <<= n;
 }
 
-const NaturalNumber NaturalNumber::operator>> (Dword n) const throw ()
+const NaturalNumber NaturalNumber::operator>> (const NaturalNumber &n) const throw ()
 {
 	NaturalNumber answer(*this);
 	return answer >>= n;
+}
+
+const NaturalNumber NaturalNumber::operator&  (const NaturalNumber &n) const throw ()
+{
+	NaturalNumber answer(*this);
+	return answer &= n;
+}
+
+const NaturalNumber NaturalNumber::operator|  (const NaturalNumber &n) const throw ()
+{
+	NaturalNumber answer(*this);
+	return answer |= n;
+}
+
+const NaturalNumber NaturalNumber::operator^  (const NaturalNumber &n) const throw ()
+{
+	NaturalNumber answer(*this);
+	return answer ^= n;
 }
 
 bool NaturalNumber::Test () throw ()
@@ -860,6 +983,24 @@ const IntegerNumber IntegerNumber::operator%  (const IntegerNumber &n) const thr
 	return answer;
 }
 
+const IntegerNumber IntegerNumber::operator& (const IntegerNumber &n) const throw ()
+{
+	IntegerNumber answer (*this);
+	return answer &= n;
+}
+
+const IntegerNumber IntegerNumber::operator| (const IntegerNumber &n) const throw ()
+{
+	IntegerNumber answer (*this);
+	return answer |= n;
+}
+
+const IntegerNumber IntegerNumber::operator^ (const IntegerNumber &n) const throw ()
+{
+	IntegerNumber answer (*this);
+	return answer ^= n;
+}
+
 IntegerNumber &IntegerNumber::operator+=  (const IntegerNumber &n) throw ()
 {
 	// Both of the same sign?
@@ -937,31 +1078,113 @@ IntegerNumber &IntegerNumber::operator%=  (const IntegerNumber &n) throw (Divisi
 	return *this;
 }
 
-const IntegerNumber IntegerNumber::operator<< (Dword n) const throw ()
+const IntegerNumber IntegerNumber::operator<< (const IntegerNumber &n) const throw (Overflow, NegativeShift)
 {
 	IntegerNumber answer (*this);
 	answer <<= n;
 	return answer;
 }
 
-const IntegerNumber IntegerNumber::operator>> (Dword n) const throw ()
+const IntegerNumber IntegerNumber::operator>> (const IntegerNumber &n) const throw (NegativeShift)
 {
 	IntegerNumber answer (*this);
 	answer >>= n;
 	return answer;
 }
 
-IntegerNumber &IntegerNumber::operator<<= (Dword n) throw ()
+IntegerNumber &IntegerNumber::operator<<= (const IntegerNumber &n) throw (Overflow, NegativeShift)
 {
 	// Sign is left unchanged
-	AbsoluteValue <<= n;
+	if (n.LesserThanZero())
+		throw NegativeShift (*this, n);
+	else
+		AbsoluteValue <<= n.AbsoluteValue;
+
 	return *this;
 }
 
-IntegerNumber &IntegerNumber::operator>>= (Dword n) throw ()
+IntegerNumber &IntegerNumber::operator>>= (const IntegerNumber &n) throw (NegativeShift)
 {
 	// Sign is left unchanged
-	AbsoluteValue >>= n;
+	if (n.LesserThanZero())
+		throw NegativeShift (*this, n);
+	else
+	{
+		// Performs arithmetic shift. Eg.: -3 >> 1 = -2, NOT -1
+		if (Negative && AbsoluteValue.Odd()) AbsoluteValue++;
+		AbsoluteValue >>= n.AbsoluteValue;
+	}
+
+	return *this;
+}
+
+// Sign-extends either *this or n so they have the same size. Assumes both numbers are in two`s complement notation
+void IntegerNumber::SignExtend (IntegerNumber &n) throw ()
+{
+	if (AbsoluteValue.Size() < n.AbsoluteValue.Size())
+	{
+		AbsoluteValue.MatchSize (n.AbsoluteValue, LesserThanZero() ? 0xFFFF : 0);
+	}
+	else
+	{
+		n.AbsoluteValue.MatchSize (AbsoluteValue, n.LesserThanZero() ? 0xFFFF : 0);
+	}
+}
+
+IntegerNumber &IntegerNumber::operator&= (IntegerNumber n) throw ()
+{
+	// Converts any negative numbers to their two's complement notation
+	if (Negative)
+		AbsoluteValue.TwosComplement();
+
+	if (n.Negative)
+		n.AbsoluteValue.TwosComplement();
+
+	// Sign extends the smaller number and performs the bitwise AND operation
+	SignExtend (n);
+	AbsoluteValue &= n.AbsoluteValue;
+	Negative = Negative && n.Negative;
+
+	// Converts the result back to its original form
+	if (Negative) AbsoluteValue.TwosComplement();
+	return *this;
+}
+
+IntegerNumber &IntegerNumber::operator|= (IntegerNumber n) throw ()
+{
+	// Converts any negative numbers to their two's complement notation
+	if (Negative)
+		AbsoluteValue.TwosComplement();
+
+	if (n.Negative)
+		n.AbsoluteValue.TwosComplement();
+
+	// Sign extends the smaller number and performs the bitwise OR operation
+	SignExtend (n);
+	AbsoluteValue |= n.AbsoluteValue;
+	Negative = Negative || n.Negative;
+
+	// Converts the result back to its original form
+	if (Negative) AbsoluteValue.TwosComplement();
+	return *this;
+}
+
+IntegerNumber &IntegerNumber::operator^= (IntegerNumber n) throw ()
+{
+	// Converts any negative numbers to their two's complement notation
+	if (Negative)
+		AbsoluteValue.TwosComplement();
+
+	if (n.Negative)
+		n.AbsoluteValue.TwosComplement();
+
+	// Sign extends the smaller number and performs the bitwise XOR operation
+	SignExtend (n);
+	AbsoluteValue ^= n.AbsoluteValue;
+	Negative = Negative != n.Negative;
+
+	// Converts the result back to its original form
+	if (Negative) AbsoluteValue.TwosComplement();
 	return *this;
 }
 
@@ -970,6 +1193,20 @@ const IntegerNumber IntegerNumber::operator- () const throw ()
 	IntegerNumber answer (*this);
 	answer.Negative = !Negative;
 	return answer;
+}
+
+IntegerNumber &IntegerNumber::OnesComplement () throw ()
+{
+	// OnesComplement(+2) = -2 - 1 = -3
+	// OnesComplement(-2) = +2 - 1 = +1
+	ChangeSign();
+	return --*this;
+}
+
+const IntegerNumber IntegerNumber::operator~ () const throw ()
+{
+	IntegerNumber answer (*this);
+	return answer.OnesComplement();
 }
 
 IntegerNumber &IntegerNumber::operator++ () throw ()
