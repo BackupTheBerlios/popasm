@@ -1,15 +1,25 @@
-\documentclass[a4paper,12pt]{book}
-\def\thebibliographyname{References}
-\title{PopAsm --- The Popular Assembler\\User's Manual}
-\author{Helcio B. de Mello}
-\date{\today}
-
 \newcommand{\popasm}{\emph{PopAsm}}
 \newcommand{\nasm}{\emph{NASM}}
 \newcommand{\tasm}{\emph{TASM}}
 
+\documentclass[a4paper,draft,12pt]{book}
+\title{\popasm\ --- The Popular Assembler\\User's Manual}
+\author{Helcio B. de Mello}
+\date{\today}
+
 \begin{document}
+
+\begin{titlepage}
 \maketitle
+\end{titlepage}
+
+\pagenumbering{roman}
+
+\bf{NOTE:} This is but a draft of the \popasm\ User's Manual. The
+contents of this document may change as needed, until the release
+of the first official full version. Comments on English mistakes
+or contents are welcome, given the author's native language is not
+English. Please see appendix \ref{CONTACT} for contacting info.
 
 \chapter*{About this document}
 This document is part of \popasm, the Popular Assembler Project.
@@ -25,7 +35,7 @@ it was developed and its internal implementation. This document also
 concerns about instalation procedures.
 \item{Programmer's Guide} --- documents \popasm\ source code in
 detail. It is recommended to those who
-want to read, understand, compile and/or modify \popasm\ sources.
+want to read, understand and/or modify \popasm\ sources.
 \end{itemize}
 
 Please check which manual is the one intended for your needs.
@@ -35,14 +45,14 @@ H\'elcio Mello was born in Brazil, in 1979. He has a degree in Computer
 Engineering from Federal University of
 Espirito Santo -- ES -- Brazil\cite{UFES}, and is curently taking
 Computer Science in Pontificial Catholic
-University in Rio de Janeiro -- RJ -- Brazil\cite{PUC}. It is expected
-that he will be a Master of Science in 2004.
+University in Rio de Janeiro -- RJ -- Brazil\cite{PUC}. He is expected
+to be a Master of Science in 2004.
 
 He joined \emph{Sourceforge}\cite{SF} in December 2001, and then
 registered \popasm\ as a \emph{SourceForge}
 project. The project was finally open to the Free Software community.
 In July 2002, he joined \emph{Advogato}
-\cite{ADV}\cite{ADVPRSN} and \emph{FreshMeat}\cite{FRESH}
+\cite{ADV,ADVPRSN} and \emph{FreshMeat}\cite{FRESH}
 
 \chapter*{Acknowledgements}
 \popasm\ is the result of many months of work. Despite being the
@@ -58,8 +68,8 @@ feedback about this project. \emph{Sourceforge} support was crucial, as
 it hosts \popasm\ CVS repository,
 home page, and so on. Thank you very much.
 
-Special thanks go to my first university, UFES\cite{UFES}, where I
-learned the bulk of my computering skills, and
+Special thanks go to my first university, UFES\cite{UFES}, where
+I learned the bulk of my computering skills, and
 to those classmates and teachers who believed \popasm\ project,
 such as professor and PhD S\'ergio Freitas%
 \cite{FREITAS}, who decided to adopt \popasm\ as the assembler for
@@ -73,6 +83,11 @@ for what I am now and what I have done so far.
 \newpage
 \listoftables
 \newpage
+\listoffigures
+\newpage
+
+\pagenumbering{arabic}
+\part{Getting Started}
 
 \chapter{Introduction}
 \popasm\ stands for ``Popular Assembler''. It is an assembler,
@@ -82,7 +97,7 @@ into machine language in a one-to-one basis. Compilers
 translate each line of code into several machine instructions. However,
 from this point on, this document will use both
 terms (compiler and assembler) indistinctly.}. Its objective is to
-convert human readable code to machine instructions.
+convert human readable code into machine instructions.
 These instructions will then be either executed as binary programs or
 linked with other modules (possibly written in
 other languages) to yield a computer program.
@@ -104,19 +119,68 @@ an ANSI C++ compiler is avaiable. Its peculiar
 features make it suited for nearly any assembly programming project:
 
 \begin{itemize}
-\item{Huge numbers internal representation} allows assembly-time
+   \item{Huge numbers internal representation} allows assembly-time
 expression evaluation in both integer and floating
 point format without any practical limit;
    \item{Smart default options} make your code cleaner, without the
 redundancy demanded by some other assemblers;
-\item{Top flexibility} gives the developers the choice to use the
+   \item{Top flexibility} gives the developers the choice to use the
 infamous ``red tape'' present in some assemblers
 or just write the good old raw assembly code;
-\item{And more...}
+   \item{Compatibility with existing code} eases migration to
+\popasm\ from other assemblers. There is no need to edit your code;
+\popasm\ is compatible with \tasm\ and \nasm.
+   \item{And more...}
 \end{itemize}
 
 Due to the reasons discussed above, this assembler was named the
-``Popular Assembler''.
+``Popular Assembler''. The next sections comment the two main
+assemblers \popasm\ is compatible with.
+
+\section{\tasm}
+\tasm\ is not free software. It is also DOS/Windows only, and
+took some time to get the instructions of the new processors
+included. Such delay possibly contributed the creation of macros
+that assembled those missing instructions. Nevertheless, there
+seems to be lots of code written for \tasm\ around.
+
+\popasm\ is an attempt to offer the advantages discussed throughout
+this document without forcing people to rewrite their code by hand
+or throw it away. This means that \popasm\ can be seen as a superset
+of \tasm\footnote{Actually, only the most used features are supported.
+Additional \tasm\ features may be added as users request them.}.
+Such major feature may boost people to give \popasm\ a try. If it
+is not of their liking, trying \popasm\ did not change their legacy
+code anyway, so there's very little to lose.
+
+\section{\nasm}
+\nasm\ is a free and portable assembler, and that's good. It looks
+like many people use \nasm\ today, but there are several points
+where \nasm\ can be questioned\footnote{The objective of this section
+is to comment \nasm\ under technical criteria, not to hurt anyone's
+feelings. All free software must be respected, regardless of its
+suitability to any project requirements.}.
+
+Besides being incompatible with existing code, \nasm\ does not
+provide (due its design) any typechecking feature for variables;
+the developer is obliged to remember the type of each variable
+himself. Some people may argue that this is not a big problem,
+but as a project grows in size, remembering each variable type
+may become nearly impossible.
+
+It can be even worse when a team of developers is working on
+the same project. Unless they use a rigid (and redundant)
+naming scheme, things will get messy quickly. Using such
+assembler for small projects (say, less than 1,000 lines of
+code) may be an acceptable idea; doing so for a large project
+may lead to disaster. C++ or Java are strongly typed languages;
+just imagine how it would be if they did not perform type checking...
+
+Another key point is the absence of good assembly-time arithmetics
+features, such as huge numbers arithmetics (both integer and floating
+point). \popasm\ overcomes such problems as described in this
+document. Other points could be mentioned, but the purpose of this
+manual is solely to document \popasm\ features.
 
 \chapter{Compiling and Installing \popasm}
 This chapter explains how to compile and install \popasm\ under
@@ -128,7 +192,7 @@ already done that you may safely skip to the next chapter.
 This section describes compiling \& installing info under UNIX-like
 operating systems (such as Linux).
 
-\subsection{Compiling PopAsm sources\label{COMPUNIX}}
+\subsection{Compiling \popasm\ sources\label{COMPUNIX}}
 In order to compile \popasm\ sources, you will need an ANSI C++
 compiler and its standard libraries\footnote{For the curious, I
 use egcs 2.91.66}. You will also need \popasm\ source code, which
@@ -144,7 +208,7 @@ directory containing the source code will be created.
 
 Now, you should enter the directory containing the sources. e.g.
 \emph{/tmp/popasm-0.0.1}. Please do not mistake it for something
-like \emph{/tmp/popasm-0.0.1/src}. You should be in \popasm
+like \emph{/tmp/popasm-0.0.1/src}. You should be in \popasm\ 
 source code root directory, as in the example above.
 
 \popasm\ relies on \emph{Autoconf}\cite{AUTOCONF} and
@@ -167,8 +231,8 @@ make
 and the \emph{Make} utility will do the rest, but might take a few
 minutes. There should be no warnings and no errors. If you got any,
 please check whether your compiler is ANSI compliant. If it is,
-please let me know (contacting information can be found in this
-document).
+please let me know (contacting information can be found in appendix
+\ref{CONTACT}).
 
 \subsection{Installing \popasm}
 
@@ -177,8 +241,8 @@ the source code or from a RPM file.
 
 \subsubsection{Installing from Source Code}
 You should compile \popasm\ as in section \ref{COMPUNIX}. Remain
-in the directory you built \popasm\ and issue the command (you will
-need to be \emph{root} to do that):
+in the directory where you built \popasm\ and issue the command
+(you will need to be \emph{root} to do that):
 
 \begin{verbatim}
 make install
@@ -201,20 +265,86 @@ it, you're done.
 \section{DOS and Windows environments}
 To be written.
 
-\subsection{Compiling PopAsm sources\label{COMPDOS}}
+\subsection{Compiling \popasm\ sources\label{COMPDOS}}
 To be written.
 
 \subsection{Installing \popasm}
 To be written.
 
-\chapter{Running PopAsm\label{CMDLINE}}
+\chapter{Running \popasm\label{CMDLINE}}
+
+The objective of an assembler is to translate assembly language source
+files into executable ones. This process is ilustrated in figure \ref{BASICASM}.
+
+\begin{figure}[h]
+\begin{center}
+\begin{picture}(300, 100)(20,0)
+\put (  0, 85){\fbox{Source File 1}}
+\put ( 80, 88){\vector(2, -1){50}}
+\put (  0, 55){\fbox{Source File 2}}
+\put ( 80, 58){\vector(2,  0){50}}
+\put ( 30, 25){\vdots}
+\put (  0,  0){\fbox{Source File n}}
+\put ( 80,  3){\vector(1,  1){50}}
+\put (135, 55){\fbox{Assembler}}
+\put (200, 58){\vector(2,  0){40}}
+\put (245, 55){\fbox{Executable File}}
+\end{picture}
+\caption{Basic assembly process}
+\label{BASICASM}
+\end{center}
+\end{figure}
+
+However, for large projects it is usually better to assemble each file
+separately, and then link their output into the final executable file.
+This procedure is sketched in figure \ref{SEPARATEASM}.
+
+\begin{figure}[h]
+\begin{center}
+\begin{picture}(300, 100)(40,0)
+\put (  0, 85){\fbox{Source File 1}}
+\put ( 80, 88){\vector(1, 0){30}}
+\put (115, 85){\fbox{Assembler}}
+\put (180, 88){\vector(1, -1){25}}
+\put (  0, 55){\fbox{Source File 2}}
+\put ( 80, 58){\vector(1,  0){30}}
+\put (115, 55){\fbox{Assembler}}
+\put (180, 58){\vector(1,  0){25}}
+\put ( 30, 25){\vdots}
+\put (  0,  0){\fbox{Source File n}}
+\put ( 80,  3){\vector(1,  0){30}}
+\put (115,  0){\fbox{Assembler}}
+\put (180,  3){\vector(1,  2){25}}
+\put (210, 55){\fbox{Linker}}
+\put (255, 58){\vector(1,  0){30}}
+\put (290, 55){\fbox{Executable File}}
+\end{picture}
+\caption{Separate assembly process}
+\label{SEPARATEASM}
+\end{center}
+\end{figure}
+
+In this case, the assembler outputs object files (.o or .obj extensions) that
+are used by the linker to build the final executable file. Such approach has
+the advantage of not reassembling source files that have not changed since the
+last build. \emph{Make} utilities such as GNU Make\cite{MAKE} are very useful
+in these situations.
+
+As an example, suppose that only \emph{Source File 2} has changed. It is then
+reassembled and a new object file for this single source file is created,
+overwriting the previous one. This new object file is combined by the linker
+with the other ones (which are up to date, because their source files did not
+change), yielding the updated version of the executable file. Note that the
+files that did not change were not reassembled.
 
 This chapter tackles the usage of \popasm\ under command line. Arguments,
 options and environment variables are discussed in detail.
 
-To be written.
+To be continued.
 
-\chapter{PopAsm syntax}
+\part{\popasm\ syntax}
+
+\chapter{Basic Syntax}
 
 One of \popasm's major goals is compatibility with existing code.
 \popasm\ syntax is very similar to the ones supported by \tasm\ and
@@ -274,9 +404,9 @@ arguments for a command without issuing it first. So,
 \noindent is obviously not.
 
 \popasm\ imposes no tabbing restrictions; white spaces and tabs are
-ignored. This document uses a 1--16--24--48 tabbing scheme (that is,
-labels at column 1, commands at column 16, arguments at column 24 and
-comments at column 48).
+ignored. This document uses a 1--17--25--49 tabbing scheme (that is,
+labels at column 1, commands at column 17, arguments at column 25 and
+comments at column 49).
 
 \section{Notes on labels\label{NOTELABEL}}
 
@@ -289,6 +419,8 @@ of the following characters:
 
 \noindent except that the first character cannot be a digit, otherwise the
 label would be treated as a number, as discussed in chapter \ref{NUMCHAP}.
+Also, note that it is not allowed to use \popasm\ reserved words (such as
+command names, registers, etc.) as labels.
 
 \popasm\ is by default case-insensitive\footnote{Due to compatibility with
 \tasm.}. Such behavior may be changed by command line options and environment
@@ -321,12 +453,16 @@ mark to make it clear, to the ones reading your code, that the label is,
 indeed, a label, instead of, say, a macro name. Of course, this can
 also be achieved with an indentation pattern.
 
+Special care should be taken when using a colon after a label that
+defines data. The colon should not appear in such circumstances. Please
+check chapter \ref{DEFDATA} for a detailed description of this issue.
+
 \chapter{Numbers\label{NUMCHAP}}
 \popasm\ accepts numbers in a variety of ways. A number is a sequence
 of as many digits as you want\footnote{There is no practical limit to
 number sizes in \popasm. If you want to write a 1,000,000-digits long
 number, \popasm\ will accept it gladly (well, if you have patience to
-type such a number...). Some other assemblers are limited to 32-bit
+type such number...). Some other assemblers are limited to 32-bit
 integer operations.} or separators, in any order, except that:
 
 \begin{itemize}
@@ -354,6 +490,9 @@ Examples:
    other two numbers above, despite looking weird and not being very useful.
 \item{\_12\_345\_678} is not a number because the first character is not
    a digit.
+\item{3241\_7779q} is not an acceptable binary number because ``9'' is not
+	a valid digit in octal notation (``q'' here stands for octal. Explained
+	later).
 \end{itemize}
 
 Typical uses for separators include separating binary fields of bit
@@ -446,6 +585,14 @@ They have their exact values stored as long as possible.
 operators currently supported, in increasing order of precedence, are listed in
 table \ref{OPTAB}.
 
+Operator precedences are discussed in section \ref{NUMEXPR}.
+
+It is important to note that \popasm\ works with both integer and
+real numbers. An operator returns an integer only if all of its
+arguments are integers. If at least one of them is real, the result
+will be real. All possible combinations are summarized in table
+\ref{ARGCOMBTAB}.
+
 \begin{table}[h]
 \begin{center}
 \begin{tabular}[h]{ccl}
@@ -458,32 +605,34 @@ Precedence & Operator & Description\\
                    & PWORD & triPle WORD --- 48-bit qualifier\\
                    & FWORD & Far WORD --- Same as PWORD\\
                    & QWORD & Quad WORD --- 64-bit qualifier\\
-Lowest precedence  & OWORD & Oct WORD --- 128-bit qualifier\\
+Lowest             & OWORD & Oct WORD --- 128-bit qualifier\\
                    & TBYTE & Ten-BYTE --- 80-bit qualifier\\
                    & TWORD & Ten-WORD --- Same as TBYTE\protect{\footnotemark}\\
                    & SHORT & 8-bit relative displacement\\
                    & NEAR & 16- or 32-bit relative displacement\\
                    & FAR & 32- or 48-bit relative displacement\\
 \hline
-                   & OR $\vert$ & Inclusive or\\
-                   & XOR \^{} & Exclusive or\\
+                   & OR or $\vert$ & Inclusive or\\
+                   & XOR or \^{} & Exclusive or\\
 \hline
-                   & AND \& & Boolean AND\\
+                   & AND or \& & Boolean AND\\
 \hline
                    & + & Addition\\
-                   & - & Subtraction\\
+                   & - (binary) & Subtraction\\
 \hline
                    & * & Multiplication\\
                    & / & Division\\
-                   & MOD & Remainer (modulus)\\
-                   & SHL & Shift left\\
-                   & SHR & Shift right\\
+                   & MOD or \% & Remainer (modulus)\\
+                   & SHL or $< <$ & Shift left\\
+                   & SHR or $> >$ & Shift right\\
 \hline
-                   & NOT & One's complement\\
+                   & NOT or \~{}& One's complement\\
+                   & + (unary) & Ignored\\
+                   & - (unary) & Negation\\
 \hline
                    & : & Segment and offset composition\\
 \hline
-Highest precedence & . & Member selection in structs and unions\\
+Highest            & . & Member selection in structs and unions\\
 \hline
 \end{tabular}
 \caption{Operators and their precedence}
@@ -491,9 +640,120 @@ Highest precedence & . & Member selection in structs and unions\\
 \end{center}
 \end{table}
 
-To be continued.
-
 \footnotetext{Due to compatibility with \nasm.}
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}[h]{cccl}
+\hline
+Argument 1 & Argument 2 & Result & Example\\
+\hline
+Integer & Integer & Integer & 3 + 2 = 5\\
+Integer & Real & Real & 3 + 2.0 = 5.0\\
+Real & Integer & Real & 3.0 + 2 = 5.0\\
+Real & Real & Real & 3.0 + 2.0 = 5.0\\
+\hline
+\end{tabular}
+\caption{Argument types combinations}
+\label{ARGCOMBTAB}
+\end{center}
+\end{table}
+
+The next sections provide additional details about each operator
+
+\section{+ -}
+These operators may be either unary or binary; their unary form
+have greater precedence. Unary minus change the sign of an expression.
+Unary plus performs no operation and exists for completeness.
+
+\section{AND OR XOR}
+Bitwise boolean operators. They can only be used with integer arguments
+(positive or negative). Because numbers have, in theory, infinite bits
+to their left (positive numbers may be left padded with zeroes and
+negative numbers can be sign-extended with ones), these operators
+are affected by the sign of their arguments. Table \ref{BOOLEX} shows
+an example of sign influence on bitwise operations. Tables
+\ref{ARGBOOLSIGN1}--\ref{ARGBOOLSIGN3} show all possible combinations
+of signs, boolean bitwise operations and the way they affect the resulting
+sign.
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}[h]{lrr}
+\hline
+           &            Decimal &            Binary\\
+\hline
+Argument 1 &              $-75$ &  $1\cdots 110101$\\
+Argument 2 &               $ 3$ &  $0\cdots 000011$\\
+AND Result &                $1$ &  $0\cdots 000001$\\
+OR  Result &               $-9$ &  $1\cdots 110111$\\
+XOR Result &              $-10$ &  $1\cdots 110110$\\
+\hline
+\end{tabular}
+\caption{Example of bitwise boolean operations on signed numbers}
+\label{BOOLEX}
+\end{center}
+\end{table}
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}[h]{ccc}
+\hline
+         & Positive & Negative\\
+\hline
+Positive & Positive & Positive\\
+Negative & Positive & Negative\\
+\hline
+\end{tabular}
+\caption{Relation between AND operator and the sign of its arguments}
+\label{ARGBOOLSIGN1}
+\end{center}
+\end{table}
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}[h]{ccc}
+\hline
+         & Positive & Negative\\
+\hline
+Positive & Positive & Positive\\
+Negative & Positive & Negative\\
+\hline
+\end{tabular}
+\caption{Relation between AND operator and the sign of its arguments}
+\label{ARGBOOLSIGN1}
+\end{center}
+\end{table}
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}[h]{ccc}
+\hline
+         & Positive & Negative\\
+\hline
+Positive & Positive & Negative\\
+Negative & Negative & Negative\\
+\hline
+\end{tabular}
+\caption{Relation between OR operator and the sign of its arguments}
+\label{ARGBOOLSIGN2}
+\end{center}
+\end{table}
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}[h]{ccc}
+\hline
+         & Positive & Negative\\
+\hline
+Positive & Positive & Negative\\
+Negative & Negative & Positive\\
+\hline
+\end{tabular}
+\caption{Relation between XOR operator and the sign of its arguments}
+\label{ARGBOOLSIGN3}
+\end{center}
+\end{table}
 
 \chapter{Registers}
 \popasm\ supports all registers present in each x86 CPU, except the ones
@@ -522,6 +782,8 @@ An expression may be either a single term or a sequence of terms
 connected by operators. A term, in turn, can be a number or a symbol.
 This section explains how \popasm\ performs assembly-time arithmetics
 and works with numbers.
+
+\section{Numeric expressions\label{NUMEXPR}}
 
 \chapter{Memory references}
 Memory references can be specified using square brackets [ ] around an expression.
@@ -595,6 +857,9 @@ presence/absence of command-line options.
 
 To be continued.
 
+\chapter{Defining data\label{DEFDATA}}
+To be written.
+
 \chapter{\popasm\ commands}
 \section{.RADIX\label{RADIXCMD}}
 This command allows the developer to change the default radix of numbers
@@ -653,6 +918,9 @@ decimal notation. It can be used no matter what the current radix is.
 The same remarks hold for the binary suffixes ``B'' and ``Y'': ``11B''
 is an hex number when the current radix is 16, but ``11Y'' is always
 binary.
+
+\appendix
+\chapter{Contacting info\label{CONTACT}}
 
 \begin{thebibliography}{12}
 \bibitem{UFES} Federal University of Esp\'{\i}rito Santo -- ES -- Brazil.
