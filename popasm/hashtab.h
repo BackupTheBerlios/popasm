@@ -27,6 +27,7 @@
 #include <functional>
 #include <exception>
 
+
 // Thrown when one attempts to insert an element which is already in the Hash Table
 class DuplicatedElement : public exception
 {
@@ -76,12 +77,5 @@ const T *HashTable<T, H, Comp, n>::Find (const T &x) const throw ()
 
 	return (j == Chains[i].end()) ? 0 : &*j;
 }
-
-template <class T>
-class PointerComparator
-{
-	public:
-	bool operator() (const T *a, const T *b) const {return *a < *b;}
-};
 
 #endif
