@@ -145,12 +145,15 @@ bool UnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output)
 	// Writes the operand size prefix if necessary
 	WriteOperandSizePrefix (Arguments, Output);
 
+	const BasicArgument *arg = Arguments[(OperandSizePrefixUsage == SECOND_ARGUMENT) ? 1 : 0]->GetData();
+	if (arg->GetSize() > 8) dw = 1 & dw_mask;
+
 	// Checks for an immediate
 	immed = dynamic_cast<const Immediate *> (Arguments[0]->GetData());
 	if (immed != 0)
 	{
 		// If it is, just write it to the output
-		Encoding.Write (Output);
+		(Encoding | Opcode (dw)).Write (Output);
 		immed->Write (Output);
 	}
 	else
@@ -164,9 +167,6 @@ bool UnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output)
 		}
 		else
 		{
-			const BasicArgument *arg = Arguments[0]->GetData();
-			if (arg->GetSize() > 8) dw = 1 & dw_mask;
-
 			// Checks for register
 			reg = dynamic_cast<const Register *> (arg);
 			if (reg != 0)
@@ -180,7 +180,7 @@ bool UnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output)
 				if (mem == 0) throw UnknownArgument (arg);
 
 				// Checks for the need of prefix
-				if ((CurrentAssembler->GetCurrentMode() == 16) != (mem->GetAddressSize() == 16)) Output.push_back (0x67);
+				if (CurrentAssembler->GetCurrentMode() != mem->GetAddressSize()) Output.push_back (0x67);
 				mod_reg_rm = mem->GetCode();
 				SegmentPrefix = mem->GetSegmentPrefix ();
 				if (SegmentPrefix != 0) Output.push_back (SegmentPrefix);
@@ -496,7 +496,7 @@ bool StringSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 	}
 
 	// Checks for the need for prefixes
-	AddressSizePrefix = (CurrentAssembler->GetCurrentMode() == 16) != (mem->GetAddressSize() == 16);
+	AddressSizePrefix = CurrentAssembler->GetCurrentMode() != mem->GetAddressSize();
 
 	for (unsigned int i = 0; i < Arguments.size(); i++)
 	{
