@@ -139,6 +139,7 @@ Expression *GetExpression (vector<Token *> &v, vector<Token *>::iterator &i, uns
 			i++;
 			Term = GetExpression (v, i, 0, enc);
 			(*enc)(*Term);
+			delete enc;
 			i++;
 			break;
 
@@ -159,6 +160,7 @@ Expression *GetExpression (vector<Token *> &v, vector<Token *>::iterator &i, uns
 			if (op->Precedence (Operator::PREFIX) >= NextPrec)
 			{
 				(*op)(*Term);
+				delete op;
 				UnaryOps.pop_back();
 				continue;
 			}
@@ -173,10 +175,15 @@ Expression *GetExpression (vector<Token *> &v, vector<Token *>::iterator &i, uns
 		if (dynamic_cast<Encloser *> (BinaryOp) != 0)
 		{
 			i++;
+			delete BinaryOp;
 			break;
 		}
 
-		(*BinaryOp)(*Term, *GetExpression (v, ++i, NextPrec, Opener));
+		Expression *NextExpression = GetExpression (v, ++i, NextPrec, Opener);
+		(*BinaryOp)(*Term, *NextExpression);
+		delete BinaryOp;
+		delete NextExpression;
+
 		BinaryOp = GetBinaryOperator(v, i, Opener);
 		NextPrec = (BinaryOp == 0) ? 0 : BinaryOp->Precedence (Operator::BINARY);
 	}
