@@ -29,6 +29,7 @@
 
 #include "argument.h"
 #include "register.h"
+#include "type.h"
 #include "defs.h"
 
 class Memory : public BasicArgument
@@ -48,8 +49,8 @@ class Memory : public BasicArgument
 	ContentsType Type;
 
 	public:
-	Memory (unsigned int sz = 0) throw ()
-		: BasicArgument (sz), SegmentPrefix(0), SIB(0), Code(0), AddressSize(0), Type(UNKNOWN) {}
+	Memory (unsigned int sz = 0, Distance dist = NONE) throw ()
+		: BasicArgument (sz, dist), SegmentPrefix(0), SIB(0), Code(0), AddressSize(0), Type(UNKNOWN) {}
 	~Memory () throw () {}
 
 	void MakeMemory16Bits (const BaseRegister *Base16, const IndexRegister *Index16);
@@ -71,7 +72,13 @@ class Memory : public BasicArgument
 	class IdFunctor : public BasicArgument::IdFunctor
 	{
 		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const Memory *> (arg) != 0;}
+		bool operator() (const BasicArgument *arg)
+		{
+			const Memory *mem = dynamic_cast<const Memory *> (arg);
+			if (mem == 0) return false;
+			if (mem->GetDistanceType() != NONE) throw 0;
+			return true;
+		}
 	};
 
 	class DirectMemory : public BasicArgument::IdFunctor
@@ -81,6 +88,7 @@ class Memory : public BasicArgument
 		{
 			const Memory *mem = dynamic_cast<const Memory *> (arg);
 			if (mem == 0) return false;
+			if (mem->GetDistanceType() != NONE) throw 0;
 
 			switch (mem->GetAddressSize())
 			{
@@ -112,10 +120,11 @@ class Memory : public BasicArgument
 	}
 };
 
-// Short-hand for getting a functor for a memory of specific size.
-template <unsigned int n, Memory::ContentsType t = Memory::UNKNOWN>
+// Short-hand for getting a functor for a memory of specific size or type.
+template <unsigned int n, Memory::ContentsType t = Memory::UNKNOWN, Type::Distance dist = Type::NONE>
 class Mem : public Memory::IdFunctor
 {
+	public:
 	bool operator() (const BasicArgument *arg)
 	{
 		if (!Memory::IdFunctor::operator() (arg)) return false;
@@ -123,6 +132,7 @@ class Mem : public Memory::IdFunctor
 		const Memory *m = dynamic_cast<const Memory *> (arg);
 		if ((m->GetSize() != 0) && (m->GetSize() != n)) return false;
 		if ((m->GetType() != Memory::UNKNOWN) && (m->GetType() != t)) return false;
+		if ((m->GetDistanceType() != Type::NONE) && (m->GetDistanceType() != dist)) return false;
 		return true;
 	}
 };

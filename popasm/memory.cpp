@@ -199,7 +199,7 @@ unsigned int GetMinimumSize (Number &n, bool set)
 
 Argument *Argument::MakeMemory (const Expression &e)
 {
-	Memory *mem = new Memory (e.GetSize());
+	Memory *mem = new Memory (e.GetSize(), e.GetDistanceType());
 
 	// Checks for segment override prefixes
 	if (e.GetSegmentPrefix() != 0)
