@@ -25,6 +25,7 @@
 #include <string>
 
 #include "symbol.h"
+#include "proc.h"
 #include "inp_file.h"
 #include "type.h"
 #include "segment.h"
@@ -43,11 +44,15 @@ class Assembler
 	Parser *CurrentParser;
 
 	vector<Segment *> Segments;
+	Procedure *CurrentProcedure;
 
+	protected:
 	bool PerformPass (InputFile &File) throw ();
+	void AddContents (const vector<Byte> &v);
 
 	public:
-	Assembler (unsigned int im) throw () : InitialMode (im), CurrentPass(0), CurrentParser(0) {}
+	Assembler (unsigned int im) throw ()
+		: InitialMode (im), CurrentPass(0), CurrentParser(0), CurrentProcedure(0) {}
 	virtual ~Assembler () throw () = 0;
 
 	unsigned int GetCurrentMode () const throw () {return CurrentMode;}
@@ -57,6 +62,8 @@ class Assembler
 
 	void AddSegment (Segment *seg);
 	void CloseSegment (const string &s);
+	void AddProcedure (Procedure *proc);
+	void CloseProcedure (const string &s);
 
 	// Attempts to read a symbol from the given string.
 	// Returns 0 if there's currently no symbol with that name defined in any segment

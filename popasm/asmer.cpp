@@ -67,6 +67,20 @@ unsigned long int Assembler::GetCurrentLine () const throw ()
 	return CurrentParser->GetCurrentLine();
 }
 
+void Assembler::AddContents (const vector<Byte> &v)
+{
+	// Creates a default segment if none exists
+	if (Segments.empty())
+		AddSegment(new Segment ());
+
+	if (!Segments.back()->IsOpen())
+	{
+		cout << "Statement outside segment." << endl;
+	}
+
+	Segments.back()->AddContents (v);
+}
+
 bool Assembler::PerformPass (InputFile &File) throw ()
 {
 	vector<Byte> LineEncoding;
@@ -83,16 +97,6 @@ bool Assembler::PerformPass (InputFile &File) throw ()
 		try
 		{
 			LineEncoding = CurrentParser->ParseLine ();
-
-			// Creates a default segment if none exists
-			if ((Segments.empty()) && (LineEncoding.size() != 0))
-				AddSegment(new Segment ());
-
-			if ((!Segments.back()->IsOpen()) && (LineEncoding.size() != 0))
-			{
-				cout << "Statement outside segment." << endl;
-				return false;
-			}
 
 			if (LineEncoding.size() != 0)
 			{
@@ -122,6 +126,7 @@ bool Assembler::PerformPass (InputFile &File) throw ()
 
 void Assembler::AddSegment (Segment *seg)
 {
+	//! Search the table for multiple segment definitions
 	Segments.push_back(seg);
 }
 
@@ -140,6 +145,30 @@ void Assembler::CloseSegment (const string &s)
 	}
 
 	Segments.back()->Close();
+}
+
+void Assembler::AddProcedure (Procedure *proc)
+{
+	DefineSymbol(proc);
+	CurrentProcedure = proc;
+}
+
+void Assembler::CloseProcedure (const string &s)
+{
+	if (CurrentProcedure == 0)
+	{
+		cout << "No open procedure at this point." << endl;
+		return;
+	}
+
+	if (CurrentProcedure->GetName() != s)
+	{
+		cout << "Mismatch between PROC and ENDP." << endl;
+		return;
+	}
+
+	CurrentProcedure->Close();
+	CurrentProcedure = 0;
 }
 
 Token *Assembler::Read (const string &str, InputFile &inp) throw ()
