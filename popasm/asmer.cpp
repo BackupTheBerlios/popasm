@@ -40,6 +40,17 @@ void PrintVector (const vector<Byte> &v)
 
 Assembler::~Assembler () throw () {}
 
+void Assembler::SetCurrentMode (unsigned int n)
+{
+	if ((n != 16) && (n != 32))
+	{
+		cout << "Modes must be 16 or 32 bits." << endl;
+		return;
+	}
+
+	CurrentMode = n;
+}
+
 void Assembler::AssembleFile (InputFile &File) throw ()
 {
 	bool NeedAnotherPass;

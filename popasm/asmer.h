@@ -40,6 +40,7 @@ class Assembler
 	virtual ~Assembler () throw () = 0;
 
 	unsigned int GetCurrentMode () const throw () {return CurrentMode;}
+	void SetCurrentMode (unsigned int n);
 	unsigned long int GetCurrentOffset () const throw () {return CurrentOffset;}
 	void AssembleFile (InputFile &File) throw ();
 };
