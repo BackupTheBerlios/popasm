@@ -27,6 +27,7 @@
 #include "full_ptr.h"
 #include "lexnum.h"
 #include "immed.h"
+#include "dup_arg.h"
 
 TypeMismatch::TypeMismatch (const vector<Argument *> v) throw () : WhatString ("Type mismatch between")
 {
@@ -163,11 +164,53 @@ void Argument::TypeCheck (const vector<Argument *> &args, CheckType ct) throw (T
 
 Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, exception)
 {
-	const Expression *Prefix = e.GetSegmentPrefix();
+	Argument *arg;
 
-	switch (e.GetCurrentType())
+	arg = Register::MakeArgument (e);
+	if (arg != 0)
+		return arg;
+
+	arg = Memory::MakeArgument (e);
+	if (arg != 0)
+		return arg;
+
+	arg = Immediate::MakeArgument (e);
+	if (arg != 0)
+		return arg;
+
+	arg = FullPointer::MakeArgument (e);
+	if (arg != 0)
+		return arg;
+
+	arg = DupArgument::MakeArgument (e);
+	if (arg != 0)
+		return arg;
+
+	return new Argument (0, false, true);
+};
+
+/*
+	const SimpleExpression *se = dynamic_cast<const SimpleExpression *> (&e.GetConstData());
+	const DupExpression *de = dynamic_cast<const DupExpression *> (&e.GetConstData());
+	const SimpleExpression *Prefix = 0;
+	const Number *num;
+	const Symbol *sym;
+
+	if (se != 0)
+	{
+		Prefix = se->GetSegmentPrefix();
+		num = se->GetNumber();
+		sym = se->GetSymbol();
+	}
+
+	if (de != 0)
+		return new Argument (new DupArgument (e), false);
+
+	switch (se->GetCurrentType())
 	{
 		case Type::SCALAR:
+			if (
+
 			if (e.QuantityOfTerms() == 1)
 			{
 				// Get a reference for the only term of the expression
@@ -231,6 +274,7 @@ Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, e
 
 	return 0;
 }
+*/
 
 const char UndefinedSize::WhatString[] = "Operation size undefined. At least one argument must be explicitly sized.";
 const char OneUndefinedSize::WhatString[] = "Operation size undefined. Both arguments must be explicitly sized.";
