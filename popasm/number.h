@@ -261,7 +261,7 @@ class RealNumber
 	RealNumber (const IntegerNumber &n) throw () : Mantissa (n), Integer (true) {}
 	RealNumber (const IntegerNumber &m, const IntegerNumber &e) throw () : Mantissa (m), Exponent (e), Integer (!e.LesserThanZero()) {}
 	RealNumber (const string &s, Word ForcedBase = 0, bool ForcedSign = false) throw (InvalidNumber, InvalidDigit);
-	RealNumber (int n) throw () : Mantissa (IntegerNumber(n)), Integer (true) {}
+	RealNumber (long int n) throw () : Mantissa (IntegerNumber(n)), Integer (true) {}
 	~RealNumber () throw () {}
 
 	static unsigned long int GetPrecisionIncrement () throw () {return PrecisionIncrement;}
