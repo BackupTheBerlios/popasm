@@ -28,6 +28,26 @@ BasicSymbol *Directive::Read (const string &str, InputFile &inp)
 HashTable <Directive *, HashFunctor, PointerComparator<BasicSymbol> > Directive::DirectiveTable =
 	HashTable <Directive *, HashFunctor, PointerComparator<BasicSymbol> > ();
 
+void Directive::Assemble (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j,
+	vector<Byte> &Encoding) const
+{
+}
+
+void DefinitionDirective::Assemble (const BasicSymbol *sym, vector<Token *>::iterator i,
+	vector<Token *>::iterator j, vector<Byte> &Encoding) const
+{
+	if (sym != 0)
+	{
+		cout << "Label definition not implemented yet." << endl;
+		return;
+	}
+
+	while (i != j)
+	{
+		i++;
+	}
+}
+
 void FunctionBITS (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding)
 {
 	if (sym != 0)

@@ -44,6 +44,9 @@ class Directive : public Command
 	{
 		(*Function) (sym, Arguments, Encoding);
 	}
+
+	void Assemble (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j,
+		vector<Byte> &Encoding) const;
 };
 
 // Directives that define data, like DB, DW, etc.
@@ -56,6 +59,9 @@ class DefinitionDirective : public Directive
 	DefinitionDirective (const string &n, unsigned int sz, bool accept) throw ()
 		: Directive (n), Size(sz), AcceptFloat(accept) {}
 	~DefinitionDirective () throw () {}
+
+	void Assemble (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j,
+		vector<Byte> &Encoding) const;
 };
 
 #endif
