@@ -40,7 +40,6 @@ class Assembler
 
 	unsigned int CurrentMode;
 	unsigned int CurrentPass;
-	unsigned long int CurrentOffset;
 	Parser *CurrentParser;
 
 	vector<Segment *> Segments;
@@ -58,7 +57,7 @@ class Assembler
 
 	unsigned int GetCurrentMode () const throw () {return CurrentMode;}
 	void SetCurrentMode (unsigned int n);
-	unsigned long int GetCurrentOffset () const throw () {return CurrentOffset;}
+	unsigned long int GetCurrentOffset () const throw ();
 	unsigned long int GetCurrentLine () const throw ();
 	unsigned long int GetCurrentPass () const throw () {return CurrentPass;}
 	const Procedure *GetCurrentProcedure() const throw ();

@@ -51,6 +51,14 @@ void Assembler::SetCurrentMode (unsigned int n)
 	CurrentMode = n;
 }
 
+unsigned long int Assembler::GetCurrentOffset () const throw ()
+{
+	if (Segments.empty())
+		return 0;
+
+	return Segments.back()->GetCurrentOffset();
+}
+
 void Assembler::AssembleFile (InputFile &File) throw ()
 {
 	delete CurrentParser;
@@ -88,7 +96,6 @@ void Assembler::PerformPass () throw ()
 	vector<Byte> LineEncoding;
 
 	CurrentPass++;
-	CurrentOffset = 0;
 	CurrentMode = InitialMode;
 	CurrentParser->Reset();
 
@@ -99,13 +106,8 @@ void Assembler::PerformPass () throw ()
 		try
 		{
 			LineEncoding = CurrentParser->ParseLine ();
-
-			if (LineEncoding.size() != 0)
-			{
-				CurrentOffset += LineEncoding.size();
+			if (!LineEncoding.empty())
 				AddContents (LineEncoding);
-			}
-
 			PrintVector (LineEncoding);
 		}
 		catch (exception &e)
@@ -120,16 +122,40 @@ void Assembler::PerformPass () throw ()
 
 	if (!Segments.empty())
 	{
-		if ((Segments.back()->IsOpen()) && (Segments.back()->GetName() != ""))
+		if (Segments.back()->IsOpen())
 		{
-			cout << "Segment not ended - " << Segments.back()->GetName() << endl;
+			if (Segments.back()->GetName() == "")
+				Segments.back()->Reset();
+			else
+				cout << "Segment not ended - " << Segments.back()->GetName() << endl;
 		}
 	}
 }
 
 void Assembler::AddSegment (Segment *seg)
 {
-	//! Search the table for multiple segment definitions
+	for (vector<Segment *>::iterator i = Segments.begin(); i != Segments.end(); i++)
+	{
+		if ((*i)->GetName() == seg->GetName())
+		{
+			// Checks whether there is already a segment with that name
+			if ((*i)->GetDefinitionPass() == seg->GetDefinitionPass())
+			{
+				delete seg;
+				throw MultidefinedSymbol ((*i)->GetName());
+			}
+
+			// If segment changed request new pass
+			if ((*i)->Changed(seg))
+				RequestNewPass();
+
+			// Reset old segment; discard new (in order to reuse symbol table).
+			(*i)->Reset();
+			delete seg;
+			return;
+		}
+	}
+
 	Segments.push_back(seg);
 }
 
