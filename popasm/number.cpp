@@ -27,10 +27,12 @@
 Word NaturalNumber::DefaultBase = 10;
 
 // Enables the construction of a number given its initial value
-NaturalNumber::NaturalNumber (const Dword d = 0) throw ()
+NaturalNumber::NaturalNumber (Dword d = 0) throw ()
 {
 	// Null initial values require no storage
-	if (d != 0) push_back (d);
+	if (d != 0) push_back (static_cast<Word> (d));
+	d >>= 16;
+	if (d != 0) push_back (static_cast<Word> (d));
 }
 
 // Gets a numeric string and strips leading and trailing underscores and radices. Also checks for the
@@ -138,9 +140,6 @@ NaturalNumber::NaturalNumber (const string &s, Word ForcedBase = 0) throw (Inval
 		if (Negative) throw InvalidNumber (s);
 	}
 
-	// Initializes the number to zero. Don't worry, any leading zeroes will be skipped later
-	push_back (0);
-
 	// Now, it's time to convert the string to a number
 	for (string::iterator i = n.begin(); i != n.end(); i++)
 	{
@@ -154,8 +153,18 @@ NaturalNumber::NaturalNumber (const string &s, Word ForcedBase = 0) throw (Inval
 		Dword carry = DecodeDigit (*i, Base);
 		for (unsigned int i = 0; carry != 0; i++)
 		{
-			carry += ZeroExtend ((*this)[i]);
-			(*this)[i] = static_cast<Word> (carry);
+			// If the carry makes the number grow bigger...
+			if (i != size())
+			{
+				carry += ZeroExtend ((*this)[i]);
+				(*this)[i] = static_cast<Word> (carry);
+			}
+			else
+			{
+				// ... allocates more storage.
+				push_back (static_cast<Word> (carry));
+			}
+
 			carry = SHR (carry, 16);
 		}
 	}

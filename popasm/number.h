@@ -59,7 +59,7 @@ class NaturalNumber : vector <Word>
 
 	public:
 	// Builds a NaturalNumber from either a Dword or a numeric string
-	NaturalNumber (const Dword d = 0) throw ();
+	NaturalNumber (Dword d = 0) throw ();
 	NaturalNumber (const string &n, Word ForcedBase = 0) throw (InvalidNumber, InvalidDigit);
 	virtual ~NaturalNumber () throw () {}
 
