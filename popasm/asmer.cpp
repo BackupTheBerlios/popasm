@@ -28,6 +28,7 @@ const OperatorData<Expression> *PopAsm::OperatorTable[] =
 	new TimesEqual<Expression> ("*", 0, 500),
 	new DividesEqual<Expression> ("/", 0, 500),
 	new ModEqual<Expression> ("MOD", 0, 500),
+	new Colon<Expression> (":", 0, 900),
 	new Period<Expression> (".", 0, 1000),
 	new And<Expression> ("AND", 0, 200),
 	new Or<Expression> ("OR", 0, 100),
