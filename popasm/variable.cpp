@@ -16,14 +16,15 @@
  ***************************************************************************/
 
 #include "variable.h"
+#include "asmer.h"
 
-UserDefined::UserDefined (const string &n) throw () : BasicSymbol(n)
+UserDefined::UserDefined (const string &n, const Type &t) throw () : BasicSymbol(n), Type(t)
 {
 	Line = CurrentAssembler->GetCurrentLine();
 	Offset = CurrentAssembler->GetCurrentOffset();
 }
 
-UserDefined::UserDefined (const string &n, Dword off) throw () : BasicSymbol(n)
+UserDefined::UserDefined (const string &n, Dword off, const Type &t) throw () : BasicSymbol(n), Type(t)
 {
 	Line = CurrentAssembler->GetCurrentLine();
 	Offset = off;

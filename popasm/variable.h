@@ -19,16 +19,16 @@
 #define VARIABLE_H
 
 #include "symbol.h"
-#include "asmer.h"
+#include "type.h"
 
-class UserDefined : public BasicSymbol
+class UserDefined : public BasicSymbol, public Type
 {
 	Dword Line;             // Line where symbol was defined
 	Dword Offset;				// Offset within its segment
 
 	public:
- 	UserDefined (const string &n) throw ();
-	UserDefined (const string &n, Dword off) throw ();
+ 	UserDefined (const string &n, const Type &t) throw ();
+	UserDefined (const string &n, Dword off, const Type &t) throw ();
 	~UserDefined () throw () {}
 
 	Dword GetOffset() const throw () {return Offset;}
@@ -37,7 +37,6 @@ class UserDefined : public BasicSymbol
 
 class Variable : public UserDefined
 {
-	unsigned int Size;		// Variable size in bits
 	unsigned int Length;		// Quantity of data items.
 
 // Example:
@@ -47,20 +46,19 @@ class Variable : public UserDefined
 // Length = 3 (three doublewords defined in the same line)
 
 	public:
-	Variable (const string &n, unsigned int sz = 0, unsigned int len = 1) throw () :
-		UserDefined(n), Size(sz), Length(len) {}
-	Variable (const string &n, Dword off, unsigned int sz = 0, unsigned int len = 1) throw () :
-		UserDefined(n, off), Size(sz), Length(len) {}
+	Variable (const string &n, const Type &t, unsigned int len = 1) throw () :
+		UserDefined(n, t), Length(len) {}
+	Variable (const string &n, Dword off, const Type &t, unsigned int len = 1) throw () :
+		UserDefined(n, off, t), Length(len) {}
 	~Variable () {}
 
-	unsigned int GetSize() const throw () {return Size;}
 	unsigned int GetLength() const throw () {return Length;}
 };
 
 class Label : public UserDefined
 {
 	public:
-	Label (const string &n) throw () : UserDefined(n) {}
+	Label (const string &n, int dist = UNDEFINED) throw () : UserDefined(n, Type (0, WEAK_MEMORY, dist)) {}
 	~Label () throw () {}
 };
 
@@ -108,7 +106,7 @@ class AggregateInstance : public Variable
 
 	public:
 	AggregateInstance (const string &n, Dword off, const Aggregate *ag, unsigned int len) throw ()
-		: Variable (n, ag->GetSize(), len) {}
+		: Variable (n, Type (ag->GetSize(), WEAK_MEMORY), len) {}
 	~AggregateInstance () {}
 
 	const Aggregate *GetFather() const throw () {return Father;}
