@@ -39,6 +39,7 @@ Expression::Expression (const Expression &e) throw ()
 
 Expression::~Expression () throw ()
 {
+	delete Data;
 }
 
 Expression &Expression::operator[] (int)
@@ -396,7 +397,10 @@ SimpleExpression &SimpleExpression::operator=  (const SimpleExpression &e)
 	{
 		Value = e.Value;
 		delete SegmentPrefix;
-		SegmentPrefix = e.SegmentPrefix->Clone();
+
+		if (e.SegmentPrefix != 0)
+			SegmentPrefix = e.SegmentPrefix->Clone();
+
 		ExpressionData::operator= (e);
 	}
 
