@@ -170,7 +170,7 @@ bool Match (int Restriction, int i) throw ()
 
 bool MatchSize (int Restriction, int x)
 {
-	static const char Sizes[] = {0, 8, 16, 32, 48, 64, 80, 128};
+	static const int Sizes[] = {0, 8, 16, 32, 48, 64, 80, 128};
 
 	for (unsigned int i = 0; i < sizeof (Sizes); i++)
 	{
