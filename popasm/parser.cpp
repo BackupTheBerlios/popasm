@@ -203,7 +203,7 @@ Expression *Parser::EvaluateExpression (const vector<Token *> &v)
 	return Result;
 }
 
-vector<Byte> Parser::ParseLine (unsigned int CurrentAddressSize)
+vector<Byte> Parser::ParseLine (unsigned int CurrentMode)
 {
 	// Reads all tokens in the line to Tokens vector
 	vector<Token *> Tokens;
@@ -270,7 +270,7 @@ vector<Byte> Parser::ParseLine (unsigned int CurrentAddressSize)
 
 					// Converts the tokens into an argument
 					Expression *e = EvaluateExpression (vector<Token *> (i, j));
-					Arguments.push_back (Argument::MakeArgument (*e, CurrentAddressSize));
+					Arguments.push_back (Argument::MakeArgument (*e, CurrentMode));
 					delete e;
 
 					// Skips the comma
@@ -279,7 +279,7 @@ vector<Byte> Parser::ParseLine (unsigned int CurrentAddressSize)
 				}
 
 				// Assemble the command
-				cmd->Assemble (var, Arguments, Encoding);
+				cmd->Assemble (var, Arguments, Encoding, CurrentMode);
 
 				// Delete what was used during parsing. var needs not be deleted because it's within sym
 				delete sym;
