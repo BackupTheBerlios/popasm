@@ -42,18 +42,5 @@ class Token
 	// Reads a token from the given file
 	static Token *GetToken (InputFile &inp, Context c);
 };
-/*
-// Thrown when the string got is neither a number, nor an operator, nor a symbol
-class UnknownToken : public exception
-{
-	string WhatString;
 
-	public:
-	// Constructor deletes the string given as argument because the caller cannot do it himself.
-	UnknownToken (const string *s) throw () : WhatString ("Unknown token: ") {WhatString += *s; delete s;}
-	~UnknownToken () {}
-
-	const char *what () const throw() {return WhatString.c_str();}
-};
-*/
 #endif
