@@ -19,6 +19,8 @@
 #include "immed.h"
 #include "parser.h"
 #include "asmer.h"
+#include "type.h"
+#include "lexop.h"
 
 BasicSymbol *Directive::Read (const string &str, InputFile &inp)
 {
@@ -58,7 +60,7 @@ void DefinitionDirective::Assemble (const BasicSymbol *sym, vector<Token *>::ite
 			cout << "Expected constant expression." << endl;
 		}
 
-		if ((!immed->IsInteger()) && (!AcceptFloat))
+		if ((immed->GetNumericalType() == FLOAT) && (!AcceptFloat))
 		{
 			RealNumber temp (immed->GetValue());
 
@@ -85,12 +87,7 @@ void DefinitionDirective::Assemble (const BasicSymbol *sym, vector<Token *>::ite
 
 	if (sym != 0)
 	{
-		Variable *newvar = new Variable (sym->GetName(), Size, length);
-
-		if ((Size == 80) && (NumericalType == INTEGER))
-			NumericalType = BCD;
-
-//		newvar->SetNumericalType (NumericalType);
+		Variable *newvar = new Variable (sym->GetName(), Type(Size, Type::WEAK_MEMORY, UNDEFINED, NumericalType), length);
 		CurrentAssembler->DefineSymbol (newvar);
 	}
 
@@ -208,6 +205,78 @@ void FunctionENDS (const BasicSymbol *sym, vector<Token *>::iterator i, vector<T
 	CurrentAssembler->CloseSegment (sym->GetName());
 }
 
+void FunctionPROC (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+{
+	if (sym == 0)
+		throw NameMissing ();
+
+	Procedure *NewProc;
+
+	if (i == j)
+	{
+		NewProc = new Procedure (sym->GetName());
+	}
+	else
+	{
+		if (i + 1 != j)
+		{
+			cout << "Extra characters on line" << endl;
+			throw 0;
+		}
+
+		Operator *op = dynamic_cast<Operator *> (*i);
+		if (op == 0)
+		{
+			cout << "Procedures must be either NEAR or FAR." << endl;
+			throw 0;
+		}
+
+		if (op->GetName() == "NEAR")
+		{
+			NewProc = new Procedure (sym->GetName(), NEAR);
+		}
+		else if (op->GetName() == "FAR")
+		{
+			NewProc = new Procedure (sym->GetName(), FAR);
+		}
+		else
+		{
+			cout << "Procedures must be either NEAR or FAR." << endl;
+			throw 0;
+		}
+	}
+
+	CurrentAssembler->AddProcedure (NewProc);
+}
+
+void FunctionENDP (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+{
+	if (sym == 0)
+		throw NameMissing ();
+
+	BasicSymbol *temp = CurrentAssembler->Find (sym->GetName());
+	if (temp == 0)
+	{
+		cout << "Procedure not found: " << sym->GetName() << endl;
+		return;
+	}
+
+	Procedure *proc = dynamic_cast<Procedure *> (temp);
+	if (proc == 0)
+	{
+		cout << "Not a procedure name" << endl;
+		return;
+	}
+
+	if (i != j)
+	{
+		cout << "Extra characters on line" << endl;
+		throw 0;
+	}
+
+	CurrentAssembler->CloseProcedure(sym->GetName());
+}
+
 void Directive::SetupDirectiveTable () throw ()
 {
 	static Directive *Directives[] =
@@ -223,7 +292,9 @@ void Directive::SetupDirectiveTable () throw ()
       new Directive ("EQU", FunctionEQU),
       new Directive ("=", FunctionEQUAL),
 		new Directive ("SEGMENT", FunctionSEGMENT),
-		new Directive ("ENDS", FunctionENDS)
+		new Directive ("ENDS", FunctionENDS),
+		new Directive ("PROC", FunctionPROC),
+		new Directive ("ENDP", FunctionENDP)
 	};
 
 	for (unsigned int i = 0; i < sizeof (Directives) / sizeof (Directive *); i++)
