@@ -2038,7 +2038,7 @@ The conventions adopted here are:
 \item xmmreg - an XMM register
 \end{itemize}
 
-\section{AAA - Ascii Adjust after Addition}
+\section{AAA --- Ascii Adjust after Addition}
 
 \begin{verbatim}
 Valid Syntaxes               Example
@@ -2050,7 +2050,7 @@ Valid Syntaxes               Example
 AAA (No arguments)           AAA
 \end{verbatim}
 
-\section{AAD - Ascii Adjust before Division}
+\section{AAD --- Ascii Adjust before Division}
 
 \begin{verbatim}
 Valid Syntaxes               Example
@@ -2067,7 +2067,7 @@ AAD unsigned8                AAD     16
 \popasm\ does not check whether or not the immediate argument for this
 instruction is zero.
 
-\section{AAM - Ascii Adjust after Multiply}
+\section{AAM --- Ascii Adjust after Multiply}
 
 \begin{verbatim}
 Valid Syntaxes               Example
@@ -2080,7 +2080,7 @@ AAD (No arguments)           AAM
 AAD unsigned8                AAM     10h
 \end{verbatim}
 
-\section{AAS - ASCII Adjust after Subtraction}
+\section{AAS --- ASCII Adjust after Subtraction}
 
 \begin{verbatim}
 Valid Syntaxes               Example
@@ -2092,7 +2092,7 @@ Valid Syntaxes               Example
 AAS (No arguments)           AAS
 \end{verbatim}
 
-\section{ADC - ADd with Carry}
+\section{ADC --- ADd with Carry}
 \begin{verbatim}
 Valid Syntaxes               Example
 \end{verbatim}
@@ -2106,7 +2106,7 @@ ADC reg/mem,immed            ADC     [VAR],18
 ADC reg/mem,signed8          ADC     EAX,-6
 \end{verbatim}
 
-\section{ADD - ADDition}
+\section{ADD --- ADDition}
 \begin{verbatim}
 Valid Syntaxes               Example
 \end{verbatim}
@@ -2120,7 +2120,7 @@ ADD reg/mem,immed            ADD     [VAR],18
 ADD reg/mem,signed8          ADD     EAX,-6
 \end{verbatim}
 
-\section{ADDPD - ADD Packed Double-precision floating-point values}
+\section{ADDPD --- ADD Packed Double-precision floating-point values}
 \begin{verbatim}
 Valid Syntaxes               Example
 \end{verbatim}
@@ -2131,7 +2131,7 @@ Valid Syntaxes               Example
 ADDPD xmmreg,xmmreg/mem128   ADDPD   XMM,XMM1
 \end{verbatim}
 
-\section{ADDPS - ADD Packed Single-precision floating-point values}
+\section{ADDPS --- ADD Packed Single-precision floating-point values}
 \begin{verbatim}
 Valid Syntaxes               Example
 \end{verbatim}
@@ -2142,7 +2142,7 @@ Valid Syntaxes               Example
 ADDPS xmmreg,xmmreg/mem128   ADDPS   XMM5,TABLE[ESI]
 \end{verbatim}
 
-\section{ADDSD - ADD Scalar Double-precision floating-point values}
+\section{ADDSD --- ADD Scalar Double-precision floating-point values}
 \begin{verbatim}
 Valid Syntaxes               Example
 \end{verbatim}
@@ -2153,7 +2153,7 @@ Valid Syntaxes               Example
 ADDSD xmmreg,xmmreg/mem64    ADDSD   XMM5,[EDI+ARRAY]
 \end{verbatim}
 
-\section{ADDSS - ADD Scalar Single-precision floating-point values}
+\section{ADDSS --- ADD Scalar Single-precision floating-point values}
 \begin{verbatim}
 Valid Syntaxes               Example
 \end{verbatim}
@@ -2164,7 +2164,7 @@ Valid Syntaxes               Example
 ADDSS xmmreg,xmmreg/mem32    ADDSS   XMM3,ES:[BX]
 \end{verbatim}
 
-\section{AND - logical AND}
+\section{AND --- logical AND}
 \begin{verbatim}
 Valid Syntaxes               Example
 \end{verbatim}
@@ -2178,7 +2178,7 @@ AND reg/mem,immed            AND     BYTE [GS:WORD_VAR],18
 AND reg/mem,signed8          AND     ESI,-6
 \end{verbatim}
 
-\section{ANDPD - bitwise AND Packed Double-precision floating-point values}
+\section{ANDPD --- bitwise AND Packed Double-precision floating-point values}
 \begin{verbatim}
 Valid Syntaxes               Example
 \end{verbatim}
@@ -2189,7 +2189,7 @@ Valid Syntaxes               Example
 ANDPD xmmreg,xmmreg/mem128   ANDPD   XMM7,[EAX]
 \end{verbatim}
 
-\section{ANDPS - bitwise AND Packed Single-precision floating-point values}
+\section{ANDPS --- bitwise AND Packed Single-precision floating-point values}
 \begin{verbatim}
 Valid Syntaxes               Example
 \end{verbatim}
@@ -2200,7 +2200,7 @@ Valid Syntaxes               Example
 ANDPS xmmreg,xmmreg/mem128   ANDPS   XMM0,[ESI*4]
 \end{verbatim}
 
-\section{ANDNPD - bitwise AND Not Packed Double-precision floating-point values}
+\section{ANDNPD --- bitwise AND Not Packed Double-precision floating-point values}
 
 \begin{verbatim}
 Valid Syntaxes               Example
@@ -2212,7 +2212,7 @@ Valid Syntaxes               Example
 ANDNPD xmmreg,xmmreg/mem128  ANDNPD  XMM7,[EAX]
 \end{verbatim}
 
-\section{ANDNPS - bitwise AND Not Packed Single-precision floating-point values}
+\section{ANDNPS --- bitwise AND Not Packed Single-precision floating-point values}
 \begin{verbatim}
 Valid Syntaxes               Example
 \end{verbatim}
@@ -2224,7 +2224,7 @@ ANDNPS xmmreg,xmmreg/mem128  ANDNPS  XMM0,[ESI*4]
 \end{verbatim}
 
 
-\section{ARPL - Adjust RPL field of segment selector}
+\section{ARPL --- Adjust RPL field of segment selector}
 \begin{verbatim}
 Valid Syntaxes               Example
 \end{verbatim}
@@ -2234,6 +2234,137 @@ Valid Syntaxes               Example
 \begin{verbatim}
 ARPL reg16/mem16,reg16       ARPL    AX,[BX]
 \end{verbatim}
+
+\section{BOUND --- check array index against BOUNDs}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+BOUND reg16,mem32            BOUND   AX,[BX]
+BOUND reg32,mem64            BOUND   ECX,[FULL_POINTER]
+\end{verbatim}
+
+\section{BSF --- Bit Scan Forward}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+BSF reg16,reg16/mem16        BSF     CX,SI
+BSF reg32,reg32/mem32        BSF     EBX,SS:[SUM]
+\end{verbatim}
+
+\section{BSR --- Bit Scan Reverse}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+BSR reg16,reg16/mem16        BSR     CX,SI
+BSR reg32,reg32/mem32        BSR     EBX,SS:[SUM]
+\end{verbatim}
+
+\section{BSWAP --- Byte SWAP}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+BSWAP reg32                  BSWAP   EDX
+\end{verbatim}
+
+\section{BT --- Bit Test}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+BT reg16/mem16,reg16         BT      AX,BX
+BT reg32/mem32,reg32         BT      [DI],ECX
+BT reg16/mem16,unsigned8     BT      DX,15
+BT reg32/mem32,unsigned8     BT      EAX,25
+\end{verbatim}
+
+\subsection{Notes}
+\popasm\ always checks whether the immediate argument is
+valid. The bit number must be lesser than the size in bits
+of the first argument. For example, if the first argument
+is 16-bits wide the immediate argument must be in the 0--15
+interval.
+
+\section{BTC --- Bit Test and Complement}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+BTC reg16/mem16,reg16        BTC     AX,BX
+BTC reg32/mem32,reg32        BTC     [DI],ECX
+BTC reg16/mem16,unsigned8    BTC     DX,15
+BTC reg32/mem32,unsigned8    BTC     EAX,25
+\end{verbatim}
+
+\subsection{Notes}
+\popasm\ always checks whether the immediate argument is
+valid. The bit number must be lesser than the size in bits
+of the first argument. For example, if the first argument
+is 16-bits wide the immediate argument must be in the 0--15
+interval.
+
+\section{BTR --- Bit Test and Reset}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+BTR reg16/mem16,reg16        BTR     AX,BX
+BTR reg32/mem32,reg32        BTR     [DI],ECX
+BTR reg16/mem16,unsigned8    BTR     DX,15
+BTR reg32/mem32,unsigned8    BTR     EAX,25
+\end{verbatim}
+
+\subsection{Notes}
+\popasm\ always checks whether the immediate argument is
+valid. The bit number must be lesser than the size in bits
+of the first argument. For example, if the first argument
+is 16-bits wide the immediate argument must be in the 0--15
+interval.
+
+\section{BTS --- Bit Test and Set}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+BTS reg16/mem16,reg16        BTS     AX,BX
+BTS reg32/mem32,reg32        BTS     [DI],ECX
+BTS reg16/mem16,unsigned8    BTS     DX,15
+BTS reg32/mem32,unsigned8    BTS     EAX,25
+\end{verbatim}
+
+\subsection{Notes}
+\popasm\ always checks whether the immediate argument is
+valid. The bit number must be lesser than the size in bits
+of the first argument. For example, if the first argument
+is 16-bits wide the immediate argument must be in the 0--15
+interval.
 
 To be continued.
 
