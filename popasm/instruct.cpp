@@ -124,29 +124,6 @@ typedef Register::IdFunctor<SegmentRegister,  5, ANY> GS;
 template <class A, class B>
 class Or : public  BinaryCompose <logical_or<bool>, A, B> {};
 
-// AMD 3DNow! Instructions
-class TDNowSyntax : public BinarySyntax
-{
-	Byte Suffix;
-
-	public:
-	TDNowSyntax (Byte suf) throw ();
-	~TDNowSyntax () throw () {}
-
-	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
-};
-
-TDNowSyntax::TDNowSyntax (Byte suf) throw () :
-	BinarySyntax (Opcode (0x0F, 0x0F), NOTHING, false, Argument::EQUAL, 0, PRESENT,
-	new MMXReg(), new Or<MMXMem, MMXReg> ()), Suffix(suf) {}
-
-bool TDNowSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
-{
-	BinarySyntax::Assemble (Arguments, Output);
-	Output.push_back (Suffix);
-	return true;
-}
-
 void Instruction::SetupInstructionTable () throw ()
 {
 	static Instruction Instructions[] =
@@ -1492,7 +1469,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax          (Opcode (0x66, 0x0F, 0xE3), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMReg(), new Or<XMMReg, XMMMem>())),
 
 		Instruction ("PAVGUSB",
-			new TDNowSyntax           (0xBF)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0xBF)),
 
 		Instruction ("PCMPEQB",
 			new BinarySyntax          (Opcode (0x0F, 0x74),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXReg(), new Or<MMXReg, MMXMem>()),
@@ -1523,64 +1500,64 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax          (Opcode (0x0F, 0xC5),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPReg32(), new XMMReg(), new Immed<8, Number::UNSIGNED>())),
 
 		Instruction ("PF2ID",
-			new TDNowSyntax           (0x1D)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0x1D)),
 
 		Instruction ("PF2IW",
-			new TDNowSyntax           (0x1C)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0x1C)),
 
 		Instruction ("PFACC",
-			new TDNowSyntax           (0xAE)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0xAE)),
 
 		Instruction ("PFADD",
-			new TDNowSyntax           (0x9E)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0x9E)),
 
 		Instruction ("PFCMPEQ",
-			new TDNowSyntax           (0xB0)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0xB0)),
 
 		Instruction ("PFCMPGE",
-			new TDNowSyntax           (0x90)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0x90)),
 
 		Instruction ("PFCMPGT",
-			new TDNowSyntax           (0xA0)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0xA0)),
 
 		Instruction ("PFMAX",
-			new TDNowSyntax           (0xA4)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0xA4)),
 
 		Instruction ("PFMIN",
-			new TDNowSyntax           (0x94)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0x94)),
 
 		Instruction ("PFMUL",
-			new TDNowSyntax           (0xB4)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0xB4)),
 
 		Instruction ("PFNACC",
-			new TDNowSyntax           (0x8A)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0x8A)),
 
 		Instruction ("PFPNACC",
-			new TDNowSyntax           (0x8E)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0x8E)),
 
 		Instruction ("PFRCP",
-			new TDNowSyntax           (0x96)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0x96)),
 
 		Instruction ("PFRCPIT1",
-			new TDNowSyntax           (0xA6)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0xA6)),
 
 		Instruction ("PFRCPIT2",
-			new TDNowSyntax           (0xB6)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0xB6)),
 
 		Instruction ("PFRSQIT1",
-			new TDNowSyntax           (0xA7)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0xA7)),
 
 		Instruction ("PFSUB",
-			new TDNowSyntax           (0x9A)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0x9A)),
 
 		Instruction ("PFSUBR",
-			new TDNowSyntax           (0xAA)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0xAA)),
 
 		Instruction ("PI2FD",
-			new TDNowSyntax           (0x0D)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0x0D)),
 
 		Instruction ("PI2FW",
-			new TDNowSyntax           (0x0C)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0x0C)),
 
 		Instruction ("PINSRW",
 			new BinarySyntax          (Opcode (0x0F, 0xC4),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new MMXReg(), new GPReg32(), new Immed<8, Number::UNSIGNED>()),
@@ -1613,7 +1590,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax          (Opcode (0x66, 0x0F, 0xD7), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPReg32(), new XMMReg())),
 
 		Instruction ("PMULHRW",
-			new TDNowSyntax           (0xB7)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0xB7)),
 
 		Instruction ("PMULHUW",
 			new BinarySyntax          (Opcode (0x0F, 0xE4),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXReg(), new Or<MMXReg, MMXMem>()),
@@ -1784,7 +1761,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax          (Opcode (0x66, 0x0F, 0xD9),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMReg(), new Or<XMMReg, XMMMem>())),
 
 		Instruction ("PSWAPD",
-			new TDNowSyntax           (0xBB)),
+			new SuffixedBinarySyntax  (Opcode (0x0F, 0x0F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new Or<MMXReg, MMXMem>(), 0xBB)),
 
 		Instruction ("PUNPCKHBW",
 			new BinarySyntax          (Opcode (0x0F, 0x68),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXReg(), new Or<MMXReg, MMXMem>()),
@@ -2227,7 +2204,7 @@ void Instruction::SetupInstructionTable () throw ()
 	}
 }
 
-InvalidSyntax::InvalidSyntax (const Command *cmd, const vector<Argument *> args) throw ()
+InvalidSyntax::InvalidSyntax (const Command *cmd, const vector<Argument *> args) throw()
 	: BadCommand(cmd), BadArguments(args), WhatString("Invalid combination of arguments for this command.")
 {
 }
