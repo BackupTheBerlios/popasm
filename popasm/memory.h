@@ -181,8 +181,7 @@ class Memory : public BasicArgument
 	bool SIBUsed () const throw () {return (AddressSize == 32) && ((Code & 7) == 4);}
 
 	public:
-	Memory (unsigned int sz = 0, int dist = UNDEFINED) throw ()
-		: BasicArgument (sz, dist), SegmentPrefix(0), SIB(0), Code(0), AddressSize(0) {}
+	Memory (const Type &t) throw () : BasicArgument (t), SegmentPrefix(0), SIB(0), Code(0), AddressSize(0) {}
 	~Memory () throw () {}
 
 	void MakeMemory16Bits (const BaseRegister *Base16, const IndexRegister *Index16);
@@ -209,7 +208,16 @@ class Memory : public BasicArgument
 			const Memory *mem = dynamic_cast<const Memory *> (arg);
 			if (mem == 0) return false;
 			if (MatchSize (size, mem->GetSize()))
-				return Match (dist, mem->GetDistanceType()) && Match (type, mem->GetNumericalType());
+			{
+				if (!Match (type, mem->GetNumericalType()))
+				{
+					cout << "Expected " << PrintNumerical(type & -2) << " got " << PrintNumerical(mem->GetNumericalType()) << " variable" << endl;
+					return false;
+//					throw 0;
+				}
+
+				return Match (dist, mem->GetDistanceType());
+			}
 			else
 				if (mem->GetSize() == 0) throw UndefinedMemorySize();
 
