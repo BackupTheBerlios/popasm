@@ -85,12 +85,12 @@ which calls the lexical analyzer (see Chapter \ref{chaplex}) to read
 the keywords, expressions, etc. from the input files. Such lexical
 items are then checked to verify whether or not they follow \popasm\ 
 syntax. If they do, the parser then converts them into arguments
-(such as memory references) and give them to the instruction (or
+(such as memory references) and pass them to the instruction (or
 directive) found in the current line.
 
 The Instruction class (explained in Chapter \ref{chapinst}) gets such
-arguments and performs additional checking (eg. type checking). If
-they succeed the instruction is assembled and the resulting encoding
+arguments and performs additional checking (eg. type checking). Unless
+an error is found, the instruction is assembled and the resulting encoding
 is returned to the parser.
 
 The paragraphs above rawly descrive how the assembly process works.
@@ -103,11 +103,11 @@ To be written.
 
 \chapter{The assembler classes\label{chapasm}}
 One of \popasm\ greatest concerns is compatibility with existing code.
-Such code was written according to syntatic rules due to other
-assemblers. Most of those rules can be gathered together in a single
+Such code was written according to syntatic rules of other assemblers.
+Most of those rules can be gathered together in a single
 assembler (like \popasm\ does), but some of them conflict with one
 another. For example, in \tasm\ a variable name stands for its contents
-while in \nasm\ it returns its offset.
+while in \nasm\ it is treated as its offset.
 
 Due to such conflicts, command line options have been created to change
 \popasm\ configuration. Nevertheless, there are differences among
@@ -118,7 +118,7 @@ and \nasm.).
 In order to do that, a base class from which all assemblers to be emulated
 derive has been defined. It contains all methods required to perform
 the assembly task. The emulated assemblers then inherit from the base
-class and overrides the necessary methods to achieve compatibility.
+class and overrides the necessary methods to achieve the desired compatibility.
 The next sections describe the Assembler base class and PopAsm, the
 only supported assembler at the time of this writing.
 
@@ -185,7 +185,7 @@ The next sections discuss how the important methods work.
 
 \section{ParseLine() method}
 This is the main function of Parser. It is called by Assembler once for each line
-of code from input. It calls ReadLine() method to read the current line and split
+of source code. It calls ReadLine() method to read the current line and split
 it into a vector of Tokens. These tokens are then identified and the state machine
 sketched in Figure \ref{SYNTAXSM} is run (via the \emph{switch} statement).
 
@@ -292,7 +292,181 @@ named MakeArgument().
 
 \chapter{Hash Tables\label{chaphash}}
 
-\chapter{Numbers Again\label{chapnumsagain}}
+\chapter{Numbers again\label{chapnumsagain}}
+This chapter shows how \popasm\ implements its huge numbers classes.
+They provide the developer unlimited bit sized numbers to operate
+with, if there is enough memory to hold them. Three classes have
+been defined to acomplish that: \emph{NaturalNumber}, \emph{IntegerNumber}
+and \emph{RealNumber}. They can be found in files \emph{number.h} and
+\emph{number.cpp}, and will be discussed in the next sections.
+
+\section{NaturalNumber}
+An object of this class can hold \emph{any} non-negative integer number,
+no matter how huge it is, with no precision loss. It is implemented
+as a vector of \emph{Words} (16-bit unsigned integers). For the rest of
+this section, let $V$ be this vector and $n$ be the number it represents.
+
+\subsection{Internal representation\label{intrep}}
+The least significant bits of $n$ are stored at the first positions of $V$
+(that is, $n$ is encoded in little-endian notation).
+For example\footnotemark, if $n = 123456789h$ then $V$ will look as in Table \ref{tabexv}.
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}[h]{|c|c|c|}
+V[2]  & V[1]  & V[0]\\
+\hline
+0001h & 2345h & 6789h\\
+\hline
+\end{tabular}
+\label{tabexv}
+\caption{Vector $V$ holding $n = 123456789h$}
+\end{center}
+\end{table}
+\footnotetext{Note that $V$ was displayed in reverse order. This
+convention will be used in this section to make numbers and math
+operations easier to read.}
+Another important property of $V$ is that it never contains trailing
+zeroes (that is, its last element -- the most significant \emph{Word}
+-- is never zero). Obviously, the first \emph{Words} may be zero,
+provided they are followed by a non-zero \emph{Word}. Hence Table \ref{tabwrong}
+shows an invalid representation of $n$ (due to a trailing zero at
+$V[3]$).
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}[h]{|c|c|c|c|}
+V[3]  & V[2]  & V[1]  & V[0]\\
+\hline
+0000h & 0001h & 2345h & 6789h\\
+\hline
+\end{tabular}
+\label{tabwrong}
+\caption{Invalid representation of $n = 123456789h$}
+\end{center}
+\end{table}
+
+Finally, $n$ is zero if and only if $V$ is empty.
+
+\subsection{The constructors}
+\emph{NaturalNumber} has two constructors. One of them takes a
+\emph{Dword} (32-bit unsigned integer) that defaults to be zero,
+splits it in two \emph{Words} and place them into $V$ (but they
+are checked to prevent trailing zeroes, as mentioned in subsection
+\ref{intrep}).
+
+The other constructor reads a \emph{NaturalNumber} from a string. It
+first calls \emph{SimplifyString()} to detect the sign\footnote{
+The reader might argue that a \emph{NaturalNumber} can't be
+negative and thus it would not make sense to detect the sign of the
+number, but recall that \emph{SimplifyString()} is not a method of
+\emph{NaturalNumber}; it is also used by the other classes (such as
+\emph{IntegerNumber}) which can hold negative numbers as well.} and
+base the number was written in and to strip trailing underscores.
+
+The number is then calculated by the usual algorithm.
+
+\begin{quotation}
+\noindent PartialNumber $\leftarrow$ 0;\\
+\\
+while there are remaining digits do\\
+\indent NextDigit $\leftarrow$ ReadNextDigit();\\
+\indent PartialNumber $\leftarrow$ PartialNumber * BASE;\\
+\indent PartialNumber $\leftarrow$ PartialNumber + NextDigit;\\
+end while
+\end{quotation}
+
+The other argument, \emph{ForcedBase}, tells the constructor to use
+the specified base instead of the default one. It is used by one of
+the constructors of RealNumber class (see section \ref{secrealnum}).
+
+\subsection{Performing math operations}
+\subsubsection{Addition}
+\emph{NaturalNumber} class performs addition by adding \emph{Words}
+of both numbers, two at a time, and propagating the carry forward. For
+example, table \ref{tabadd} shows how we could add $12345678h$ and
+$32055h$.
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|c|c|c}
+V[1]  & V[0]  &\\
+\hline
+1234h & 5678h & A\\
+\hline
+0003h & 2055h & B\\
+\hline
+1237h & 76CDh & A + B\\
+\hline
+\end{tabular}
+\label{tabadd}
+\caption{Simple example of addition}
+\end{center}
+\end{table}
+
+Table \ref{tabadd} shows a rather simple example, because both numbers
+have the same size in \emph{Words} and there is no carry. Let's consider
+another example where both of these issues occur (table \ref{tabadd2}).
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|c|c|c|c}
+V[2]  & V[1]  & V[0] & \\
+\hline
+      & FFFFh & 9314h & A\\
+\hline
+      &       & 8000h & B\\
+\hline
+0001h & 0000h & 1314h & A + B\\
+\hline
+\end{tabular}
+\label{tabadd2}
+\caption{A more complex example of addition}
+\end{center}
+\end{table}
+
+As table \ref{tabadd2} shows, the first addition of \emph{Words} at V[0]
+generates a carry, because $9314h + 8000h = 11314h$, which is beyond the
+$FFFFh$ limit for a \emph{Word}. Thus the V[0] of the result will hold the
+16 least significant bits of $11314h$ (that is, $1314h$) and a carry will be
+propagated to the next stage of the addition.
+
+The next stage would be to add $FFFFh$ and an empty vector position
+(which can be interpreted as zero) and the carry due to the previous stage.
+The result will be $FFFFh + 0000h + 1 = 10000h$. This value, too, is greater
+than $FFFFh$, so its 16 least significant bits ($0000h$) are stored at V[1] and
+a new carry is generated, but we are already done with adding $A$ and $B$, so
+the carry is appended to $A$, yielding $A + B$ as shown in table \ref{tabadd2}.
+
+Note that some cells of table \ref{tabadd2} are blank, not zero. That's because
+$A$ has a two \emph{Words} long vector, while $B$ has a single-element vector of
+\emph{Words} to represent its value. We could not add trailing zeroes to either
+number, otherwise we would be violating the restriction that states that no
+number may have trailing zeroes at its vector (see section \ref{intrep}).
+
+From the above discution, it is easy to get to the algorithm \popasm\ uses to
+add two \emph{NaturalNumbers} (the sum is placed onto $A$, that is, this is
+the algorithm for \emph{NaturalNumber::operator+=}):
+
+\begin{quotation}
+\noindent 01 Dword temp $\leftarrow$ 0;\\
+02 \noindent \\
+03 \noindent if A.SizeInWords() $<$ B.SizeInWords()\\
+04 \indent   match $A$ and $B$ sizes by pushing back zeroes\\
+05 \noindent end if\\
+06 \noindent \\
+07 \noindent for i $\leftarrow$ 0 to A.SizeInWords() - 1 do\\
+08 \indent   temp $\leftarrow$ Dword(A[i]) + Dword(B[i]) + temp;\\
+09 \indent   A[i] $\leftarrow$ temp[0..15];\\
+10 \indent   temp $\leftarrow$ temp[16..31];\\
+11 \noindent end for
+\end{quotation}
+
+
+\section{IntegerNumber}
+\section{RealNumber\label{secrealnum}}
+
+
 
 \chapter{Operators\label{chapops}}
 
@@ -306,7 +480,7 @@ named MakeArgument().
 \appendix
 
 \chapter{Contacting info\label{CONTACT}}
-Up to date info about contacting \popasm\ team can be found at \popasm\ 
+Up to date info about contacting \popasm\ team can be found at \popasm\
 homepage, at http://popasm.sourceforge.net.
 
 \begin{thebibliography}{12}
