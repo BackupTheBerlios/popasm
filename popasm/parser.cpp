@@ -50,6 +50,7 @@ Expression *MakeTerm (Token *t)
 		Expression *exp;
 		const UserDefined *ud = dynamic_cast<const UserDefined *> (s->GetData());
 		const Variable *v;
+		const Constant *c;
 
 		if (ud != 0)
 		{
@@ -61,6 +62,14 @@ Expression *MakeTerm (Token *t)
 			{
 				exp->SetType (Type::WEAK_MEMORY);
 				exp->SetSize (v->GetSize());
+			}
+			else
+			{
+				c = dynamic_cast<const Constant *> (ud);
+				if (c != 0)
+				{
+					exp = c->GetValue()->Clone();
+				}
 			}
 		}
 		else
