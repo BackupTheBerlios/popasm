@@ -35,13 +35,35 @@ class InvalidFullPointer : public exception
 	const char *what() const throw() {return WhatString;}
 };
 
+class SegmentOverflow : public exception
+{
+	static const char WhatString[];
+
+	public:
+	SegmentOverflow () throw () {}
+	~SegmentOverflow () throw () {}
+
+	const char *what() const throw() {return WhatString;}
+};
+
+class OffsetOverflow : public exception
+{
+	static const char WhatString[];
+
+	public:
+	OffsetOverflow () throw () {}
+	~OffsetOverflow () throw () {}
+
+	const char *what() const throw() {return WhatString;}
+};
+
 class FullPointer : public BasicArgument
 {
 	Word Segment;
 	Dword Offset;
 
 	public:
-	FullPointer (unsigned int sz, Word seg, Dword off) throw (InvalidFullPointer);
+	FullPointer (unsigned int sz, Word seg, Dword off) throw (InvalidFullPointer, OffsetOverflow);
 	~FullPointer () throw () {}
 
 	void Write (vector<Byte> &Output) const throw ();

@@ -19,10 +19,12 @@
 #include "defs.h"
 
 const char InvalidFullPointer::WhatString[] = "Invalid immediate full-pointer.";
+const char SegmentOverflow::WhatString[] = "Segment value must be less than 0FFFFh.";
+const char OffsetOverflow::WhatString[] = "Offset value needs size overriding to dword.";
 
-FullPointer::FullPointer (unsigned int sz, Word seg, Dword off) throw (InvalidFullPointer) : BasicArgument (sz)
+FullPointer::FullPointer (unsigned int sz, Word seg, Dword off) throw (InvalidFullPointer, OffsetOverflow) : BasicArgument (sz)
 {
-	if ((sz == 0) && (CurrentAssembler->GetCurrentMode() == 16) && (off > 0xFFFF)) throw InvalidFullPointer();
+	if ((sz == 0) && (CurrentAssembler->GetCurrentMode() == 16) && (off > 0xFFFF)) throw OffsetOverflow();
 
 	Segment = seg;
 	Offset = off;
