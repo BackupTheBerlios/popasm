@@ -17,72 +17,10 @@
 
 #include "immed.h"
 
-void Immediate::SetSize(unsigned int sz)
+void Immediate::SetSize(unsigned int sz) const
 {
 	Number temp(Value);
 	temp.SetSize(sz);
 	BasicArgument::SetSize(sz);
 }
 
-bool UnsignedByte::IdFunctor::operator() (const BasicArgument *arg)
-{
-	const Immediate *immed = dynamic_cast<const Immediate *> (arg);
-	if (immed == 0) return false;
-
-	if ((arg->GetSize() != 0) && (arg->GetSize() != 8)) return false;
-
-	// Unsigned bytes must be integers
-	const RealNumber &n = immed->GetValue();
-	if (!n.GetInteger()) return false;
-
-	long int x = static_cast<IntegerNumber> (n).GetValue(true);
-	if ((x >= 0) && (x <= 255))
-	{
-		arg->BasicArgument::SetSize (8);
-		return true;
-	}
-
-	return false;
-}
-
-bool SignedByte::IdFunctor::operator() (const BasicArgument *arg)
-{
-	const Immediate *immed = dynamic_cast<const Immediate *> (arg);
-	if (immed == 0) return false;
-
-	if ((arg->GetSize() != 0) && (arg->GetSize() != 8)) return false;
-
-	// Unsigned bytes must be integers
-	const RealNumber &n = immed->GetValue();
-	if (!n.GetInteger()) return false;
-
-	long int x = static_cast<IntegerNumber> (n).GetValue(true);
-	if ((x >= -128) && (x <= 127))
-	{
-		arg->BasicArgument::SetSize (8);
-		return true;
-	}
-
-	return false;
-}
-
-bool UnsignedWord::IdFunctor::operator() (const BasicArgument *arg)
-{
-	const Immediate *immed = dynamic_cast<const Immediate *> (arg);
-	if (immed == 0) return false;
-
-	if ((arg->GetSize() != 0) && (arg->GetSize() != 16)) return false;
-
-	// Unsigned words must be integers
-	const RealNumber &n = immed->GetValue();
-	if (!n.GetInteger()) return false;
-
-	long int x = static_cast<IntegerNumber> (n).GetValue(true);
-	if ((x >= 0) && (x <= 65535))
-	{
-		arg->BasicArgument::SetSize (16);
-		return true;
-	}
-
-	return false;
-}

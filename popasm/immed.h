@@ -35,7 +35,7 @@ class Immediate : public BasicArgument
 	~Immediate () throw () {}
 
 	const RealNumber &GetValue() const throw () {return Value;}
-	void SetSize (unsigned int sz);
+	void SetSize (unsigned int sz) const;
 
 	class IdFunctor : public BasicArgument::IdFunctor
 	{
@@ -48,43 +48,66 @@ class Immediate : public BasicArgument
 	string Print() const throw() {return Value.Print();}
 };
 
-class UnsignedByte : public Immediate
+template <long int n>
+class ImmedEqual : public UnaryFunction<const BasicArgument *, bool>
 {
 	public:
-	UnsignedByte () {}
-	~UnsignedByte () throw () {}
-
-	class IdFunctor : public BasicArgument::IdFunctor
+	result_type operator() (argument_type arg)
 	{
-		public:
-		bool operator() (const BasicArgument *arg);
-	};
+		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
+		if (immed == 0) return false;
+		if ((arg->GetSize() != 0) || (!immed->GetValue().GetInteger())) return false;
+		return immed->GetValue() == RealNumber (n);
+	}
 };
 
-class SignedByte : public Immediate
+template <unsigned int n, Number::NumberType t>
+class Immed : public UnaryFunction<const BasicArgument *, bool>
 {
 	public:
-	SignedByte () {}
-	~SignedByte () throw () {}
-
-	class IdFunctor : public BasicArgument::IdFunctor
+	result_type operator() (argument_type arg)
 	{
-		public:
-		bool operator() (const BasicArgument *arg);
-	};
+		// Checks whether we have an integer immediate value
+		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
+		if (immed == 0) return false;
+
+		try
+		{
+			immed->SetSize (n);
+		}
+		catch (...) {return false;}
+
+		return true;
+	}
 };
 
-class UnsignedWord : public Immediate
+class DefaultImmed : public UnaryFunction<const BasicArgument *, bool>
 {
 	public:
-	UnsignedWord () {}
-	~UnsignedWord () throw () {}
-
-	class IdFunctor : public BasicArgument::IdFunctor
+	result_type operator() (argument_type arg)
 	{
-		public:
-		bool operator() (const BasicArgument *arg);
-	};
+		// Checks whether we have an integer immediate value
+		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
+		if (immed == 0) return false;
+
+		switch (immed->GetSize())
+		{
+			case 0:
+				if (CurrentAssembler->GetCurrentMode() == 16)
+					return Immed<16, Number::ANY>() (arg);
+				else
+					return Immed<32, Number::ANY>() (arg);
+
+			case 16:
+			case 32:
+				break;
+
+			default:
+				return false;
+		}
+
+		return true;
+	}
 };
 
 #endif
