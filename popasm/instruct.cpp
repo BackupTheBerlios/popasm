@@ -79,6 +79,7 @@ typedef BinaryCompose <logical_or<bool>,  GPRegister16Bits::IdFunctor, GPRegiste
 typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           WordReg>                     MemWordReg;
 typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           GPRegister8Bits::IdFunctor>  Mem8Reg8;
 typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           GPRegister16Bits::IdFunctor> Mem16Reg16;
+typedef BinaryCompose <logical_or<bool>,  WordReg,                     Mem<0, Memory::INTEGER, Type::NEAR> > WordRegNearMem;
 
 typedef BinaryCompose <logical_and<bool>, GPRegister::IdFunctor,       Register::CompareCodeFunctor<0> > Accumulator;
 typedef BinaryCompose <logical_and<bool>, FPURegister::IdFunctor,      Register::CompareCodeFunctor<0> > ST;
@@ -146,6 +147,10 @@ void Instruction::SetupInstructionTable () throw ()
 		new Instruction ("BTS",
 			new BinarySyntax        (100, Opcode (0x0F, 0xAB),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MemWordReg(), new WordReg()),
 			new BinarySyntax        (110, Opcode (0x0F, 0xBA, 0x05), Syntax::FIRST_ARGUMENT, false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MemWordReg(), new Immed<8, Number::UNSIGNED>())),
+
+		new Instruction ("CALL",
+			new UnarySyntax         (100, Opcode (0xFF, 0x02),       Syntax::FIRST_ARGUMENT,                                                          new WordRegNearMem()),
+			new UnarySyntax         (110, Opcode (0xFF, 0x03),       Syntax::FULL_POINTER,                                                            new Mem<0, Memory::INTEGER, Type::FAR>())),
 
 		new Instruction ("CBW",
 			new ZerarySyntax        (100, Opcode (0x98),             Syntax::MODE_16BITS)),
