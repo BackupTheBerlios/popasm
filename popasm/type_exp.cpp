@@ -212,6 +212,39 @@ Expression &Expression::operator>>= (const Expression &e)
 	return *this;
 }
 
+Expression &Expression::BinaryShiftRight (const Expression &e)
+{
+	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);
+
+	BasicExpression<Number, Symbol>::BinaryShiftRight (e);
+
+	// The effect on the type is the same as the arithmetic counterpart
+	t >>= e.t;
+	return *this;
+}
+
+Expression &Expression::UnsignedDivision (const Expression &e)
+{
+	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);
+
+	BasicExpression<Number, Symbol>::UnsignedDivision (e);
+
+	// The effect on the type is the same as the signed counterpart
+	t /= e.t;
+	return *this;
+}
+
+Expression &Expression::UnsignedModulus (const Expression &e)
+{
+	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);
+
+	BasicExpression<Number, Symbol>::UnsignedModulus (e);
+
+	// The effect on the type is the same as the arithmetic counterpart
+	t %= e.t;
+	return *this;
+}
+
 Expression &Expression::MemberSelect (const Expression &e)
 {
 	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);

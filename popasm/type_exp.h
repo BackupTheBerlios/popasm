@@ -79,6 +79,11 @@ class Expression : BasicExpression<Number, Symbol>
 	Expression &operator<<= (const Expression &e);
 	Expression &operator>>= (const Expression &e);
 
+	// Methods for implementing NASM >>, // and %% operators
+	Expression &BinaryShiftRight (const Expression &e);
+	Expression &UnsignedDivision (const Expression &e);
+	Expression &UnsignedModulus (const Expression &e);
+
 	void operator[] (int) {t[0];}
 	Expression &MemberSelect (const Expression &e);
 	Expression &Compose (const Expression &e);

@@ -244,6 +244,16 @@ class ShiftRight : public OperatorData<T>
 };
 
 template <class T = int>
+class BinaryShiftRight : public OperatorData<T>
+{
+	public:
+	BinaryShiftRight (const string &n, unsigned int p0, unsigned int p1) throw () : OperatorData (n, p0, p1) {}
+	~BinaryShiftRight () throw () {}
+
+	T &operator() (T &x, T &y) const {return x.BinaryShiftRight(y);}
+};
+
+template <class T = int>
 class SizeCast : public OperatorData<T>
 {
 	unsigned int Size;

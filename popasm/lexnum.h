@@ -86,6 +86,10 @@ class Number : public Token
 	Number &operator<<= (const Number &x);
 	Number &operator>>= (const Number &x);
 
+	Number &BinaryShiftRight (const Number &x);
+	Number &UnsignedDivision (const Number &x);
+	Number &UnsignedModulus (const Number &x);
+
 	Number &operator~ ();
 	Number &operator- () {n.ChangeSign(); Size = 0; return *this;}
 	bool operator== (const Number &x) const throw () {return (n == x.n);}

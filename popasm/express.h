@@ -118,6 +118,10 @@ class BasicTerm : public pair <NumberClass *, VariableClass *>
 	BasicTerm &operator<<= (const BasicTerm &t);
 	BasicTerm &operator>>= (const BasicTerm &t);
 
+	BasicTerm &BinaryShiftRight (const BasicTerm &t);
+	BasicTerm &UnsignedDivision (const BasicTerm &t);
+	BasicTerm &UnsignedModulus (const BasicTerm &t);
+
 	virtual BasicTerm *Clone () const {return new BasicTerm (*this);}
 
 	// For debugging purposes only
@@ -383,6 +387,56 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 	return *this;
 }
 
+template <class NumberClass, class VariableClass>
+BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::BinaryShiftRight (const BasicTerm <NumberClass, VariableClass> &t)
+{
+	// Both terms MUST be pure constants
+	if (Constant() && t.Constant())
+	{
+		// If the numeric part is implicit, replace it by a true number
+		if (first == 0) first = new NumberClass (1);
+
+		first->BinaryShiftRight ((t.first != 0) ? *t.first : NumberClass (1));
+	}
+	else throw ConstantExpected();
+
+	return *this;
+}
+
+template <class NumberClass, class VariableClass>
+BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::UnsignedDivision (const BasicTerm <NumberClass, VariableClass> &t)
+{
+	// The second term MUST be a pure constant
+	if (!t.Constant()) throw ConstantExpected();
+
+	// If the second term is an implicit one, there's no need to perform the operation at all
+	if (t.first != 0)
+	{
+		// If the numeric part is implicit, replace it by a true number
+		if (first == 0) first = new NumberClass (1);
+
+		first->UnsignedDivision (*t.first);
+	}
+
+	return *this;
+}
+
+template <class NumberClass, class VariableClass>
+BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::UnsignedModulus (const BasicTerm <NumberClass, VariableClass> &t)
+{
+	// Both terms MUST be pure constants
+	if (Constant() && t.Constant())
+	{
+		// If the numeric part is implicit, replace it by a true number
+		if (first == 0) first = new NumberClass (1);
+
+		first->UnsignedModulus ((t.first != 0) ? *t.first : NumberClass (1));
+	}
+	else throw ConstantExpected();
+
+	return *this;
+}
+
 //------- BasicExpression
 
 // Performs arithmetics on expressions
@@ -427,6 +481,10 @@ class BasicExpression
 	virtual BasicExpression &operator^= (const BasicExpression &t);
 	virtual BasicExpression &operator<<= (const BasicExpression &t);
 	virtual BasicExpression &operator>>= (const BasicExpression &t);
+
+	virtual BasicExpression &BinaryShiftRight (const BasicExpression &t);
+	virtual BasicExpression &UnsignedDivision (const BasicExpression &t);
+	virtual BasicExpression &UnsignedModulus (const BasicExpression &t);
 
 	// For debugging purposes only
 	virtual string Print () const
@@ -649,6 +707,49 @@ BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberCl
 
 	// Performs operation
 	*Terms.back() >>= *(t.Terms.back());
+	return *this;
+}
+
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::BinaryShiftRight (const BasicExpression &t)
+{
+	// Only constants may be used in this operation
+	if ((!Constant()) || (!t.Constant())) throw ConstantExpected ();
+
+	if (Zero() || t.Zero())	return *this;
+
+	// Performs operation
+	Terms.back()->BinaryShiftRight (*(t.Terms.back()));
+	return *this;
+}
+
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::UnsignedDivision (const BasicExpression &t)
+{
+	// Prevents division by zero or non-constant
+	if (!t.Constant()) throw ConstantExpected ();
+	if (t.Zero()) throw DivisionException ();
+
+	// The divisor must have only one term in this version of the module
+	Term *x = t.Terms.back();
+
+	// Divides each term from the dividend by the one of the divisor
+	for (vector<Term *>::iterator i = Terms.begin(); i != Terms.end(); i++) (*i)->UnsignedDivision (*x);
+	return *this;
+}
+
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::UnsignedModulus (const BasicExpression &t)
+{
+	// Only constants may be used in this operation
+	if ((!Constant()) || (!t.Constant())) throw ConstantExpected ();
+	if (t.Zero()) throw DivisionException ();
+
+	// Zero divided by anything yields zero
+	if (Zero()) return *this;
+
+	// Performs modulus operation
+	Terms.back()->UnsignedModulus (*(t.Terms.back()));
 	return *this;
 }
 

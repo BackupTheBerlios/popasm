@@ -251,6 +251,42 @@ Number &Number::operator>>= (const Number &x)
 	return *this;
 }
 
+Number &Number::BinaryShiftRight (const Number &x)
+{
+	// Both numbers are integers?
+	if (!n.GetInteger()) throw IntegerExpected (n);
+	if (!x.n.GetInteger()) throw IntegerExpected (x.n);
+
+	// Performs operation
+	n = RealNumber (static_cast<IntegerNumber> (n).BinaryShiftRight (static_cast<IntegerNumber> (x.n)));
+	Size = 0;
+	return *this;
+}
+
+Number &Number::UnsignedDivision (const Number &x)
+{
+	// Both numbers are integers?
+	if (!n.GetInteger()) throw IntegerExpected (n);
+	if (!x.n.GetInteger()) throw IntegerExpected (x.n);
+
+	// Performs operation
+	n = RealNumber (static_cast<IntegerNumber> (n).BinaryShiftRight (static_cast<IntegerNumber> (x.n)));
+	Size = 0;
+	return *this;
+}
+
+Number &Number::UnsignedModulus (const Number &x)
+{
+	// Both numbers are integers?
+	if (!n.GetInteger()) throw IntegerExpected (n);
+	if (!x.n.GetInteger()) throw IntegerExpected (x.n);
+
+	// Performs operation
+	n = RealNumber (static_cast<IntegerNumber> (n).BinaryShiftRight (static_cast<IntegerNumber> (x.n)));
+	Size = 0;
+	return *this;
+}
+
 Number &Number::operator~ ()
 {
 	// Number must be integer for One's Complement
