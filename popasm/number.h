@@ -36,6 +36,8 @@ class DivisionByZero;
 class LeadingZero;
 class PrecisionLoss;
 
+string SimplifyString (const string &s, Word &Base, bool *Negative = 0) throw (InvalidNumber);
+
 // Natural number is a vector of words capable of storing any number, no
 // matter how huge it is. IMPORTANT: No leading zeroes must be allowed!!
 // Remember that if you plan to add any new function.
@@ -56,7 +58,7 @@ class NaturalNumber : vector <Word>
 	public:
 	// Builds a NaturalNumber from either a Dword or a numeric string
 	NaturalNumber (const Dword d = 0) throw ();
-	NaturalNumber (const string &n, const Word ForcedBase = 0) throw (InvalidNumber, InvalidDigit);
+	NaturalNumber (const string &n, Word ForcedBase = 0) throw (InvalidNumber, InvalidDigit);
 	virtual ~NaturalNumber () throw () {}
 
 	// Returns the size of the underlying vector
@@ -139,7 +141,7 @@ class IntegerNumber
 	// Builds an integer from a long int, a numeric string or a NaturalNumber
 	IntegerNumber (long int i = 0) throw ();
 	IntegerNumber (const NaturalNumber &n) throw () : AbsoluteValue(n), Negative(false) {}
-	IntegerNumber (const string &s) throw (InvalidNumber, InvalidDigit);
+	IntegerNumber (const string &s, Word ForcedBase = 0, bool ForcedSign = false) throw (InvalidNumber, InvalidDigit);
 	~IntegerNumber () throw () {}
 
 	// Returns the size of the underlying vector
@@ -168,6 +170,7 @@ class IntegerNumber
 	IntegerNumber &operator>>= (Dword n) throw ();
 
 	// Unary operators
+	void ChangeSign () throw () {Negative = !Negative;}
 	const IntegerNumber operator- () const throw ();
 	IntegerNumber &operator++ () throw ();
 	const IntegerNumber operator++ (int) throw ();
@@ -221,9 +224,9 @@ class RealNumber
 	public:
 	RealNumber () throw () : Integer (true) {}
 	RealNumber (const IntegerNumber &n) throw () : Mantissa (n), Integer (true) {}
-	RealNumber (const IntegerNumber &m, const IntegerNumber &e) throw () : Mantissa (m), Exponent (e), Integer (false) {}
-	RealNumber (const string &str) throw (InvalidNumber, InvalidDigit);
-	RealNumber (int n) throw () : Mantissa (IntegerNumber(n)) {}
+	RealNumber (const IntegerNumber &m, const IntegerNumber &e) throw () : Mantissa (m), Exponent (e), Integer (!e.LesserThanZero()) {}
+	RealNumber (const string &s, Word ForcedBase = 0, bool ForcedSign = false) throw (InvalidNumber, InvalidDigit);
+	RealNumber (int n) throw () : Mantissa (IntegerNumber(n)), Integer (true) {}
 	~RealNumber () throw () {}
 
 	static unsigned long int GetPrecisionIncrement () throw () {return PrecisionIncrement;}
@@ -232,6 +235,9 @@ class RealNumber
 	static void SetMaximumSize (const unsigned long int n) throw () {MaximumSize = n;}
 	static bool GetWatchPrecisionLoss () throw () {return WatchPrecisionLoss;}
 	static void SetWatchPrecisionLoss (const bool yes) throw () {WatchPrecisionLoss = yes;}
+
+	bool GetInteger () const {return Integer;}
+	void SetInteger (bool NewInteger) {Integer = NewInteger;}
 
 	const RealNumber operator+ (const RealNumber &n) const throw ();
 	const RealNumber operator- (const RealNumber &n) const throw ();
@@ -247,11 +253,12 @@ class RealNumber
 	string Print (Word Base = 10, Dword n = 8) const throw ();
 
 	Dword Size () const {return Mantissa.Size();}
-	const RealNumber Abs() throw () {return RealNumber (Mantissa.Abs(), Exponent);}
+	const RealNumber Abs() const throw () {return RealNumber (Mantissa.Abs(), Exponent);}
 	int Compare (const RealNumber &n) const throw ();
 
 	// Unary minus
 	const RealNumber operator- () const throw () {return RealNumber (-Mantissa, Exponent);}
+	void ChangeSign () throw () {Mantissa.ChangeSign();}
 
 	bool operator>  (const RealNumber &n) const throw ();
 	bool operator>= (const RealNumber &n) const throw ();
@@ -262,6 +269,8 @@ class RealNumber
 
 	bool GreaterThanZero () const throw () {return Mantissa.GreaterThanZero();}
 	bool LesserThanZero () const throw () {return Mantissa.LesserThanZero();}
+
+	operator IntegerNumber () const throw (PrecisionLoss);
 
 	// Performs tests to check if the class is working without bugs
 	static bool Test () throw ();

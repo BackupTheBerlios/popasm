@@ -29,63 +29,107 @@ NaturalNumber::NaturalNumber (const Dword d = 0) throw ()
 	if (d != 0) push_back (d);
 }
 
-// Translates the contents of the string to a possibly huge number
-NaturalNumber::NaturalNumber (const string &s, const Word ForcedBase = 0) throw (InvalidNumber, InvalidDigit)
+// Gets a numeric string and strips leading and trailing underscores and radices. Also checks for the
+// first digit being 0-9
+string SimplifyString (const string &s, Word &Base, bool *Negative = 0) throw (InvalidNumber)
 {
-	// Assures no empty strings get past this point
-	if (s.empty()) return;
-
-	Word Base;
-	string n;
-  	unsigned int RadixPosition;
-
-	// Size must be at least 2 if 0x or $n are used
-	if (s.size() > 1)
-	{
-		// Did the user say 0x...?
-		if ((s[0] == '0') && ((s[1] == 'x') || (s[1] == 'X')))
-		{
-			// "0x" and "0X" are not numbers themselves
-			if ((s.size() == 2) || (ForcedBase != 0)) throw InvalidNumber (s);
-
-			Base = 16;
-			n = string (s.begin() + 2, s.end());
-			goto CalculateNumber;
-		}
-
-		// A $ followed by a number is hex as well
-		if (s[0] == '$')
-		{
-			if ((s[1] < '0') || (s[1] > '9') || (ForcedBase != 0)) throw InvalidNumber (s);
-			Base = 16;
-			n = string (s.begin() + 1, s.end());
-			goto CalculateNumber;
-		}
-	}
-
-	// Checks if the first character is a digit; otherwise it's not a number
-	if ((s[0] < '0') || (s[0] > '9')) throw InvalidNumber (s);
-
 	// Find the radix (if any). Any number can be followed by as many underscores
 	// as the programmer wishes, so 123h___ is a valid heximal number
-	RadixPosition = s.find_last_not_of ('_');
+	unsigned int i = 0, j = s.find_last_not_of ('_');
+	Base = 0;
 
-	// Translates the trailing radix to its base (i.e. h to 16, b to 2, etc)
-	Base = IsRadix (s[RadixPosition]);
-	if (Base == 0)
+	// A string solely of underscores is not a number
+	if (j == string::npos) throw InvalidNumber (s);
+	j++;
+
+	// Gets the sign
+	if ((s[0] == '+') || (s[0] == '-'))
 	{
-		// If no radix was specified, use the forced base. If none is forced, use the default one
-		Base = (ForcedBase == 0) ? GetDefaultBase () : ForcedBase;
-		n = string (s, 0, RadixPosition + 1);
+		if (Negative != 0) *Negative = s[0] == '-';
+		i++;
 	}
 	else
 	{
-		// It is an error to force a base and specify a radix simultaneously
-		if (ForcedBase != 0) throw InvalidNumber (s);
-		n = string (s, 0, RadixPosition);
+		if (Negative != 0) *Negative = false;
 	}
 
-CalculateNumber:
+	if (i == j) throw InvalidNumber (s);
+	// Leading '$' means hex...
+	if (s[i] == '$')
+	{
+		i++;
+		Base = 16;
+		if (i == j) throw InvalidNumber (s);
+		// ... if followed by at least one decimal digit
+		if ((s[i] < '0') || (s[i] > '9')) throw InvalidNumber (s);
+	}
+	else
+	{
+		if (s[i] == '0')
+		{
+			i++;
+
+			if (i != j)
+			{
+				if ((s[i] == 'x') || (s[i] == 'X'))
+				{
+					i++;
+
+					// User has typed either '0x' or '0X'
+					Base = 16;
+
+					// "0x______" is an invalid number
+					unsigned int k = s.find_first_not_of ("_", i);
+					if ((k >= j) || (k == string::npos)) throw InvalidNumber(s);
+					if (!(((s[k] >= '0') && (s[k] <= '9')) || (s[k] == '_'))) throw InvalidNumber(s);
+					i = k;
+				}
+			}
+		}
+	}
+
+	if (Base == 0)
+	{
+		// If no prefix was specified, the number must be led by a 0-9 digit
+		if ((s[i] < '0') || (s[i] > '9')) throw InvalidNumber (s);
+
+		// Translates the trailing radix to its base (i.e. h to 16, b to 2, etc)
+		Base = NaturalNumber::IsRadix (s[j-1]);
+
+		// The last digit is not a radix; assume default base
+		if (Base == 0)
+		{
+			Base = NaturalNumber::GetDefaultBase ();
+		}
+		else
+		{
+			// Last character was a radix, so skip it
+			j--;
+		}
+	}
+
+	return string (s, i, j - i);
+}
+
+// Translates the contents of the string to a possibly huge number
+NaturalNumber::NaturalNumber (const string &s, Word ForcedBase = 0) throw (InvalidNumber, InvalidDigit)
+{
+	Word Base;
+	string n;
+
+	if (ForcedBase != 0)
+	{
+		// If a base was specified, use it and the string in an as-is basis
+		Base = ForcedBase;
+		n = s;
+	}
+	else
+	{
+		bool Negative;
+		n = SimplifyString (s, Base, &Negative);
+		if (Negative) throw InvalidNumber (s);
+	}
+
 	// Initializes the number to zero. Don't worry, any leading zeroes will be skipped later
 	push_back (0);
 
@@ -744,63 +788,25 @@ Word NaturalNumber::IsRadix (char c) throw ()
 
 //--- Integer Numbers
 
-IntegerNumber::IntegerNumber (const string &s) throw (InvalidNumber, InvalidDigit)
+IntegerNumber::IntegerNumber (const string &s, Word ForcedBase = 0, bool ForcedSign = false) throw (InvalidNumber, InvalidDigit)
 {
-	// Assumes positive initiallly
-	Negative = false;
-	if (s.empty()) return;
-
-	try
+	if (ForcedBase == 0)
 	{
-		switch (s[0])
+		try
 		{
-			case '$':
-				// "$" is an invalid number
-				if (s.size() == 1) throw InvalidNumber (s);
-				if (s[1] == '-')
-				{
-					if (s.size() <= 2) throw InvalidNumber (s);
-					Negative = true;
-					AbsoluteValue = NaturalNumber (string (s, 2, string::npos), 16);
-				}
-				else
-				{
-					AbsoluteValue = NaturalNumber (string (s, 1, string::npos), 16);
-				}
-
-				break;
-
-			case '0':
-				if (s.size() >= 4)
-				{
-					if ((s[1] == 'x') || (s[1] == 'X'))
-					{
-						if (s[2] == '-')
-						{
-							Negative = true;
-							AbsoluteValue = NaturalNumber (string (s, 3, string::npos), 16);
-							break;
-						}
-					}
-				}
-
-				AbsoluteValue = NaturalNumber (s);
-				break;
-
-			case '-':
-				Negative = true;
-
-			case '+':
-				AbsoluteValue = NaturalNumber (string (s.begin() + 1, s.end()));
-				break;
-
-			default:
-				AbsoluteValue = NaturalNumber (s);
+			Word Base;
+			string n (SimplifyString (s, Base, &Negative));
+			AbsoluteValue = NaturalNumber (n, Base);
+		}
+		catch (...)
+		{
+			throw InvalidNumber (s);
 		}
 	}
-	catch (InvalidNumber iv)
+	else
 	{
-		throw InvalidNumber (s);
+		AbsoluteValue = NaturalNumber (s, ForcedBase);
+		Negative = ForcedSign;
 	}
 }
 
@@ -1150,32 +1156,12 @@ Dword RealNumber::PrecisionIncrement = 8;
 Dword RealNumber::MaximumSize = 8;
 bool RealNumber::WatchPrecisionLoss = false;
 
-NaturalNumber DigitCount (const string &m, const string &s, NaturalNumber &Multiplicator) throw ()
+NaturalNumber DigitCount (const string &s, NaturalNumber &Multiplicator, Word Base) throw ()
 {
 	NaturalNumber count;
 	Multiplicator = NaturalNumber ();
-	Word Base;
 
 	if (s.empty ()) return count;
-
-	string::const_iterator i = s.begin();
-	string::const_iterator j = s.end();
-
-	if (m[0] == '$')
-	{
-		Base = 16;
-	}
-	else
-	{
-		// Gets the base the number is written at
-		Base = NaturalNumber::IsRadix (*(j - 1));
-
-		// If no radix was specified, assume the default base. If a radix was used, skip it
-		if (Base == 0)
-			Base = NaturalNumber::GetDefaultBase ();
-		else
-			j--;
-	}
 
 	// Calculates how many times the number must be multiplied by 10 to make the mantissa an integer
 	switch (Base)
@@ -1194,96 +1180,85 @@ NaturalNumber DigitCount (const string &m, const string &s, NaturalNumber &Multi
 	}
 
 	// Let's count all possible digits. Let the current base be 16. If it is not, an InvalidDigit exception
-	// will be caught elsewhere.
-	for (; i != j; i++)
+	// will be caught elsewhere if an invalid digit is found.
+	for (string::const_iterator i = s.begin(); i != s.end(); i++)
 	{
 		if (NaturalNumber::ValidDigit (*i, 16)) count++;
 	}
 
 	Multiplicator *= count;
-
 	if (Base != 10) return Multiplicator;
-
 	return count;
 }
 
-RealNumber::RealNumber (const string &s) throw (InvalidNumber, InvalidDigit)
+RealNumber::RealNumber (const string &s, Word ForcedBase = 0, bool ForcedSign = false) throw (InvalidNumber, InvalidDigit)
 {
-	unsigned int DotPosition;
+	Word Base;
+	bool Negative;
+	string n;
 
-	// Search for the decimal point (if any)
-	DotPosition = s.find('.');
-
-	// Verifies if there is a fractional part
-	if (DotPosition == string::npos)
+	if (ForcedBase == 0)
 	{
-		Integer = true;
-		Mantissa = IntegerNumber (s);
-		return;
-	}
-
-	// TemporaryMantissa holds the string up to the decimal point (exclusive); TemporaryFraction holds the
-	// rest (except the decimal point)
-	Integer = false;
-	string TemporaryMantissa (s, 0, DotPosition);
-	string TemporaryFraction (s, DotPosition + 1, s.size());
-
-	unsigned int RadixPosition = TemporaryFraction.find_last_not_of ('_');
-
-	// If there is nothing after the decimal point except underscores, all we must do is to calculate the mantissa
-	if (RadixPosition == string::npos)
-	{
-		try
-		{
-			Mantissa = IntegerNumber (TemporaryMantissa);
-			return;
-		}
-		catch (...)
-		{
-			throw InvalidNumber (s);
-		}
-	}
-
-	unsigned int LastDigit;
-
-	// Appends the significant part of the fraction to the mantissa
-	if (NaturalNumber::IsRadix (TemporaryFraction[RadixPosition]))
-	{
-		char Radix = TemporaryFraction[RadixPosition];
-
-		// Finds the position after the last significant digit
-		LastDigit = TemporaryFraction.find_last_not_of ("0_", RadixPosition - 1);
-		if (LastDigit == string::npos)
-			LastDigit = 0;
-		else
-			LastDigit++;
-
-		// Skips any trailing underscores and zeroes; Puts the radix into position again
-		TemporaryFraction.resize (LastDigit);
-		TemporaryFraction += Radix;
+		n = SimplifyString (s, Base, &Negative);
 	}
 	else
 	{
-		// Finds the position after the last significant digit
-		LastDigit = TemporaryFraction.find_last_not_of ("0_", RadixPosition + 1);
-		if (LastDigit == string::npos)
-			LastDigit = 0;
-		else
-			LastDigit++;
-
-		// Skips any trailing underscores and zeroes
-		TemporaryFraction.resize (LastDigit);
+		Base = ForcedBase;
+		Negative = ForcedSign;
+		n = s;
 	}
+
+	// Search for the decimal point (if any)
+	unsigned int DotPosition = n.find('.');
+
+	// Checks if the user has typed something like 1e4 (= 1.0e+4)
+	unsigned int EPosition = n.find_first_of ("eE");
 
 	try
 	{
-		NaturalNumber Multiplicator;
+		if ((Base == 10) && (EPosition != string::npos))
+		{
+			// The user has typed something like 12.24e-3, for example
+			RealNumber temp (string (n, 0, EPosition), Base, Negative);
+			Mantissa = temp.Mantissa;
+			Integer = false;
 
-		// Calculates the mantissa and the exponent of the number
-		Mantissa = IntegerNumber (TemporaryMantissa + TemporaryFraction);
-		Exponent = DigitCount (TemporaryMantissa, TemporaryFraction, Multiplicator);
-		Exponent = -Exponent;
-		Mantissa *= (IntegerNumber (5)).Power (Multiplicator);
+			// Searches the next digit after the 'e'
+			unsigned int i = n.find_first_not_of ('_', EPosition + 1);
+			if (i == string::npos) throw (InvalidNumber (s));
+
+			bool Negative = false;
+			if ((n[i] == '-') || (n[i] == '+'))
+			{
+				Negative = n[i] == '-';
+				i++;
+			}
+
+			Exponent = temp.Exponent + IntegerNumber (string (n, i), Base, Negative);
+		}
+		else
+		{
+			if (DotPosition == string::npos)
+			{
+				// Integer number in a non-10 base
+				Mantissa = IntegerNumber (n, Base, Negative);
+				Integer = true;
+			}
+			else
+			{
+				// Fraction in a non-10 base
+				n[DotPosition] = '_';
+				Mantissa = IntegerNumber (n, Base, Negative);
+				Integer = false;
+
+				NaturalNumber Multiplicator;
+
+				// Calculates the mantissa and the exponent of the number
+				Exponent = DigitCount (string (n, DotPosition + 1), Multiplicator, Base);
+				Exponent.ChangeSign();
+				Mantissa *= (IntegerNumber (5)).Power (Multiplicator);
+			}
+		}
 	}
 	catch (...)
 	{
@@ -1351,6 +1326,7 @@ RealNumber &RealNumber::operator+= (const RealNumber &n) throw ()
 
 	Adjust (r);
 	Mantissa += r.Mantissa;
+	Integer = Integer && n.Integer;
 	return *this;
 }
 
@@ -1360,6 +1336,7 @@ RealNumber &RealNumber::operator-= (const RealNumber &n) throw ()
 
 	Adjust (r);
 	Mantissa -= r.Mantissa;
+	Integer = Integer && n.Integer;
 	return *this;
 }
 
@@ -1405,9 +1382,11 @@ const RealNumber RealNumber::operator/ (const RealNumber &n) const throw (Divisi
 
 	Quotient.Exponent = Exponent - n.Exponent;
 	Quotient.Mantissa = Mantissa.Divide (n.Mantissa, &Remainer);
+	Quotient.Integer = Integer && n.Integer;
 
 	// If we have an exact division, fine.
 	if (Remainer.Zero()) return Quotient;
+	Quotient.Integer = false;
 	IntegerNumber Multiplier = IntegerNumber (10).Power (PrecisionIncrement);
 
 	// As long as there is some remainer and room for more digits, keep dividing
@@ -1420,7 +1399,7 @@ const RealNumber RealNumber::operator/ (const RealNumber &n) const throw (Divisi
 		Quotient.Mantissa += Remainer.Divide (n.Mantissa, &Remainer);
 	}
 
-	// If the user wants an exception due to precision loss and we have it...
+	// If the user wants an exception due to precision loss and we have one...
 	if (WatchPrecisionLoss && (!Remainer.Zero()))
 	{
 		RealNumber r (Remainer, Quotient.Exponent - PrecisionIncrement);
@@ -1428,6 +1407,32 @@ const RealNumber RealNumber::operator/ (const RealNumber &n) const throw (Divisi
 	}
 
 	return Quotient;
+}
+
+RealNumber::operator IntegerNumber () const throw (PrecisionLoss)
+{
+	if (Integer) return Mantissa;
+
+	if (Exponent.LesserThanZero())
+	{
+		// If exponent is negative, there may be a precision loss, as in 1230.0e-2
+		IntegerNumber r;
+		IntegerNumber d = IntegerNumber (10).Power (Exponent.Abs());
+		IntegerNumber q = Mantissa.Divide (d, &r);
+
+		// If the user wants an exception due to precision loss and we have one...
+		if (WatchPrecisionLoss && (!r.Zero()))
+		{
+			throw PrecisionLoss (q, RealNumber (r, Exponent));
+		}
+
+		return q;
+	}
+	else
+	{
+		// If exponent is greater than zero, just return Mantissa * Exponent ^ 10
+		return Mantissa * IntegerNumber (10).Power (Exponent.Abs());
+	}
 }
 
 int RealNumber::Compare (const RealNumber &n) const throw ()
