@@ -19,6 +19,8 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <typeinfo>
+
 #include "argument.h"
 #include "parser.h"
 #include "command.h"
@@ -61,7 +63,11 @@ Expression *MakeTerm (Token *t)
 		}
 		else
 		{
-			exp = new Expression (0, s);
+			// If we have a forward reference, make it an unknown expression
+			if (typeid (*s->GetData()) == typeid (BasicSymbol))
+				exp = new Expression (0, s, Type(0, Type::UNKNOWN));
+			else
+				exp = new Expression (0, s);
 		}
 
 		return exp;
