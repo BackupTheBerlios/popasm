@@ -56,6 +56,7 @@ bool Assembler::PerformPass (InputFile &File) throw ()
 	Parser p (File);
 
 	CurrentPass++;
+	CurrentOffset = 0;
 	File.ResetFile();
 
 	while (File)
@@ -63,6 +64,7 @@ bool Assembler::PerformPass (InputFile &File) throw ()
 		try
 		{
 			LineEncoding = p.ParseLine ();
+			CurrentOffset += LineEncoding.size();
 			PrintVector (LineEncoding);
 		}
 		catch (exception &e)
