@@ -56,6 +56,8 @@ class HashTable
 
 	// Inserts elements in the Hash Table
 	void Insert (const T &x) throw (DuplicatedElement);
+	// Removes elements from the Hash Table
+	void Remove (const T &x) throw ();
 	// Checks if x is present in the table. Returns a pointer to it or null if not found.
 	const T *Find (const T &x) const throw ();
 };
@@ -67,6 +69,13 @@ void HashTable<T, H, Comp, n>::Insert (const T &x) throw (DuplicatedElement)
 
 	pair<ContainerType::iterator, bool> p = Chains[i].insert(x);
 	if (!p.second) throw DuplicatedElement();
+}
+
+template <class T, class H, class Comp = less<T>, unsigned int n = 47>
+void HashTable<T, H, Comp, n>::Remove (const T &x) throw ()
+{
+	unsigned int i = H() (x) % n;
+	Chains[i].erase(x);
 }
 
 template <class T, class H, class Comp = less<T>, unsigned int n = 47>
