@@ -20,6 +20,7 @@
 #include "asmer.h"
 #include "instruct.h"
 #include "directiv.h"
+#include "prefix.h"
 #include "type.h"
 
 const OperatorData<Expression> *PopAsm::OperatorTable[] =
@@ -76,6 +77,7 @@ PopAsm::PopAsm (unsigned int InitialMode) throw () : Assembler (InitialMode)
 	SetupOperatorTable ();
 	SetupEncloserTable ();
 	Instruction::SetupInstructionTable ();
+	PrefixInstruction::SetupPrefixTable ();
 	Directive::SetupDirectiveTable ();
 }
 
