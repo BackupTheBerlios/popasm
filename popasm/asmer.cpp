@@ -53,11 +53,13 @@ void Assembler::SetCurrentMode (unsigned int n)
 
 void Assembler::AssembleFile (InputFile &File) throw ()
 {
-	bool NeedAnotherPass;
+	delete CurrentParser;
+	CurrentParser = new Parser (File);
 
 	do
 	{
-		NeedAnotherPass = PerformPass (File);
+		NeedAnotherPass = false;
+		PerformPass ();
 	} while (NeedAnotherPass);
 }
 
@@ -81,18 +83,18 @@ void Assembler::AddContents (const vector<Byte> &v)
 	Segments.back()->AddContents (v);
 }
 
-bool Assembler::PerformPass (InputFile &File) throw ()
+void Assembler::PerformPass () throw ()
 {
 	vector<Byte> LineEncoding;
-	delete CurrentParser;
-	CurrentParser = new Parser (File);
 
 	CurrentPass++;
 	CurrentOffset = 0;
 	CurrentMode = InitialMode;
-	File.ResetFile();
+	CurrentParser->Reset();
 
-	while (File)
+	cout << "*** Performing pass " << CurrentPass << " ***" << endl;
+
+	while (*CurrentParser)
 	{
 		try
 		{
@@ -108,11 +110,11 @@ bool Assembler::PerformPass (InputFile &File) throw ()
 		}
 		catch (exception &e)
 		{
-			cerr << "Line " << File.GetCurrentLine() - 1 << ": Error - " << e.what() << endl;
+			cerr << "Line " << CurrentParser->GetCurrentLine() - 1 << ": Error - " << e.what() << endl;
 		}
 		catch (...)
 		{
-			cerr << "Line " << File.GetCurrentLine() - 1 << ": Internal error. Please send a bug report." << endl;
+			cerr << "Line " << CurrentParser->GetCurrentLine() - 1 << ": Internal error. Please send a bug report." << endl;
 		}
 	}
 
@@ -123,8 +125,6 @@ bool Assembler::PerformPass (InputFile &File) throw ()
 			cout << "Segment not ended - " << Segments.back()->GetName() << endl;
 		}
 	}
-
-	return false;
 }
 
 void Assembler::AddSegment (Segment *seg)

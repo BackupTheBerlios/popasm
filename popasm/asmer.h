@@ -45,9 +45,10 @@ class Assembler
 
 	vector<Segment *> Segments;
 	Procedure *CurrentProcedure;
+	bool NeedAnotherPass;
 
 	protected:
-	bool PerformPass (InputFile &File) throw ();
+	void PerformPass () throw ();
 	void AddContents (const vector<Byte> &v);
 
 	public:
@@ -59,12 +60,15 @@ class Assembler
 	void SetCurrentMode (unsigned int n);
 	unsigned long int GetCurrentOffset () const throw () {return CurrentOffset;}
 	unsigned long int GetCurrentLine () const throw ();
+	unsigned long int GetCurrentPass () const throw () {return CurrentPass;}
 	const Procedure *GetCurrentProcedure() const throw ();
 
 	void AddSegment (Segment *seg);
 	void CloseSegment (const string &s);
 	void AddProcedure (Procedure *proc);
 	void CloseProcedure (const string &s);
+
+	void RequestNewPass () throw () {NeedAnotherPass = true;}
 
 	// Attempts to read a symbol from the given string.
 	// Returns 0 if there's currently no symbol with that name defined in any segment
