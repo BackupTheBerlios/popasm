@@ -44,7 +44,7 @@ const OperatorData<Expression> *PopAsm::OperatorTable[] =
 	new ShiftLeft<Expression> ("SHL", 0, 500),
 	new ShiftLeft<Expression> ("<<", 0, 500),
 	new ShiftRight<Expression> ("SHR", 0, 500),
-	new ShiftRight<Expression> (">>", 0, 500),
+	new BinaryShiftRight<Expression> (">>", 0, 500),
 	new SizeCast<Expression> ("BYTE", 50, 0, 8),
 	new SizeCast<Expression> ("WORD", 50, 0, 16),
 	new SizeCast<Expression> ("DWORD", 50, 0, 32),
