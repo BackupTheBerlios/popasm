@@ -90,6 +90,17 @@ class InvalidSegmentOverride : public exception
 	const char *what() const throw () {return WhatString;}
 };
 
+class AddressSizeMix : public exception
+{
+	static const char WhatString[];
+
+	public:
+	AddressSizeMix () throw () {}
+	~AddressSizeMix () throw () {}
+
+	const char *what() const throw () {return WhatString;}
+};
+
 // Syntaxes of instructions that take no arguments
 class ZerarySyntax : public Syntax
 {

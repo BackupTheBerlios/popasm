@@ -102,6 +102,7 @@ bool Syntax::Match (vector<Argument *> &Arguments) const
 
 const char JumpOutOfRange::WhatString[] = "Transfer to an out of range destination attempted.";
 const char InvalidSegmentOverride::WhatString[] = "Cannot override default destination segment.";
+const char AddressSizeMix::WhatString[] = "Cannot mix 16-bits and 32-bits memory access modes.";
 
 bool ZerarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
 {
@@ -455,14 +456,22 @@ bool StringSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 {
 	Byte SegmentPrefix = 0;
 	bool AddressSizePrefix = false;
-	const Memory *mem;
+	const Memory *mem, *mem2;
 
 	// Verifies the type of each argument
 	if (!Match (Arguments)) return false;
 
 	// Performs type checking
 	if (Arguments.size() == 2)
+	{
 		Argument::TypeCheck (Arguments, Check);
+
+		mem = dynamic_cast<const Memory *> (Arguments[0]->GetData());
+		mem2 = dynamic_cast<const Memory *> (Arguments[1]->GetData());
+		if ((mem != 0) && (mem2 != 0))
+			if (mem->GetAddressSize() != mem2->GetAddressSize())
+				throw AddressSizeMix();
+	}
 
 	// Gets the relevant argument for type specification
 	switch (OperandSizePrefixUsage)
