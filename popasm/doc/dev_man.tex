@@ -174,9 +174,107 @@ All the heavy work is performed in the base class by its default AssemblyFile()
 and PerformPass() methods.
 
 \chapter{The Parser\label{chapparser}}
+The Parser class can be found in parser.h. The parser is intended to play a
+support role for the Assembler, Instruction and Directive classes via its
+methods ParseLine() and ParseArguments(). It also checks whether each line
+of code conforms to \popasm\ syntax.
+
+Its constructor takes an InputFile object as argument (see Chapter \ref{chapinp}
+for details about that class). That is the file the non-static methods act on.
+The next sections discuss how the important methods work.
+
+\section{ParseLine() method}
+This is the main function of Parser. It is called by Assembler once for each line
+of code from input. It calls ReadLine() method to read the current line and split
+it into a vector of Tokens. These tokens are then identified and the state machine
+sketched in Figure \ref{SYNTAXSM} is run (via the \emph{switch} statement).
+
+\begin{figure}[h]
+\begin{center}
+\begin{picture}(300, 100)(0,0)
+\put (  0, 20){\vector(1, 0){25}}
+
+\put ( 40, 17){\scriptsize{INIT}}
+\put ( 50, 20){\circle{50}}
+\put ( 75, 20){\vector(1, 0){60}}
+\put ( 85, 25){\scriptsize{Command}}
+
+\put (150, 17){\scriptsize{CMD}}
+\put (160, 20){\circle{50}}
+\put (185, 20){\vector(1, 0){60}}
+\put (190, 25){\scriptsize{Rest of line}}
+
+\put (260, 17){\scriptsize{END}}
+\put (270, 20){\circle{55}}
+\put (270, 20){\circle{50}}
+
+\put ( 90, 72){\scriptsize{LABEL}}
+\put (105, 75){\circle{50}}
+\put ( 67, 37){\vector(1, 1){20}}
+\put (122, 56){\vector(1, -1){20}}
+\put ( 50, 50){\scriptsize{Label}}
+\put (135, 50){\scriptsize{Command}}
+\end{picture}
+\caption{Syntax state machine}
+\label{SYNTAXSM}
+\end{center}
+\end{figure}
+
+The state machine has four states:
+
+\begin{itemize}
+\item INITIAL (INIT) --- is the initial state of the state machine. At
+this point nothing has been parsed so far.
+\item LABEL --- A label has been read (optionally followed by a colon).
+\item COMMAND (CMD) --- The command of this line was found. It may be
+either a machine instruction or an assembler directive.
+\item END --- Final state.
+\end{itemize}
+
+The reader might notice the arguments after the command were not parsed.
+The reason for that is that some assembler directives (such as ASSUME)
+do not work with usual arguments, but only with the raw sequence of Tokens.
+Most commands, however, need the parser to hand them their arguments
+after they had been processed. For example, a ``MOV AL,2+2'' instruction
+does not ``care'' whether the user typed in just a number or a complex
+arithmetic expression; it must be given only the final result.
+
+In order to simplify the implementation of such commands Parser has a
+public static method, ParseArguments(), described next.
+
+\section{ParseArguments() method}
+This method converts a raw sequence of Tokens into arguments machine
+instructions can work with. This conversion cannot be performed within
+ParseLine() method because some commands require special parsing.
+
+The required arguments for this method are two iterators into a vector
+of Tokens and a vector to output the Arguments to. Those iterators
+define an open interval, so that the second iterator points to the
+first position past the last Token.
+
+That interval is sequencially searched for a comma or end of interval.
+When either is found the first argument Tokens will have been delimited.
+The second argument Tokens are the ones from this point on to the next
+comma or end of interval, and so on.
+
+Every time the Tokens for a particular argument are determined the
+EvaluateExpression() method is called. It performs all arithmetic
+operations and returns an Expression (see Chapter \ref{chapexps}).
+This Expression is then converted to an Argument and stored in the
+vector of Arguments. This conversion is carried out by a static
+method of class Argument (details in Chapter \ref{chapargs}),
+named MakeArgument().
+
+\section{EvaluateExpression() method}
+
+
+\section{ReadLine() method}
+
+
+
+
 
 \chapter{Instructions\label{chapinst}}
-
 
 
 
@@ -196,11 +294,13 @@ and PerformPass() methods.
 
 \chapter{Numbers Again\label{chapnumsagain}}
 
-\chapter{Operators\label{chapop}}
+\chapter{Operators\label{chapops}}
 
 \chapter{Registers\label{chapregs}}
 
+\chapter{Expressions\label{chapexps}}
 
+\chapter{Arguments\label{chapargs}}
 
 
 \appendix
