@@ -39,7 +39,7 @@ class Expression : BasicExpression<Number, Symbol>
 	Expression *SegmentPrefix;		// Segment prefix (0 if none)
 
 	public:
-	Expression () throw () : t(0, Type::SCALAR, Type::NONE), SegmentPrefix(0) {}
+	Expression () throw () : t(0, Type::SCALAR, UNDEFINED), SegmentPrefix(0) {}
 	Expression (Number *n, Symbol *s) throw ();
 	Expression (const Expression &e) : BasicExpression<Number, Symbol> (e)
 	{
@@ -55,8 +55,8 @@ class Expression : BasicExpression<Number, Symbol>
 	Type::TypeName GetType () const throw () {return t.GetCurrentType();}
 	const Expression *GetSegmentPrefix () const throw () {return SegmentPrefix;}
 
-	Type::Distance GetDistanceType () const throw () {return t.GetDistanceType();}
-	void SetDistanceType (Type::Distance dist) throw (InvalidSizeCast);
+	int GetDistanceType () const throw () {return t.GetDistanceType();}
+	void SetDistanceType (int dist) throw (InvalidSizeCast);
 
 	unsigned int QuantityOfTerms () const throw () {return Terms.size();}
 

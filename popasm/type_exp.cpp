@@ -47,7 +47,7 @@ void Expression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) t
 	}
 }
 
-void Expression::SetDistanceType (Type::Distance dist) throw (InvalidSizeCast)
+void Expression::SetDistanceType (int dist) throw (InvalidSizeCast)
 {
 	if (t.GetCurrentType() != Type::STRONG_MEMORY)
 	{
@@ -67,7 +67,7 @@ void Expression::SetDistanceType (Type::Distance dist) throw (InvalidSizeCast)
 
 Expression::Expression (Number *n, Symbol *s) throw () : BasicExpression<Number, Symbol> (n, s)
 {
-	t = Type (0, Type::SCALAR, Type::NONE);
+	t = Type (0, Type::SCALAR, UNDEFINED);
 	SegmentPrefix = 0;
 }
 
