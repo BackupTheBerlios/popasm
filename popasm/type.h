@@ -134,8 +134,8 @@ class Type
 	Type &operator<<= (const Type &t) throw (IncompatibleTypes);
 	Type &operator>>= (const Type &t) throw (IncompatibleTypes);
 
-	Type operator- () throw (IncompatibleTypes);
-	Type operator~ () throw (IncompatibleTypes);
+	Type &operator- () throw (IncompatibleTypes);
+	Type &operator~ () throw (IncompatibleTypes);
 	Type &operator= (const Type &t) throw ()
 	{
 		Size = t.Size; CurrentType = t.CurrentType; DistanceType = t.DistanceType; NumericalType = t.NumericalType;

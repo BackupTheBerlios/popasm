@@ -216,7 +216,7 @@ Type &Type::operator>>= (const Type &t) throw (IncompatibleTypes)
 	return *this *= t;
 }
 
-Type Type::operator~ () throw (IncompatibleTypes)
+Type &Type::operator~ () throw (IncompatibleTypes)
 {
 	// Strong memory cannot negate or complement.
 	if (CurrentType == STRONG_MEMORY) throw IncompatibleTypes();
@@ -230,7 +230,7 @@ Type Type::operator~ () throw (IncompatibleTypes)
 	return *this;
 }
 
-Type Type::operator- () throw (IncompatibleTypes)
+Type &Type::operator- () throw (IncompatibleTypes)
 {
 	// - and ~ share the same behavior
 	return ~*this;

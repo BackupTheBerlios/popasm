@@ -22,6 +22,7 @@
 #include "type.h"
 #include "lexop.h"
 #include "defs.h"
+#include "dup_arg.h"
 
 BasicSymbol *Directive::Read (const string &str, InputFile &inp)
 {
@@ -57,7 +58,7 @@ void DefinitionDirective::Assemble (const Symbol *sym, Parser &p, vector<Byte> &
 
 	vector<Argument *> Arguments;
 	p.ParseArguments (Arguments);
-	unsigned int length = 0;
+	unsigned long int length = Encoding.size();
 	int NumericalType;
 
 	// Converts the tokens into arguments.
@@ -70,46 +71,65 @@ void DefinitionDirective::Assemble (const Symbol *sym, Parser &p, vector<Byte> &
 	for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
 	{
 		const Immediate *immed;
+		const DupArgument *duparg;
 
 		immed = dynamic_cast<const Immediate *> ((*x)->GetData());
-		if (immed == 0)
+		if (immed != 0)
 		{
-			for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
-				delete *x;
-
-			cout << "Expected constant expression." << endl;
-		}
-
-		if ((immed->GetNumericalType() == FLOAT) && (!AcceptFloat))
-		{
-			RealNumber temp (immed->GetValue());
-
-			// Performs cleanup
-			for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
-				delete *x;
-
-			throw IntegerExpected (temp);
-		}
-
-		// The numerical type of this variable is the same as the first of its arguments
-		if (x == Arguments.begin())
-			NumericalType = immed->GetNumericalType();
-		else
-			if (NumericalType != immed->GetNumericalType())
+			if ((immed->GetNumericalType() == FLOAT) && (!AcceptFloat))
 			{
-				cout << "Cannot mix integer and floating-point values" << endl;
+				RealNumber temp (immed->GetValue());
+
+				// Performs cleanup
+				for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
+					delete *x;
+
+				throw IntegerExpected (temp);
 			}
 
-		immed->SetSize (Size);
-		immed->Write (Encoding);
-		length++;
+			// The numerical type of this variable is the same as the first of its arguments
+			if (x == Arguments.begin())
+				NumericalType = immed->GetNumericalType();
+			else
+				if (NumericalType != immed->GetNumericalType())
+				{
+					cout << "Cannot mix integer and floating-point values." << endl;
+				}
+
+			immed->SetSize (Size);
+			immed->Write (Encoding);
+			continue;
+		}
+
+		duparg = dynamic_cast<const DupArgument *> ((*x)->GetData());
+		if (duparg != 0)
+		{
+			// The numerical type of this variable is the same as the first of its arguments
+			if (x == Arguments.begin())
+				NumericalType = duparg->GetNumericalType();
+			else
+				if (NumericalType != duparg->GetNumericalType())
+				{
+					cout << "Cannot mix integer and floating-point values." << endl;
+				}
+
+			duparg->SetSize (Size);
+			duparg->Write (Encoding);
+			continue;
+		}
+
+		for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
+			delete *x;
+
+		cout << "Expected constant expression." << endl;
+		return;
 	}
 
 	// Adjusts numerical type and length
 	if (newvar != 0)
 	{
 		newvar->SetNumericalType (NumericalType);
-		newvar->SetLength (length);
+		newvar->SetLength (((Encoding.size() - length) * 8) / Size);
 	}
 
 	for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
@@ -195,7 +215,7 @@ void FunctionEQUAL (const Symbol *sym, vector<Token *> &Tokens, vector<Byte> &En
 		return;
 	}
 
-	c->SetValue (Parser::EvaluateExpression (Tokens, i));
+	c->SetValue (e);
 }
 
 void FunctionSEGMENT (const Symbol *sym, vector<Token *> &Tokens, vector<Byte> &Encoding)

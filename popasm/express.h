@@ -485,6 +485,15 @@ class BasicExpression
 
 	virtual BasicExpression *Clone () const {return new BasicExpression (*this);}
 
+	typedef vector<Term *>::const_iterator const_iterator;
+	const_iterator begin() const throw () {return Terms.begin();}
+	const_iterator end() const throw () {return Terms.end();}
+
+	// Try to convert the expression to a number or variable
+	const VariableClass *GetVariable () const throw ();
+	const NumberClass *GetNumber () const throw ();
+	unsigned long int QuantityOfTerms () const throw () {return Terms.size();}
+
 	// Adds a term to the expression. Duplicates it if necessary.
 	void AddTerm (const Term &t);
 	// Deletes all terms and removes them from the expression
@@ -541,6 +550,30 @@ BasicExpression<NumberClass, VariableClass, Redundant>::BasicExpression (NumberC
 		if (n->Zero()) return;
 
 	Terms.push_back(new Term(n, v));
+}
+
+template <class NumberClass, class VariableClass, bool Redundant=true>
+const VariableClass *BasicExpression<NumberClass, VariableClass, Redundant>::GetVariable () const throw ()
+{
+	if (Terms.size() != 1)
+		return 0;
+
+	if (Terms.back()->first != 0)
+		return 0;
+
+	return Terms.back()->second;
+}
+
+template <class NumberClass, class VariableClass, bool Redundant=true>
+const NumberClass *BasicExpression<NumberClass, VariableClass, Redundant>::GetNumber () const throw ()
+{
+	if (Terms.size() != 1)
+		return 0;
+
+	if (Terms.back()->second != 0)
+		return 0;
+
+	return Terms.back()->first;
 }
 
 template <class NumberClass, class VariableClass, bool Redundant=true>

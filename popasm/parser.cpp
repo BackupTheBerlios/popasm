@@ -60,7 +60,7 @@ Expression *MakeTerm (Token *t)
 		{
 			c = dynamic_cast<const Constant *> (ud);
 			if (c != 0)
-				exp = c->GetValue()->Clone();
+				exp = new Expression (*c->GetValue());
 			else
 				exp = new Expression (new Number (ud->GetOffset()), 0, *ud);
 		}
@@ -152,6 +152,10 @@ Operator *GetBinaryOperator (const vector<Token *> &v, vector<Token *>::const_it
 	// Checks for a binary operator after the term just read. If not found, we have two consecutive terms
 	BinaryOp = dynamic_cast<Operator *> (*i);
 	if (BinaryOp == 0) return 0;
+
+	// Distinguish between a DUP list and several arguments
+	if ((BinaryOp->GetName() == ",") && (Opener == 0))
+		return 0;
 
 	// Checks if the operator is an encloser
 	enc = dynamic_cast<Encloser *> (BinaryOp);

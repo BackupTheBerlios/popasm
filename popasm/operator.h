@@ -309,6 +309,26 @@ class Colon : public OperatorData<T>
 	T &operator() (T &x, T &y) const {return x.Compose(y);}
 };
 
+template <class T = int>
+class Comma : public OperatorData<T>
+{
+	public:
+	Comma (const string &n, unsigned int p0, unsigned int p1) throw () : OperatorData (n, p0, p1) {}
+	~Comma () throw () {}
+
+	T &operator() (T &x, T &y) const {return x.AddToList(y);}
+};
+
+template <class T = int>
+class DUP : public OperatorData<T>
+{
+	public:
+	DUP (const string &n, unsigned int p0, unsigned int p1) throw () : OperatorData (n, p0, p1) {}
+	~DUP () throw () {}
+
+	T &operator() (T &x, T &y) const {return x.DUP(y);}
+};
+
 //------- Exceptions
 
 // Root of Operator exceptions hierarchy
