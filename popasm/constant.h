@@ -18,7 +18,7 @@
 #ifndef CONSTANT_H
 #define CONSTANT_H
 
-#include <exception>
+#include <vector>
 #include <string>
 
 #include "variable.h"
@@ -26,18 +26,24 @@
 
 class Constant : public UserDefined
 {
-	Expression *Value;
+	vector <Expression *> Values;
+	mutable unsigned int DefinitionCount;
+	mutable unsigned int CurrentPass;
+
 	bool Mutable;
 
-	public:
-	Constant (const string &n, Expression *exp = 0, bool m = false) throw ()
-		: UserDefined (n, Type(UNDEFINED, SCALAR)), Value(exp), Mutable(m) {}
-	~Constant () throw () {delete Value;}
+	Constant (const Constant &c) throw () : UserDefined (c) {}
+	unsigned int CurrentIndex () const throw () {return (DefinitionCount == 0) ? 0 : DefinitionCount - 1;}
 
-	const Expression *GetValue() const throw () {return Value;}
+	public:
+	Constant (const string &n, Expression *exp = 0, bool m = false) throw ();
+	~Constant () throw ();
+
+	const Expression *GetValue() const throw ();
 	void SetValue(Expression *NewValue) throw ();
 
 	bool IsMutable () const throw () {return Mutable;}
+	bool Changed (const BasicSymbol *s) throw ();
 };
 
 #endif
