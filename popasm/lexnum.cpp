@@ -17,12 +17,15 @@
 
 #include "lexnum.h"
 
-CastFailed::CastFailed (const RealNumber &n, unsigned int s) throw () : WhatString ("Could not cast ")
+CastFailed::CastFailed (const RealNumber &n, unsigned int s, Number::NumberType t = Number::ANY) throw ()
+	: WhatString ("Could not cast ")
 {
-	WhatString += n.Print();
-	WhatString += " to be ";
-	WhatString += Print(s);
-	WhatString += " bits wide.";
+	WhatString += n.Print() + " to be ";
+
+	if ((t == Number::SIGNED) || (Number::UNSIGNED))
+		WhatString += Number::PrintNumberType (t) + " ";
+
+	WhatString += Print(s) + " bits wide.";
 }
 
 void Number::SetSize (unsigned int s, NumberType t = ANY) throw (InvalidSize, CastFailed)
@@ -34,7 +37,7 @@ void Number::SetSize (unsigned int s, NumberType t = ANY) throw (InvalidSize, Ca
 	if (s != 0)
 	{
 		// Is it an integer number?
-		if (n.GetInteger())
+		if (n.IsInteger())
 		{
 			// limit now holds the greatest possible number+1 for its type: 2^n for unsigned or any,
 			// and 2^(n-1) for signed numbers
@@ -42,7 +45,7 @@ void Number::SetSize (unsigned int s, NumberType t = ANY) throw (InvalidSize, Ca
 			IntegerNumber limit(1);
 			limit <<= (t == SIGNED) ? (s - 1) : s;
 
-			if (i >= limit) throw CastFailed (n, s);
+			if (i >= limit) throw CastFailed (n, s, t);
 
 			// The lower bound is zero for unsigned numbers and -2^(n-1) for signed or any. -2^n for raw
 			if (t == UNSIGNED)
@@ -50,12 +53,12 @@ void Number::SetSize (unsigned int s, NumberType t = ANY) throw (InvalidSize, Ca
 			else
 				limit.ChangeSign();
 
-			if (i < limit) throw CastFailed (n, s);
+			if (i < limit) throw CastFailed (n, s, t);
 		}
 		else
 		{
 			// IEEE format requires at least 32 bits to store real numbers
-			if (s < 32) throw CastFailed (n, s);
+			if (s < 32) throw CastFailed (n, s, t);
 		}
 	}
 
@@ -164,7 +167,7 @@ Number *Number::Read (const string &str, InputFile &inp)
 Number &Number::operator/= (const Number &x)
 {
 	// Both numbers are integers?
-	if (n.GetInteger() && x.n.GetInteger())
+	if (n.IsInteger() && x.n.IsInteger())
 	{
 		// Integer division
 		n = RealNumber (static_cast<IntegerNumber> (n) / static_cast<IntegerNumber> (x.n));
@@ -182,8 +185,8 @@ Number &Number::operator/= (const Number &x)
 Number &Number::operator%= (const Number &x)
 {
 	// Both numbers are integers?
-	if (!n.GetInteger()) throw IntegerExpected (n);
-	if (!x.n.GetInteger()) throw IntegerExpected (x.n);
+	if (!n.IsInteger()) throw IntegerExpected (n);
+	if (!x.n.IsInteger()) throw IntegerExpected (x.n);
 
 	// Performs operation
 	n = RealNumber (static_cast<IntegerNumber> (n) % static_cast<IntegerNumber> (x.n));
@@ -194,8 +197,8 @@ Number &Number::operator%= (const Number &x)
 Number &Number::operator&= (const Number &x)
 {
 	// Both numbers are integers?
-	if (!n.GetInteger()) throw IntegerExpected (n);
-	if (!x.n.GetInteger()) throw IntegerExpected (x.n);
+	if (!n.IsInteger()) throw IntegerExpected (n);
+	if (!x.n.IsInteger()) throw IntegerExpected (x.n);
 
 	// Performs operation
 	n = RealNumber (static_cast<IntegerNumber> (n) & static_cast<IntegerNumber> (x.n));
@@ -206,8 +209,8 @@ Number &Number::operator&= (const Number &x)
 Number &Number::operator|= (const Number &x)
 {
 	// Both numbers are integers?
-	if (!n.GetInteger()) throw IntegerExpected (n);
-	if (!x.n.GetInteger()) throw IntegerExpected (x.n);
+	if (!n.IsInteger()) throw IntegerExpected (n);
+	if (!x.n.IsInteger()) throw IntegerExpected (x.n);
 
 	// Performs operation
 	n = RealNumber (static_cast<IntegerNumber> (n) | static_cast<IntegerNumber> (x.n));
@@ -218,8 +221,8 @@ Number &Number::operator|= (const Number &x)
 Number &Number::operator^= (const Number &x)
 {
 	// Both numbers are integers?
-	if (!n.GetInteger()) throw IntegerExpected (n);
-	if (!x.n.GetInteger()) throw IntegerExpected (x.n);
+	if (!n.IsInteger()) throw IntegerExpected (n);
+	if (!x.n.IsInteger()) throw IntegerExpected (x.n);
 
 	// Performs operation
 	n = RealNumber (static_cast<IntegerNumber> (n) ^ static_cast<IntegerNumber> (x.n));
@@ -230,8 +233,8 @@ Number &Number::operator^= (const Number &x)
 Number &Number::operator<<= (const Number &x)
 {
 	// Both numbers are integers?
-	if (!n.GetInteger()) throw IntegerExpected (n);
-	if (!x.n.GetInteger()) throw IntegerExpected (x.n);
+	if (!n.IsInteger()) throw IntegerExpected (n);
+	if (!x.n.IsInteger()) throw IntegerExpected (x.n);
 
 	// Performs operation
 	n = RealNumber (static_cast<IntegerNumber> (n) << static_cast<IntegerNumber> (x.n));
@@ -242,8 +245,8 @@ Number &Number::operator<<= (const Number &x)
 Number &Number::operator>>= (const Number &x)
 {
 	// Both numbers are integers?
-	if (!n.GetInteger()) throw IntegerExpected (n);
-	if (!x.n.GetInteger()) throw IntegerExpected (x.n);
+	if (!n.IsInteger()) throw IntegerExpected (n);
+	if (!x.n.IsInteger()) throw IntegerExpected (x.n);
 
 	// Performs operation
 	n = RealNumber (static_cast<IntegerNumber> (n) >> static_cast<IntegerNumber> (x.n));
@@ -254,8 +257,8 @@ Number &Number::operator>>= (const Number &x)
 Number &Number::BinaryShiftRight (const Number &x)
 {
 	// Both numbers are integers?
-	if (!n.GetInteger()) throw IntegerExpected (n);
-	if (!x.n.GetInteger()) throw IntegerExpected (x.n);
+	if (!n.IsInteger()) throw IntegerExpected (n);
+	if (!x.n.IsInteger()) throw IntegerExpected (x.n);
 
 	// Performs operation
 	n = RealNumber (static_cast<IntegerNumber> (n).BinaryShiftRight (static_cast<IntegerNumber> (x.n)));
@@ -266,8 +269,8 @@ Number &Number::BinaryShiftRight (const Number &x)
 Number &Number::UnsignedDivision (const Number &x)
 {
 	// Both numbers are integers?
-	if (!n.GetInteger()) throw IntegerExpected (n);
-	if (!x.n.GetInteger()) throw IntegerExpected (x.n);
+	if (!n.IsInteger()) throw IntegerExpected (n);
+	if (!x.n.IsInteger()) throw IntegerExpected (x.n);
 
 	// Performs operation
 	n = RealNumber (static_cast<IntegerNumber> (n).BinaryShiftRight (static_cast<IntegerNumber> (x.n)));
@@ -278,8 +281,8 @@ Number &Number::UnsignedDivision (const Number &x)
 Number &Number::UnsignedModulus (const Number &x)
 {
 	// Both numbers are integers?
-	if (!n.GetInteger()) throw IntegerExpected (n);
-	if (!x.n.GetInteger()) throw IntegerExpected (x.n);
+	if (!n.IsInteger()) throw IntegerExpected (n);
+	if (!x.n.IsInteger()) throw IntegerExpected (x.n);
 
 	// Performs operation
 	n = RealNumber (static_cast<IntegerNumber> (n).BinaryShiftRight (static_cast<IntegerNumber> (x.n)));
@@ -290,7 +293,7 @@ Number &Number::UnsignedModulus (const Number &x)
 Number &Number::operator~ ()
 {
 	// Number must be integer for One's Complement
-	if (!n.GetInteger()) throw IntegerExpected(n);
+	if (!n.IsInteger()) throw IntegerExpected(n);
 
 	// Performs the operation
 	n = RealNumber (~static_cast<IntegerNumber> (n));

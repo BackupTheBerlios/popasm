@@ -25,29 +25,8 @@
 #include "lexical.h"
 #include "inp_file.h"
 
-// Thrown when the user attempts to set the size of an expression to a number not multiple of eight
-class InvalidSize : public exception
-{
-	string WhatString;
-
-	public:
-	InvalidSize (unsigned int s) throw () : WhatString ("Size must be multiple of 8. Got ") {WhatString += Print(s);}
-	~InvalidSize () throw () {}
-
-	const char *what() const throw() {return WhatString.c_str();}
-};
-
-// Thrown when the user attempts to cast a number to a storage space that cannot hold it. Eg. BYTE 1234
-class CastFailed : public exception
-{
-	string WhatString;
-
-	public:
-	CastFailed (const RealNumber &n, unsigned int s) throw ();
-	~CastFailed () throw () {}
-
-	const char *what() const throw() {return WhatString.c_str();}
-};
+class InvalidSize;
+class CastFailed;
 
 // Numbers represent quantities (including negative and real ones)
 class Number : public Token
@@ -62,11 +41,28 @@ class Number : public Token
 	~Number () throw () {}
 
 	enum NumberType {SIGNED = 0, UNSIGNED = 1, ANY = 2, RAW = 3};
+	static string PrintNumberType (NumberType nt) throw ()
+	{
+		switch (nt)
+		{
+			case SIGNED:
+				return string ("signed");
+
+			case UNSIGNED:
+				return string ("unsigned");
+
+			default:
+				break;
+		}
+
+		return string();
+	}
+
 	unsigned int GetSize () const throw () {return Size;}
 	void SetSize (unsigned int s, NumberType t = ANY) throw (InvalidSize, CastFailed);
 
 	const RealNumber &GetValue () const throw() {return n;}
-	bool IsInteger () const throw () {return n.GetInteger();}
+	bool IsInteger () const throw () {return n.IsInteger();}
 
 	// Returns the value of the number as an unsigned long int
 	unsigned long int GetUnsignedLong () const throw (IntegerExpected, Overflow) {return n.GetUnsignedLong();}
@@ -121,6 +117,30 @@ class Number : public Token
 	// Attempts to build a Number from the given string. Gets more from inp if necessary. Returns 0 if failed.
 	static Number *Read (const string &str, InputFile &inp);
 	void Write (vector<Byte> &Output) const {n.Write(Output, Size / 8);}
+};
+
+// Thrown when the user attempts to set the size of an expression to a number not multiple of eight
+class InvalidSize : public exception
+{
+	string WhatString;
+
+	public:
+	InvalidSize (unsigned int s) throw () : WhatString ("Size must be multiple of 8. Got ") {WhatString += Print(s);}
+	~InvalidSize () throw () {}
+
+	const char *what() const throw() {return WhatString.c_str();}
+};
+
+// Thrown when the user attempts to cast a number to a storage space that cannot hold it. Eg. BYTE 1234
+class CastFailed : public exception
+{
+	string WhatString;
+
+	public:
+	CastFailed (const RealNumber &n, unsigned int s, Number::NumberType t = Number::ANY) throw ();
+	~CastFailed () throw () {}
+
+	const char *what() const throw() {return WhatString.c_str();}
 };
 
 #endif
