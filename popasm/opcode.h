@@ -28,6 +28,7 @@ class Opcode :	vector<Byte>
 	Opcode (Byte b0) throw () {push_back (b0);}
 	Opcode (Byte b0, Byte b1) throw () {push_back (b0); push_back (b1);}
 	Opcode (Byte b0, Byte b1, Byte b2) throw () {push_back (b0); push_back (b1); push_back (b2);}
+	Opcode (Byte b0, Byte b1, Byte b2, Byte b3) throw () {push_back (b0); push_back (b1); push_back (b2); push_back (b3);}
 	~Opcode () throw () {}
 
 	const Opcode operator+ (Byte b) const;
