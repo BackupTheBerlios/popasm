@@ -67,6 +67,17 @@ class DistanceSizedMemory : public exception
 	const char *what() const throw() {return WhatString;}
 };
 
+class CastConflict : public exception
+{
+	string WhatString;
+
+	public:
+	CastConflict (const string &s1, const string &s2) throw ();
+	~CastConflict () throw () {}
+
+	const char *what() const throw() {return WhatString.c_str();}
+};
+
 class Type
 {
 	public:
@@ -84,12 +95,18 @@ class Type
 	// Methods for reading and writing each member
 	unsigned int GetSize () const throw () {return Size;}
 	void SetSize (unsigned int sz) throw () {Size = sz;}
+	static string PrintSize (unsigned int sz) throw ();
 
 	TypeName GetCurrentType () const throw () {return CurrentType;}
 	void SetCurrentType (TypeName NewType) throw () {CurrentType = NewType;}
 
 	int GetDistanceType () const throw () {return DistanceType;}
 	void SetDistanceType (int dist) throw () {DistanceType = dist;}
+	static string PrintDistance (unsigned int dist) throw ();
+
+	// Check whether it makes sense for a type to be sz sizes and
+	// dist as distance qualifier at the same time
+	static bool CombineSD (unsigned int sz, unsigned int dist) throw ();
 
 	Type &operator+= (const Type &t) throw (IncompatibleTypes);
 	Type &operator-= (const Type &t) throw (IncompatibleTypes);

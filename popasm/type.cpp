@@ -24,6 +24,58 @@ const char MultipleBrackets::WhatString[] = "Illegal: Multiple brackets.";
 const char DistanceSizedMemory::WhatString[] = "Distance size qualifiers cannot be used inside brackets.";
 const char IncompatibleTypes::WhatString[] = "Error: Incompatible types that cannot be operated between them.";
 
+string Type::PrintSize (unsigned int sz) throw ()
+{
+	switch (sz)
+	{
+		case 8: return "byte";
+		case 16: return "word";
+		case 32: return "dword";
+		case 48: return "pword";
+		case 64: return "qword";
+		case 80: return "tbyte";
+	}
+
+	return "unknown size";
+}
+
+string Type::PrintDistance (unsigned int dist) throw ()
+{
+	switch (dist)
+	{
+		case SHORT: return "short";
+		case NEAR: return "near";
+		case FAR: return "far";
+	}
+
+	return "unknown distance";
+}
+
+CastConflict::CastConflict (const string &s1, const string &s2) throw () : WhatString ("Cannot cast a ")
+{
+	WhatString += s1 + " expression to be " + s2;
+}
+
+bool Type::CombineSD (unsigned int sz, unsigned int dist) throw ()
+{
+	switch (dist)
+	{
+		case SHORT:
+			return (sz == 0) || (sz == 8);
+
+		case NEAR:
+			return (sz == 0) || (sz == 16) || (sz == 32);
+
+		case FAR:
+			return (sz == 0) || (sz == 32) || (sz == 48);
+
+		default:
+			break;
+	}
+
+	return true;
+}
+
 Type &Type::operator+= (const Type &t) throw (IncompatibleTypes)
 {
 	// Cannot operate on SHORT, NEAR or FAR expressions
