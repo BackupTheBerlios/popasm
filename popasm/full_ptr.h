@@ -20,6 +20,7 @@
 
 #include <string>
 #include <exception>
+#include <typeinfo>
 
 #include "argument.h"
 #include "defs.h"
@@ -57,13 +58,15 @@ class OffsetOverflow : public exception
 	const char *what() const throw() {return WhatString;}
 };
 
+class UndefinedArgument;
+
 class FullPointer : public BasicArgument
 {
 	Word Segment;
 	Dword Offset;
 
 	public:
-	FullPointer (unsigned int sz, Word seg, Dword off) throw (InvalidFullPointer, OffsetOverflow);
+	FullPointer (unsigned int sz = 0, Word seg = 0, Dword off = 0) throw (InvalidFullPointer, OffsetOverflow);
 	~FullPointer () throw () {}
 
 	void Write (vector<Byte> &Output) const throw ();
@@ -72,7 +75,21 @@ class FullPointer : public BasicArgument
 	class IdFunctor : public BasicArgument::IdFunctor
 	{
 		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const FullPointer *> (arg) != 0;}
+		bool operator() (Argument &arg)
+		{
+			const FullPointer *fptr = dynamic_cast<const FullPointer *> (arg.GetData());
+
+			if (fptr != 0)
+				return true;
+
+			if (arg.IsUndefined())
+			{
+				arg.SetData (new FullPointer());
+				return true;
+			}
+
+			return false;
+		}
 	};
 };
 
