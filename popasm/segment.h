@@ -32,6 +32,7 @@ class Segment : public BasicSymbol
 	vector<Byte> Contents;
 
 	HashTable<BasicSymbol *, HashFunctor, PointerComparator<BasicSymbol> > SymbolTable;
+	void UndefineSymbol (BasicSymbol *s) throw ();
 
 	public:
 	Segment (const string &n = "") : BasicSymbol (n), Open(true) {}

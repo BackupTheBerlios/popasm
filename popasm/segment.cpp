@@ -15,8 +15,12 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <typeinfo>
+
 #include "segment.h"
 #include "lexsym.h"
+#include "asmer.h"
+#include "defs.h"
 
 Token *Segment::Read (const string &str, InputFile &inp) throw ()
 {
@@ -38,9 +42,34 @@ void Segment::DefineSymbol (BasicSymbol *s) throw (MultidefinedSymbol)
 	}
 	else
 	{
-		// Symbol defined two or more times
-		throw MultidefinedSymbol (s->GetName());
+		// Checks if the existing entry in the symbol table is provisory (forward reference)
+		if (typeid (**sym) == typeid (BasicSymbol))
+		{
+			// Yes, it is. Replace it for the new definition unless it is also provisory
+			if (typeid (*s) != typeid (BasicSymbol))
+			{
+				UndefineSymbol (*sym);
+				DefineSymbol (s);
+			}
+		}
+		else
+		{
+			// No, it is a full-featured symbol. Check whether we are in the same pass
+			// the previous symbol was defined. If so we have a multidefined symbol.
+			if ((*sym)->GetDefinitionPass() == CurrentAssembler->GetCurrentPass())
+				throw MultidefinedSymbol (s->GetName());
+			else
+			{
+				// Atualizar o valor do simbolo e pedir novo passo se necessario
+			}
+		}
 	}
+}
+
+void Segment::UndefineSymbol (BasicSymbol *s) throw ()
+{
+	SymbolTable.Remove (s);
+	delete (s);
 }
 
 BasicSymbol *Segment::Find (const string &name)
