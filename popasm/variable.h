@@ -32,6 +32,7 @@ class UserDefined : public BasicSymbol, public Type
 	~UserDefined () throw () {}
 
 	Dword GetOffset() const throw () {return Offset;}
+	void SetOffset (Dword NewOffset) throw () {Offset = NewOffset;}
 	Dword GetLine() const throw () {return Line;}
 	bool Changed (const BasicSymbol *s) throw ();
 };
