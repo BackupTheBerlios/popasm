@@ -45,7 +45,7 @@ class Symbol : public Token
 	const BasicSymbol *GetData () const throw () {return s;}
 	void SetData (BasicSymbol *bs, bool own) throw ();
 
-	virtual Symbol *Clone () const throw () {return new Symbol (Owner ? s->Clone() : s, false);}
+	virtual Symbol *Clone () const throw () {return new Symbol (Owner ? s->Clone() : s, Owner);}
 	virtual bool operator== (const Symbol &x) const throw () {return s == x.s;}
 };
 
