@@ -32,7 +32,7 @@ class Command : public BasicSymbol
 	Command (const string &n) throw () : BasicSymbol (n) {}
 	~Command () throw () {}
 
-	virtual void Assemble (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding, unsigned int CurrentMode) const {}
+	virtual void Assemble (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding) const {}
 	static BasicSymbol *Read (const string &str, InputFile &inp);
 };
 
