@@ -51,6 +51,18 @@ string Type::PrintDistance (unsigned int dist) throw ()
 	return "unknown distance";
 }
 
+string Type::PrintNumerical (unsigned int num) throw ()
+{
+	switch (num)
+	{
+		case INTEGER: return "integer";
+		case FLOAT: return "float";
+		case BCD: return "bcd";
+	}
+
+	return "unknown numerical type";
+}
+
 CastConflict::CastConflict (const string &s1, const string &s2) throw () : WhatString ("Cannot cast a ")
 {
 	WhatString += s1 + " expression to be " + s2;

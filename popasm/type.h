@@ -87,9 +87,11 @@ class Type
 	unsigned int Size;
 	TypeName CurrentType;
 	int DistanceType;
+	int NumericalType;
 
 	public:
-	Type (unsigned int sz = 0, TypeName t = SCALAR, int dist = UNDEFINED) throw () : Size (sz), CurrentType (t), DistanceType(dist) {}
+	Type (unsigned int sz = 0, TypeName t = SCALAR, int dist = UNDEFINED, int num = UNDEFINED) throw ()
+		: Size (sz), CurrentType (t), DistanceType(dist), NumericalType (num) {}
 	virtual ~Type () throw () {}
 
 	// Methods for reading and writing each member
@@ -103,6 +105,10 @@ class Type
 	int GetDistanceType () const throw () {return DistanceType;}
 	void SetDistanceType (int dist) throw () {DistanceType = dist;}
 	static string PrintDistance (unsigned int dist) throw ();
+
+	int GetNumericalType () const throw () {return NumericalType;}
+	void SetNumericalType (int num) throw () {NumericalType = num;}
+	static string PrintNumerical (unsigned int num) throw ();
 
 	// Check whether it makes sense for a type to be sz sizes and
 	// dist as distance qualifier at the same time
