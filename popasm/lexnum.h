@@ -24,6 +24,7 @@
 #include "number.h"
 #include "lexical.h"
 #include "inp_file.h"
+#include "type.h"
 
 class InvalidSize;
 class CastFailed;
@@ -91,24 +92,9 @@ class Number : public Token
 	bool operator== (const Number &x) const throw () {return (n == x.n);}
 	bool operator!= (const Number &x) const throw () {return (n != x.n);}
 
-	static string PrintSize (unsigned int Size) throw ()
-	{
-		switch (Size)
-		{
-			case 8: return "byte";
-			case 16: return "word";
-			case 32: return "dword";
-			case 48: return "pword";
-			case 64: return "qword";
-			case 80: return "tbyte";
-		}
-
-		return string();
-	}
-
 	string Print () const throw ()
 	{
-		return PrintSize (Size) + " " + n.Print();
+		return Type::PrintSize (Size) + " " + n.Print();
 	}
 
 	virtual Number *Clone() const throw () {return new Number (*this);}
