@@ -70,29 +70,43 @@ void Instruction::Assemble (const BasicSymbol *sym, vector<Argument *> &Argument
 
 HashTable <Instruction *, HashFunctor, PointerComparator<Instruction> > Instruction::InstructionTable = HashTable <Instruction *, HashFunctor, PointerComparator<Instruction> > ();
 
-typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           GPRegister::IdFunctor>       MemGPReg;
-typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           MMXRegister::IdFunctor>      MemMMXReg;
-typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           GPRegister16Bits::IdFunctor> MemReg16;
-typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           GPRegister32Bits::IdFunctor> MemReg32;
-typedef BinaryCompose <logical_or<bool>,  GPRegister16Bits::IdFunctor, GPRegister32Bits::IdFunctor> WordReg;
-typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           WordReg>                     MemWordReg;
-typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           GPRegister8Bits::IdFunctor>  Mem8Reg8;
-typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           GPRegister16Bits::IdFunctor> Mem16Reg16;
-typedef BinaryCompose <logical_or<bool>,  WordReg,                     Mem<0, Memory::INTEGER, Type::NEAR> > WordRegNearMem;
+// Memory functors
+typedef Memory::IdFunctor<UNDEFINED | BYTE | WORD | DWORD, UNDEFINED, UNDEFINED | INTEGER> GPMem;
+typedef Memory::IdFunctor<UNDEFINED | WORD,                UNDEFINED, UNDEFINED | INTEGER> Mem16;
+typedef Memory::IdFunctor<UNDEFINED | DWORD,               UNDEFINED, UNDEFINED | INTEGER> Mem32;
+typedef Memory::IdFunctor<UNDEFINED | QWORD,               UNDEFINED, UNDEFINED | INTEGER> MMXMem;
+typedef Memory::IdFunctor<UNDEFINED | WORD | DWORD,        UNDEFINED, UNDEFINED | INTEGER> WordMem;
 
-typedef BinaryCompose <logical_and<bool>, GPRegister::IdFunctor,       Register::CompareCodeFunctor<0> > Accumulator;
-typedef BinaryCompose <logical_and<bool>, FPURegister::IdFunctor,      Register::CompareCodeFunctor<0> > ST;
-typedef BinaryCompose <logical_and<bool>, GPRegister8Bits::IdFunctor,  Register::CompareCodeFunctor<0> > AL;
-typedef BinaryCompose <logical_and<bool>, GPRegister16Bits::IdFunctor, Register::CompareCodeFunctor<0> > AX;
-typedef BinaryCompose <logical_and<bool>, GPRegister16Bits::IdFunctor, Register::CompareCodeFunctor<2> > DX;
-typedef BinaryCompose <logical_and<bool>, GPRegister8Bits::IdFunctor,  Register::CompareCodeFunctor<1> > CL;
+// Register functors
+typedef Register::IdFunctor <GPRegister,  ANY>               GPReg;
+typedef Register::IdFunctor <GPRegister,  ANY, BYTE>         GPReg8;
+typedef Register::IdFunctor <GPRegister,  ANY, WORD>         GPReg16;
+typedef Register::IdFunctor <GPRegister,  ANY, DWORD>        GPReg32;
+typedef Register::IdFunctor <GPRegister,  ANY, WORD | DWORD> WordReg;
+typedef Register::IdFunctor <MMXRegister, ANY>               MMXReg;
 
-typedef BinaryCompose <logical_and<bool>, SegmentRegister::IdFunctor,  Register::CompareCodeFunctor<0> > ES;
-typedef BinaryCompose <logical_and<bool>, SegmentRegister::IdFunctor,  Register::CompareCodeFunctor<1> > CS;
-typedef BinaryCompose <logical_and<bool>, SegmentRegister::IdFunctor,  Register::CompareCodeFunctor<2> > SS;
-typedef BinaryCompose <logical_and<bool>, SegmentRegister::IdFunctor,  Register::CompareCodeFunctor<3> > DS;
-typedef BinaryCompose <logical_and<bool>, SegmentRegister::IdFunctor,  Register::CompareCodeFunctor<4> > FS;
-typedef BinaryCompose <logical_and<bool>, SegmentRegister::IdFunctor,  Register::CompareCodeFunctor<5> > GS;
+// Specific register functors
+typedef Register::IdFunctor<GPRegister,       0> Accumulator;
+typedef Register::IdFunctor<FPURegister,      0> ST;
+typedef Register::IdFunctor<GPRegister8Bits,  0> AL;
+typedef Register::IdFunctor<GPRegister16Bits, 0> AX;
+typedef Register::IdFunctor<GPRegister16Bits, 2> DX;
+typedef Register::IdFunctor<GPRegister8Bits,  1> CL;
+
+// Segment register functors
+typedef Register::IdFunctor<SegmentRegister,  0> ES;
+typedef Register::IdFunctor<SegmentRegister,  1> CS;
+typedef Register::IdFunctor<SegmentRegister,  2> SS;
+typedef Register::IdFunctor<SegmentRegister,  3> DS;
+typedef Register::IdFunctor<SegmentRegister,  4> FS;
+typedef Register::IdFunctor<SegmentRegister,  5> GS;
+
+// Combinations with memory and registers
+typedef BinaryCompose <logical_or<bool>, GPMem,   GPReg>   MemGPReg;
+typedef BinaryCompose <logical_or<bool>, MMXMem,  MMXReg>  MemMMXReg;
+typedef BinaryCompose <logical_or<bool>, Mem16,   GPReg16> MemGPReg16;
+typedef BinaryCompose <logical_or<bool>, Mem32,   GPReg32> MemGPReg32;
+typedef BinaryCompose <logical_or<bool>, WordMem, WordReg> MemWordReg;
 
 template <unsigned int sz = 0, Memory::ContentsType ct = Memory::FLOAT>
 class MemXMMReg : public BinaryCompose <logical_or<bool>,  Mem<sz, ct>, XMMRegister::IdFunctor>
