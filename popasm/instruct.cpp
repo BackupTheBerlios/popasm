@@ -54,15 +54,15 @@ BasicSymbol *Instruction::Read (const string &str, InputFile &inp)
 
 void Instruction::Assemble (const Symbol *sym, Parser &p, vector<Byte> &Encoding) const
 {
-	// Converts the tokens into arguments.
-	vector<Argument *> Arguments;
-	p.ParseArguments (Arguments);
-
 	// Include in the symbol table the creation of the new label
 	if (sym != 0)
 	{
 		CurrentAssembler->DefineSymbol (new Label (sym->GetName()));
 	}
+
+	// Converts the tokens into arguments.
+	vector<Argument *> Arguments;
+	p.ParseArguments (Arguments);
 
 	// Checks all syntaxes avaiable
 	for (vector<const Syntax *>::const_iterator i = Syntaxes.begin(); i != Syntaxes.end(); i++)
