@@ -30,6 +30,9 @@ enum {SHORT = 2, NEAR = 4, FAR = 8};
 enum {INTEGER = 2, FLOAT = 4};
 bool Match (int Restriction, int i) throw ();
 bool MatchSize (int SizeRestriction, int sz);
+int GetFirstSize(int sz_mask) throw ();
+int GetFirst(int mask) throw ();
+
 
 // Thrown when types cannot be operated. E.g.: [5] + 1 = STRONG_MEMORY + SCALAR = error!
 class IncompatibleTypes : public exception
@@ -81,7 +84,7 @@ class CastConflict : public exception
 class Type
 {
 	public:
-	enum TypeName {SCALAR, WEAK_MEMORY, STRONG_MEMORY};
+	enum TypeName {SCALAR, WEAK_MEMORY, STRONG_MEMORY, UNKNOWN};
 
 	private:
 	unsigned int Size;
@@ -96,7 +99,7 @@ class Type
 
 	// Methods for reading and writing each member
 	unsigned int GetSize () const throw () {return Size;}
-	void SetSize (unsigned int sz) throw () {Size = sz;}
+	virtual void SetSize (unsigned int sz) throw () {Size = sz;}
 	static string PrintSize (unsigned int sz) throw ();
 
 	TypeName GetCurrentType () const throw () {return CurrentType;}

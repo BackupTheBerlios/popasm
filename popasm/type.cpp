@@ -108,6 +108,9 @@ Type &Type::operator+= (const Type &t) throw (IncompatibleTypes)
 				case STRONG_MEMORY:
 					throw IncompatibleTypes();	// STRONG_MEMORY + SCALAR = error!
 					break;
+
+				case UNKNOWN:						// UNKNOWN + anything = UNKNOWN
+					break;
 			}
 
 			break;
@@ -128,12 +131,19 @@ Type &Type::operator+= (const Type &t) throw (IncompatibleTypes)
 				case STRONG_MEMORY:
 					throw IncompatibleTypes();	// STRONG_MEMORY + WEAK_MEMORY = error!
 					break;
+
+				case UNKNOWN:						// UNKNOWN + anything = UNKNOWN
+					break;
 			}
 
 			break;
 
 		case STRONG_MEMORY:
 			throw IncompatibleTypes ();		// Anything + STRONG_MEMORY = error!
+
+		case UNKNOWN:
+			CurrentType = UNKNOWN;				// Anything + UNKNOWN = UNKNOWN
+			break;
 	}
 
 	return *this;
@@ -151,6 +161,12 @@ Type &Type::operator*= (const Type &t) throw (IncompatibleTypes)
 	if ((CurrentType == STRONG_MEMORY) || (t.CurrentType == STRONG_MEMORY)) throw IncompatibleTypes();
 	// Cannot operate on SHORT, NEAR or FAR expressions
 	if ((DistanceType != UNDEFINED) && (t.DistanceType != UNDEFINED)) throw IncompatibleTypes();
+	// Returns UNKNOWN if either object is unknown
+	if ((CurrentType == UNKNOWN) || (t.CurrentType == UNKNOWN))
+	{
+		CurrentType = UNKNOWN;
+		return *this;
+	}
 
 	// The result of any valid operation will be scalar
 	CurrentType = SCALAR;
@@ -207,6 +223,9 @@ Type Type::operator~ () throw (IncompatibleTypes)
 	// Cannot operate on SHORT, NEAR or FAR expressions
 	if (DistanceType != UNDEFINED) throw IncompatibleTypes();
 
+	if (CurrentType != UNKNOWN)
+		CurrentType = SCALAR;
+
 	Size = 0;
 	return *this;
 }
@@ -223,7 +242,8 @@ void Type::operator[] (int) throw (MultipleBrackets, DistanceSizedMemory)
 	if (DistanceType != UNDEFINED) throw DistanceSizedMemory();
 	if (CurrentType == STRONG_MEMORY) throw MultipleBrackets();
 
-	CurrentType = STRONG_MEMORY;
+	if (CurrentType != UNKNOWN)
+		CurrentType = STRONG_MEMORY;
 }
 
 bool Match (int Restriction, int i) throw ()
@@ -231,10 +251,10 @@ bool Match (int Restriction, int i) throw ()
 	return (Restriction & i) != 0;
 }
 
+static const int Sizes[] = {0, 8, 16, 32, 48, 64, 80, 128};
+
 bool MatchSize (int Restriction, int x)
 {
-	static const int Sizes[] = {0, 8, 16, 32, 48, 64, 80, 128};
-
 	for (unsigned int i = 0; i < sizeof (Sizes); i++)
 	{
 		if (Sizes[i] == x)
@@ -244,4 +264,28 @@ bool MatchSize (int Restriction, int x)
 	}
 
 	return false;
+}
+
+int GetFirstSize(int sz_mask) throw ()
+{
+	for (unsigned int i = 1; i < sizeof (Sizes); i++)
+	{
+		if ((sz_mask & (1 << i)) != 0)
+		{
+			return Sizes[i];
+		}
+	}
+
+	return 0;
+}
+
+int GetFirst(int mask) throw ()
+{
+	for (int i = 1;; i <<= 1)
+	{
+		if ((i & mask) != 0)
+			return i;
+	}
+
+	return 0;
 }
