@@ -23,6 +23,8 @@
 #define ARGUMENT_H
 
 #include <exception>
+#include <vector>
+#include <typeinfo>
 
 #include "defs.h"
 #include "number.h"
@@ -43,13 +45,50 @@ class BasicArgument
 
 class Immediate : public BasicArgument
 {
+	public:
+	Immediate (unsigned int sz = 0) throw () : BasicArgument (sz) {}
+	~Immediate () throw () {}
+
+	virtual void Write (vector<Byte> &Output) const = 0;
+	virtual string Print () const throw () = 0;
+};
+
+class UnknownImmediate : public Immediate
+{
 	RealNumber Value;
 
 	public:
-	Immediate (const Number &n) throw ();
-	~Immediate () throw () {}
+	UnknownImmediate (const Number &n) throw () : Immediate(n.GetSize()), Value(n.GetValue()) {}
+	~UnknownImmediate () throw () {}
 
-	string Print () const throw () {return Value.Print();}
+	const RealNumber &GetValue() const throw () {return Value;}
+
+	void Write (vector<Byte> &Output) const {throw 0;}
+	string Print() const throw() {return Value.Print();}
+};
+
+class UnsignedByte : public Immediate
+{
+	Byte Value;
+
+	public:
+	UnsignedByte (const RealNumber &n);
+	~UnsignedByte () throw () {}
+
+	void Write (vector<Byte> &Output) const throw () {Output.push_back (Value);}
+	string Print() const throw() {return ::Print(Value);}
+};
+
+class SignedByte : public Immediate
+{
+	Byte Value;
+
+	public:
+	SignedByte (const RealNumber &n);
+	~SignedByte () throw () {}
+
+	void Write (vector<Byte> &Output) const throw () {Output.push_back (Value);}
+	string Print() const throw() {return ::Print(Value);}
 };
 
 class Argument
@@ -66,6 +105,7 @@ class Argument
 	const BasicArgument *GetData () const throw () {return Data;}
 	static Argument *MakeArgument (const Expression &e, unsigned int CurrentAddressSize);
 
+	bool Match (const type_info &ti);
 	string Print () const throw () {return Data->Print();}
 };
 
