@@ -32,28 +32,22 @@ class Register : public BasicSymbol, public BasicArgument
 	unsigned int Code;	// Register code
 
 	public:
-	Register (const string &n, unsigned int s, unsigned int c) throw () : BasicSymbol (n), BasicArgument (s, NONE), Code (c) {}
+	Register (const string &n, unsigned int s, unsigned int c) throw () : BasicSymbol (n), BasicArgument (s, UNDEFINED), Code (c) {}
 	~Register () throw () {}
 
 	// Attempts to read a register from the given string. Gets more from inp if necessary. Returns 0 if failed.
 	static Register *Read (const string &str, InputFile &inp) throw ();
 	unsigned int GetCode () const throw () {return Code;}
 
+	template <class T, Byte code, int size = ANY>
 	class IdFunctor : public BasicArgument::IdFunctor
 	{
 		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const Register *> (arg) != 0;}
-	};
-
-	template <unsigned int n>
-	class CompareCodeFunctor : public BasicArgument::IdFunctor
-	{
-		public:
+		IdFunctor (const SizeRestriction &sr) throw () : Size(sr) {}
 		bool operator() (const BasicArgument *arg)
 		{
-			const Register *reg = dynamic_cast<const Register *> (arg);
-			if (reg == 0) return false;
-			return reg->GetCode() == n;
+			if (dynamic_cast<const T *> (arg) == 0) return false;
+			return ((Code == code) && (MatchSize (size, GetSize())));
 		}
 	};
 
@@ -65,20 +59,14 @@ class SegmentRegister : public Register
 {
 	static SegmentRegister RegisterTable[];
 
-	unsigned int PrefixCode;
+	Byte PrefixCode;
 
 	public:
-	SegmentRegister (const string &n, unsigned int s, unsigned int c, unsigned int p) throw ()
+	SegmentRegister (const string &n, unsigned int s, unsigned int c, Byte p) throw ()
 		: Register (n, s, c), PrefixCode (p) {}
 	~SegmentRegister () throw () {}
 
-	unsigned int GetPrefixCode () const throw () {return PrefixCode;}
-
-	class IdFunctor : public Register::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const SegmentRegister *> (arg) != 0;}
-	};
+	Byte GetPrefixCode () const throw () {return PrefixCode;}
 
 	// Attempts to read a register from the given string. Gets more from inp if necessary. Returns 0 if failed.
 	static Register *Read (const string &str, InputFile &inp) throw ();
@@ -91,35 +79,9 @@ class GPRegister : public Register
 	GPRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~GPRegister () throw () {};
 
-	class IdFunctor : public Register::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const GPRegister *> (arg) != 0;}
-	};
-
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
-/*
-class Accumulator : public GPRegister
-{
-	// Makes constructor private, so no one can build it
-	Accumulator () throw () : GPRegister ("", 0, 0) {}
 
-	public:
-	~Accumulator () {}
-
-	class IdFunctor : public Register::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg)
-		{
-			const GPRegister *gpr = dynamic_cast<const GPRegister * const> (arg);
-			if (gpr == 0) return false;
-			return gpr->GetCode() == 0;
-		}
-	};
-};
-*/
 class GPRegister8Bits : public GPRegister
 {
 	static GPRegister8Bits RegisterTable[];
@@ -127,12 +89,6 @@ class GPRegister8Bits : public GPRegister
 	public:
 	GPRegister8Bits (const string &n, unsigned int s, unsigned int c) throw () : GPRegister (n, s, c) {}
 	~GPRegister8Bits () throw () {}
-
-	class IdFunctor : public Register::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const GPRegister8Bits *> (arg) != 0;}
-	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
@@ -145,12 +101,6 @@ class GPRegister16Bits : public GPRegister
 	GPRegister16Bits (const string &n, unsigned int s, unsigned int c) throw () : GPRegister (n, s, c) {}
 	~GPRegister16Bits () throw () {}
 
-	class IdFunctor : public Register::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const GPRegister16Bits *> (arg) != 0;}
-	};
-
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -161,12 +111,6 @@ class GPRegister32Bits : public GPRegister
 	public:
 	GPRegister32Bits (const string &n, unsigned int s, unsigned int c) throw () : GPRegister (n, s, c) {}
 	~GPRegister32Bits () throw () {}
-
-	class IdFunctor : public Register::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const GPRegister32Bits *> (arg) != 0;}
-	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
@@ -182,12 +126,6 @@ class BaseRegister : public GPRegister16Bits
 		: GPRegister16Bits (n, s, c), BaseCode (bc), BaseIndexCode (bic) {}
 	~BaseRegister () {}
 
-	class IdFunctor : public Register::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const BaseRegister *> (arg) != 0;}
-	};
-
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -202,12 +140,6 @@ class IndexRegister : public GPRegister16Bits
 		: GPRegister16Bits (n, s, c), BaseCode (bc), IndexCode (ic) {}
 	~IndexRegister () {}
 
-	class IdFunctor : public Register::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const IndexRegister *> (arg) != 0;}
-	};
-
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -219,12 +151,6 @@ class ControlRegister : public Register
 	public:
 	ControlRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~ControlRegister () throw () {}
-
-	class IdFunctor : public Register::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const ControlRegister *> (arg) != 0;}
-	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
@@ -238,12 +164,6 @@ class TestRegister : public Register
 	TestRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~TestRegister () throw () {}
 
-	class IdFunctor : public Register::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const TestRegister *> (arg) != 0;}
-	};
-
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -255,12 +175,6 @@ class DebugRegister : public Register
 	public:
 	DebugRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~DebugRegister () throw () {}
-
-	class IdFunctor : public Register::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const DebugRegister *> (arg) != 0;}
-	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
@@ -274,12 +188,6 @@ class MMXRegister : public Register
 	MMXRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~MMXRegister () throw () {}
 
-	class IdFunctor : public Register::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const MMXRegister *> (arg) != 0;}
-	};
-
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -292,12 +200,6 @@ class XMMRegister : public Register
 	XMMRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~XMMRegister () throw () {}
 
-	class IdFunctor : public Register::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const XMMRegister *> (arg) != 0;}
-	};
-
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -308,12 +210,6 @@ class FPURegister : public Register
 	public:
 	FPURegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~FPURegister () throw () {}
-
-	class IdFunctor : public Register::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const FPURegister *> (arg) != 0;}
-	};
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
