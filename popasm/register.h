@@ -47,7 +47,7 @@ class Register : public BasicSymbol, public BasicArgument
 		{
 			const T *reg = dynamic_cast<const T *> (arg);
 			if (reg == 0) return false;
-			return (reg->GetCode() == code) && MatchSize (size, arg->GetSize());
+			return Match (code, reg->GetCode()) && MatchSize (size, arg->GetSize());
 		}
 	};
 
