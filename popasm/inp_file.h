@@ -60,7 +60,7 @@ class InputFile : ifstream
 	~InputFile () throw () {}
 
 	bool operator! () const throw () {return ifstream::operator!();}
-	void ResetFile () throw ();
+	void Reset () throw ();
 
 	// Return the next string found in input file. Returns 0 if EOF is reached.
 	string *GetString () throw ();
