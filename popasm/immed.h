@@ -49,6 +49,11 @@ class Immediate : public BasicArgument
 	const RealNumber &GetValue() const throw () {return Value;}
 	void SetSize (unsigned int sz, Number::NumberType t = Number::ANY) const throw (InvalidSize, CastFailed);
 
+	// Returns the value of the number as an unsigned long int
+	unsigned long int GetUnsignedLong () const throw (Overflow, IntegerExpected) {return Value.GetUnsignedLong();}
+	// Returns the value of the number as a long int
+	long int GetLong () const throw (Overflow, IntegerExpected) {return Value.GetLong();}
+
 	class IdFunctor : public BasicArgument::IdFunctor
 	{
 		public:
