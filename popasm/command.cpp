@@ -16,6 +16,7 @@
  ***************************************************************************/
 
 #include "command.h"
+#include "defs.h"
 #include "instruct.h"
 #include "directiv.h"
 #include "prefix.h"
@@ -24,10 +25,7 @@ BasicSymbol *Command::Read (const string &str, InputFile &inp)
 {
 	BasicSymbol *s;
 	string UppercaseName (str);
-
-	// Gets a copy of the original string in uppercase
-	for (string::iterator i = UppercaseName.begin(); i < UppercaseName.end(); i++)
-		if ((*i <= 'z') && (*i >= 'a')) *i -= 32;
+	UpperCase (UppercaseName);
 
 	s = Instruction::Read (UppercaseName, inp);
 	if (s != 0) return s;
