@@ -209,11 +209,54 @@ Expression *Parser::EvaluateExpression (const vector<Token *> &v)
 	return Result;
 }
 
+void Parser::ReadLine (vector<Token *> &Tokens, InputFile &Input) throw ()
+{
+	Token *t;
+	Symbol *s;
+	Token::Context c = Token::COMMAND_EXPECTED;
+
+	// Reads all tokens and place them in a vector
+	while (true)
+	{
+		// Get the next token
+		t = Token::GetToken(Input, c);
+
+		// Checks for end-of-file
+		if (t == 0) break;
+
+		s = dynamic_cast<Symbol *> (t);
+		if (s != 0)
+		{
+			// Checks for end-of-line
+			if (s->GetName() == "\n")
+			{
+				delete t;
+				break;
+			}
+
+			// Checks for comment
+			if (s->GetName() == ";")
+			{
+				delete t;
+				Input.SkipLine ();
+				break;
+			}
+
+			// If a command has already been read, switch the lexical analyser to another context,
+			// to read its arguments
+			if (dynamic_cast<const Command *> (s->GetData()) != 0)
+				c = Token::ARGUMENT_EXPECTED;
+		}
+
+		Tokens.push_back (t);
+	}
+}
+
 vector<Byte> Parser::ParseLine ()
 {
 	// Reads all tokens in the line to Tokens vector
 	vector<Token *> Tokens;
-	Token::ReadLine (Tokens, Input);
+	ReadLine (Tokens, Input);
 	vector<Token *>::iterator i = Tokens.begin();
 
 	vector<Argument *> Arguments;

@@ -100,6 +100,7 @@ class Parser
 	InputFile &Input;
 
 	public:
+	static void ReadLine (vector<Token *> &Tokens, InputFile &Input) throw ();
 	static Expression *EvaluateExpression (const vector<Token *> &v);
 	vector<Byte> ParseLine ();
 
