@@ -17,7 +17,7 @@
 
 #include "register.h"
 #include "type_exp.h"
-#include "symbol.h"
+#include "variable.h"
 #include <algorithm>
 
 void Expression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) throw (InvalidSize, CastFailed, CastConflict)

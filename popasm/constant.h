@@ -21,7 +21,7 @@
 #include <exception>
 #include <string>
 
-#include "symbol.h"
+#include "variable.h"
 #include "type_exp.h"
 
 class RedefinedConstant : public exception

@@ -22,6 +22,8 @@
 #include "full_ptr.h"
 #include "defs.h"
 #include "parser.h"
+#include "variable.h"
+#include "asmer.h"
 
 Instruction::Instruction (const string &n,
 	const Syntax *s1  = 0, const Syntax *s2  = 0, const Syntax *s3  = 0, const Syntax *s4  = 0,
@@ -60,7 +62,7 @@ void Instruction::Assemble (const BasicSymbol *sym, vector<Token *>::iterator i,
 	// Include in the symbol table the creation of the new label
 	if (sym != 0)
 	{
-		Symbol::DefineSymbol (new Label (sym->GetName()));
+		CurrentAssembler->DefineSymbol (new Label (sym->GetName()));
 	}
 
 	// Checks all syntaxes avaiable

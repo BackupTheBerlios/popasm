@@ -179,17 +179,15 @@ class Memory : public BasicArgument
 	unsigned int AddressSize;	// Address size: 16 or 32 bits, or zero if undecided
 
 	bool SIBUsed () const throw () {return (AddressSize == 32) && ((Code & 7) == 4);}
-	int Type;
 
 	public:
 	Memory (unsigned int sz = 0, int dist = UNDEFINED) throw ()
-		: BasicArgument (sz, dist), SegmentPrefix(0), SIB(0), Code(0), AddressSize(0), Type(UNDEFINED) {}
+		: BasicArgument (sz, dist), SegmentPrefix(0), SIB(0), Code(0), AddressSize(0) {}
 	~Memory () throw () {}
 
 	void MakeMemory16Bits (const BaseRegister *Base16, const IndexRegister *Index16);
 	void MakeMemory32Bits (const GPRegister *Base32, const GPRegister *Index32, long int scale);
 
-	int GetType () const throw() {return Type;}
 	Byte GetSegmentPrefix () const throw () {return SegmentPrefix;}
 	void SetSegmentPrefix (Byte s) throw () {SegmentPrefix = s;}
 	unsigned int GetAddressSize () const throw () {return AddressSize;}
@@ -211,7 +209,7 @@ class Memory : public BasicArgument
 			const Memory *mem = dynamic_cast<const Memory *> (arg);
 			if (mem == 0) return false;
 			if (MatchSize (size, mem->GetSize()))
-				return Match (dist, mem->GetDistanceType()) && Match (type, mem->GetType());
+				return Match (dist, mem->GetDistanceType()) && Match (type, mem->GetNumericalType());
 			else
 				if (mem->GetSize() == 0) throw UndefinedMemorySize();
 
@@ -226,6 +224,12 @@ class Memory : public BasicArgument
 		{
 			const Memory *mem = dynamic_cast<const Memory *> (arg);
 			if (mem == 0) return false;
+			if (!Match (UNDEFINED | INTEGER, mem->GetNumericalType()))
+			{
+				cout << "Must be integer variable";
+				return false;
+			}
+
 			if (mem->GetDistanceType() == NEAR) return false;
 			return (mem->GetSize() == 0) || (mem->GetSize() == 32) || (mem->GetSize() == 48);
 		}
