@@ -261,7 +261,7 @@ class Mem : public Memory::IdFunctor
 		if (!Memory::IdFunctor::operator() (arg)) return false;
 
 		const Memory *m = dynamic_cast<const Memory *> (arg);
-		if ((m->GetSize() != 0) && (m->GetSize() != n)) return false;
+		if ((m->GetSize() != 0) && (n != 0) && (m->GetSize() != n)) return false;
 		if ((m->GetType() != Memory::UNKNOWN) && (m->GetType() != t)) return false;
 		if ((m->GetDistanceType() != Type::NONE) && (m->GetDistanceType() != dist)) return false;
 		return true;
