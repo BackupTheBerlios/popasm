@@ -47,7 +47,7 @@ language.
 Last, but not least, I would like to thank my family, friends and God for what I am now and what I have done so far.
 
 \chapter{Introduction}
-PopAsm stands for ``Popular Assembler''. It is an assembler, that is, and assembly language compiler\footnote{Technically
+\emph{PopAsm} stands for ``Popular Assembler''. It is an assembler, that is, and assembly language compiler\footnote{Technically
 speaking, assemblers are not compilers. They translate lines of code into machine language in a one-to-one basis. Compilers
 translate each line of code into several machine instructions. However, from this point on, this document will use both
 terms (compiler and assembler) indistinctly.}. Its objective is to convert human readable code to machine instructions.
@@ -75,6 +75,68 @@ features make it suited for nearly any assembly programming project:
 
 Due to the reasons discussed above, this assembler was named the ``Popular Assembler''.
 
+\chapter{Compiling and Installing PopAsm}
+This chapter explains how to compile and install \emph{PopAsm} under linux or other UNIX-like
+platforms. If you have already done that you may safely skip to the next chapter.
+
+\section{Compiling PopAsm sources\label{COMPILING}}
+In order to compile \emph{PopAsm} sources, you will need an ANSI C++ compiler and its standard
+libraries\footnote{For the curious, I use egcs 0.0.0}. You will also need \emph{PopAsm} source
+code, which you should already have. If not, please go to \emph{http://popasm.sourceforge.net/}
+and download it. You will get an archive containing the source code to be built. Unpack it
+anywhere you like, using the appropriate software (e.g. if you downloaded a .tar.gz file, you
+should run \emph{tar xvzf popasm-x.y.z.tar.gz}, where $x$, $y$ and $z$ are the version numbers
+of the package you got). At this point, a directory containing the source code will be created.
+
+Now, you should enter the directory containing the sources. e.g. \emph{/tmp/popasm-0.0.1}. Please
+do not mistake it for something like \emph{/tmp/popasm-0.0.1/src}. You should be in \emph{PopAsm}
+source code root directory, as in the example above.
+
+\emph{PopAsm} relies on \emph{Autoconf}\cite{AUTOCONF} and \emph{Automake}\cite{AUTOMAKE} to probe
+your system for the necessary resources and generate the resulting \emph{Makefile}. This file will
+tell the \emph{Make}\cite{MAKE} utility how to compile \emph{PopAsm} sources. First, type
+
+\begin{verbatim}
+./configure
+\end{verbatim}
+
+to perform the necessary checks. If everything is ok, you should have a \emph{Makefile}. The next
+step is to compile the sources. Just type
+
+\begin{verbatim}
+make
+\end{verbatim}
+
+and the \emph{Make} utility will do the rest, but might take a few minutes. There should be no
+warnings and no errors. If you got any, please check whether your compiler is ANSI compliant. If
+it is, please let me know (contacting information can be found in this document).
+
+\section{Installing PopAsm}
+
+There is basically two ways of installing \emph{PopAsm}: either from the source code or from a
+RPM file.
+
+\subsection{Installing from Source Code}
+You should compile \emph{PopAsm} as in section \ref{COMPILING}. Remain in the directory you built
+\emph{PopAsm} and issue the command (you will need to be \emph{root} to do that):
+
+\begin{verbatim}
+make install
+\end{verbatim}
+
+This will install the binary file, documentation, etc.
+
+\subsection{Installing from RPM files}
+The easiest way to install \emph{PopAsm} is to use RPM files. Get one from
+\emph{http://popasm.sourceforge.net/} if you do not have done so yet. Login as \emph{root} and
+type:
+
+\begin{verbatim}
+rpm -ivh popasm-x.y.z.rpm
+\end{verbatim}
+
+replacing $x$, $y$ and $z$ for the appropriate values. That's it, you're done.
+
 \begin{thebibliography}{9}
 \bibitem{UFES} Federal University of Esp\'irito Santo -- ES -- Brazil. http://www.ufes.br
 \bibitem{PUC} Pontificial Catholic University of Rio de Janeiro -- RJ -- Brazil. http://www.puc-rio.br
@@ -83,7 +145,9 @@ Due to the reasons discussed above, this assembler was named the ``Popular Assem
 \bibitem{ADVPRSN}H\'elcio Mello's personal page at Advogato. http://www.advogato.com/person/helcio
 \bibitem{FRESH}FreshMeat. http://www.freahmeat.net
 \bibitem{FREITAS}Professor PhD S\'ergio A. A. Freitas. http://www.inf.ufes.br/~sergio.
-
+\bibitem{AUTOCONF}GNU Autoconf. http://www.gnu.org/software/autoconf/autoconf.html
+\bibitem{AUTOMAKE}GNU Automake. http://www.gnu.org/software/automake/automake.html
+\bibitem{MAKE}GNU Make. http://www.gnu.org/software/make/make.html
 \end{thebibliography}
 
 \end{document}
