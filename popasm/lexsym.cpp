@@ -53,7 +53,7 @@ void Symbol::DefineSymbol (BasicSymbol *s) throw (MultidefinedSymbol)
 
 	if (sym == 0)
 	{
-		SymbolTable.Insert (new Label (s->GetName()));
+		SymbolTable.Insert (s);
 	}
 	else
 	{
