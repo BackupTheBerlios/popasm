@@ -23,7 +23,8 @@
 #define ASMER_H
 
 #include "lexical.h"
-#include "operator.h"
+#include "express.h"
+#include "lexop.h"
 
 class Assembler
 {

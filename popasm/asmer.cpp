@@ -35,6 +35,14 @@ const OperatorData<Expression> *PopAsm::OperatorTable[] =
 	new Not<Expression> ("NOT", 600, 0),
 	new ShiftLeft<Expression> ("SHL", 0, 500),
 	new ShiftRight<Expression> ("SHR", 0, 500),
+	new SizeCast<Expression> ("BYTE", 50, 0, 8),
+	new SizeCast<Expression> ("WORD", 50, 0, 16),
+	new SizeCast<Expression> ("DWORD", 50, 0, 32),
+	new SizeCast<Expression> ("PWORD", 50, 0, 48),
+	new SizeCast<Expression> ("FWORD", 50, 0, 48),
+	new SizeCast<Expression> ("QWORD", 50, 0, 64),
+	new SizeCast<Expression> ("TBYTE", 50, 0, 80),
+	new SizeCast<Expression> ("TWORD", 50, 0, 80),
 	0	// End of list
 };
 
