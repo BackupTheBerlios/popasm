@@ -65,6 +65,7 @@ class NaturalNumber : vector <Word>
 
 	// Returns the size of the underlying vector
 	Dword Size() const throw () {return size();}
+	Dword SizeInBits() const throw (LeadingZero);
 	Dword SizeInBytes() const throw ();
 
 	void MatchSize (const NaturalNumber &n, Word w) throw ();
@@ -138,10 +139,13 @@ class NaturalNumber : vector <Word>
 	NaturalNumber &TwosComplement () throw ();
 	NaturalNumber &operator~ () throw ();
 
+	void SetBit (Dword n) throw ();
+	void ClearBit (Dword n) throw ();
+
 	// Prints the number in any base. Default is 10.
 	string Print (Word Base = 10) const throw ();
 	// Writes the number in little-endian form, using n bytes, padding using the given byte
-	void Write (vector<Byte> &Output, unsigned int n, Byte pad) const;
+	void Write (vector<Byte> &Output, unsigned int n, Byte pad = 0) const;
 	// Detects if a number is zero
 	bool Zero() const throw (LeadingZero);
 	// Returns the value of the number as an unsigned long int
@@ -205,6 +209,7 @@ class IntegerNumber
 	// Speeds up comparisson with zero
 	bool GreaterThanZero () const throw () {return !Negative && !Zero();}
 	bool LesserThanZero () const throw () {return Negative && !Zero();}
+	bool GetNegativeBit () const throw () {return Negative;}
 
 	// Sign extends *this and n to be the same size
 	void SignExtend (IntegerNumber &n) throw ();
@@ -317,6 +322,7 @@ class RealNumber
 
 class NumberException : public exception
 {
+	protected:
 	string WhatString;
 
 	public:
@@ -417,6 +423,17 @@ class NegativeShift : public NumberException
 	NegativeShift (const IntegerNumber &aa, const IntegerNumber &bb) :
 		NumberException ("Shift attempted by negative amount."), a (aa), b (bb) {}
 	~NegativeShift () {}
+};
+
+// Thrown when a real number is requested to be written in a non-supported format (e.g. 128 bits)
+class InvalidFormat : public NumberException
+{
+	unsigned int Format;
+
+	public:
+	InvalidFormat (unsigned int f) throw () :
+		NumberException ("Unsuported floating point format: "), Format (f) {WhatString += Print (f) + " bits.";}
+	~InvalidFormat () {}
 };
 
 #endif

@@ -43,6 +43,20 @@ Dword NaturalNumber::SizeInBytes() const throw ()
 	return answer;
 }
 
+Dword NaturalNumber::SizeInBits() const throw (LeadingZero)
+{
+	if (size() == 0) return 0;
+
+	Word msw = back();
+	for (Dword i = 16; i != 0;)
+	{
+		i--;
+		if (msw & (1 << i) != 0) return (size() - 1) * 16 + i + 1;
+	}
+
+	throw LeadingZero();
+}
+
 // Gets a numeric string and strips leading and trailing underscores and radices. Also checks for the
 // first digit being 0-9
 string SimplifyString (const string &s, Word &Base, bool *Negative = 0) throw (InvalidNumber)
@@ -205,7 +219,7 @@ string NaturalNumber::Print (Word Base = 10) const throw ()
 }
 
 // Writes the number in little-endian form, using n bytes, padding using the given byte
-void NaturalNumber::Write (vector<Byte> &Output, unsigned int n, Byte pad) const
+void NaturalNumber::Write (vector<Byte> &Output, unsigned int n, Byte pad = 0) const
 {
 	NaturalNumber temp(*this);
 
@@ -879,6 +893,22 @@ const NaturalNumber NaturalNumber::operator^  (const NaturalNumber &n) const thr
 {
 	NaturalNumber answer(*this);
 	return answer ^= n;
+}
+
+void NaturalNumber::SetBit (Dword n) throw ()
+{
+	// Left pads with zeroes if needed.
+	if (n / 16 >= size())
+		resize (n / 16 + 1, 0);
+
+	(*this)[n / 16] |= 1 << (n & 15);
+}
+
+void NaturalNumber::ClearBit (Dword n) throw ()
+{
+	// First check if the bit is beyond vactor bounds
+	if (n / 16 < size())
+		(*this)[n / 16] &= ~(1 << (n & 15));
 }
 
 bool NaturalNumber::Test () throw ()
@@ -1638,8 +1668,84 @@ void RealNumber::Write (vector<Byte> &Output, unsigned int n) const
 	}
 	else
 	{
-		// Floating point Write() method still missing.
-		throw (0);
+		bool ImpliedOne;
+		Dword MantissaSize, ExponentSize;
+
+		// +0.0 and -0.0 have special representations
+		if (Zero())
+		{
+			Output.insert (Output.end(), n - 1, 0);
+			Output.push_back (Mantissa.GetNegativeBit() ? 0x80 : 0);
+			return;
+		}
+
+		switch (n)
+		{
+			case 4:
+				ImpliedOne = true;
+				MantissaSize = 24;
+				ExponentSize = 8;
+				break;
+
+			case 8:
+				ImpliedOne = true;
+				MantissaSize = 52;
+				ExponentSize = 12;
+				break;
+
+			case 10:
+				ImpliedOne = false;
+				MantissaSize = 64;
+				ExponentSize = 15;
+				break;
+
+			// Only 32- 48- and 80- bit formats are available
+			default: throw (InvalidFormat(n));
+		}
+
+		NaturalNumber m(Mantissa.Abs());
+		NaturalNumber e(NaturalNumber(10).Power(Exponent.Abs()));
+		Dword count = 0;
+
+		if (Mantissa.LesserThanZero())
+		{
+			
+		}
+		else
+		{
+			// Performs mantissa * 10^exponent
+			m *= e;
+			count = m.SizeInBits() - 1;
+
+			if (count >= MantissaSize)
+			{
+				// Shifts right the result to fit the mantissa size, rounding the result
+				m >>= count - MantissaSize;
+				if (m.Odd()) m++;
+				m >>= 1;
+
+				// Calculates biased exponent
+				count = 1 << (ExponentSize - 1) - 1 - count;
+			}
+			else
+			{
+				// Shifts left the mantissa to make it as large as needed
+				m <<= MantissaSize - (count + 1);
+
+				// Calculates biased exponent
+				count += 1 << (ExponentSize - 1) - 1;
+			}
+		}
+
+		// Removes implicit 1 if any
+		if (ImpliedOne) m.ClearBit (--MantissaSize);
+
+		// Writes de exponent field
+		m |= NaturalNumber (count) << MantissaSize;
+
+		// Sets sign bit
+		if (Mantissa.GetNegativeBit()) m.SetBit (n - 1);
+		m.Write (Output, n);
 	}
 }
 
