@@ -24,6 +24,8 @@
 
 #include "inp_file.h"
 
+class Parser;
+
 class Assembler
 {
 	// Operating mode the assembler is reset to at the beginning of each pass
@@ -32,16 +34,18 @@ class Assembler
 	unsigned int CurrentMode;
 	unsigned int CurrentPass;
 	unsigned long int CurrentOffset;
+	Parser *CurrentParser;
 
 	bool PerformPass (InputFile &File) throw ();
 
 	public:
-	Assembler (unsigned int im) throw () : InitialMode (im), CurrentPass(0) {}
+	Assembler (unsigned int im) throw () : InitialMode (im), CurrentPass(0), CurrentParser(0) {}
 	virtual ~Assembler () throw () = 0;
 
 	unsigned int GetCurrentMode () const throw () {return CurrentMode;}
 	void SetCurrentMode (unsigned int n);
 	unsigned long int GetCurrentOffset () const throw () {return CurrentOffset;}
+	unsigned long int GetCurrentLine () const throw ();
 	void AssembleFile (InputFile &File) throw ();
 };
 

@@ -61,10 +61,17 @@ void Assembler::AssembleFile (InputFile &File) throw ()
 	} while (NeedAnotherPass);
 }
 
+unsigned long int Assembler::GetCurrentLine () const throw ()
+{
+	if (CurrentParser == 0) return 0;
+	return CurrentParser->GetCurrentLine();
+}
+
 bool Assembler::PerformPass (InputFile &File) throw ()
 {
 	vector<Byte> LineEncoding;
-	Parser p (File);
+	delete CurrentParser;
+	CurrentParser = new Parser (File);
 
 	CurrentPass++;
 	CurrentOffset = 0;
@@ -75,7 +82,7 @@ bool Assembler::PerformPass (InputFile &File) throw ()
 	{
 		try
 		{
-			LineEncoding = p.ParseLine ();
+			LineEncoding = CurrentParser->ParseLine ();
 			CurrentOffset += LineEncoding.size();
 			PrintVector (LineEncoding);
 		}
