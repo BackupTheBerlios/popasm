@@ -1394,7 +1394,110 @@ that your code will become easier to read and maintain without any execution
 performance loss.
 
 \section{STRUCT}
-To be written.
+Structures are the simplest aggregates that can be defined. They are a sequence
+of data members that are placed in adjacent memory addresses. The syntax for
+defining structures is:
+
+\begin{verbatim}
+struct_name     STRUCT
+FIELD_NAME      DEF_CMD EXPRESSION
+FIELD_NAME      DEF_CMD EXPRESSION
+.
+.
+.
+FIELD_NAME      DEF_CMD EXPRESSION
+ENDS
+\end{verbatim}
+
+\noindent where FIELD\_NAME are the names of each field (member), DEF\_CMD is
+any of the data defining commands (DB, DW, etc., see Chapter \ref{DEFDATA}) and
+EXPRESSION is the default value for the field if it is not specified when the
+structure is used (see details further in this section). The ENDS command stands
+for ``END Structure''. Also, STRUCT and STRUC are both accepted indistinctly.
+
+For example, let's suppose we want to define a simple structure to hold dates.
+Its fields will be month, day and year values:
+
+\begin{verbatim}
+DATE_STRUCT     STRUCT
+MONTH           DB      6
+DAY             DB      5
+YEAR            DW      1979
+ENDS
+\end{verbatim}
+
+Note that the code above defines no data at all; it only defines a structure
+that may now be used (instantiated). The syntax for instantiating structure is:
+
+\begin{verbatim}
+INSTANCE_NAME   STRUCT_NAME <EXPR1, EXPR2, ..., EXPRN>
+\end{verbatim}
+
+The syntax above define a variable named INSTANCE\_NAME, and instantiate the
+structure to the expressions given (EXPR1, EXPR2, ..., EXPRN). For example,
+if someone wants to use the above structure to define a variable that holds
+the date ``Oct 22nd 1977'' then the next line will do it:
+
+\begin{verbatim}
+IMPORTANT_DATE  DATE_STRUCT <10, 20 + 2, 1977>
+\end{verbatim}
+
+As can be seen, the first expression (10) will be placed in the first field of
+the structure (MONTH), the second expression, which evaluates to 22 (just to
+remind that any numeric expression can be used, not just numbers), will be copied
+to the next field and so on. The original default values of the structure definition
+remain unchanged. The next example shows how to use those default values:
+
+\begin{verbatim}
+JOHN            DATE_STRUCT <2, 7, 1977>
+MARY            DATE_STRUCT <5, 1, 1975>
+LINDA           DATE_STRUCT < ,  , 1981>
+\end{verbatim}
+
+Here, we define three dates. The last one looks incomplete, but the blanks will
+be filled by their default values (MONTH = 6 and DAY = 5). The blank spaces
+between the commas and the left angle bracket are optional, but were included
+to give the code a better look.
+
+Once a structure is instantiated, its fields can be accessed as any other
+variable using the field selection operator (.). Using the structures used
+in the last example, one could write \verb@JOHN.MONTH@ to refer to the byte
+related to MONTH in JOHN variable. Other examples follow:
+
+\begin{verbatim}
+                MOV     AL,[JOHN.DAY]           ; AL = 7
+
+                MOV     BX,OFFSET JOHN.DAY      ; Same as above
+                MOV     AL,[BX]                 ;
+
+                MOV     BX,OFFSET JOHN          ;
+                MOV     SI,OFFSET DATE_STRUCT.DAY; Same as above
+                MOV     AL,[BX+SI]              ;
+
+                MOV     [DATE_STRUCT.DAY],19    ; Wrong!
+\end{verbatim}
+
+The first line copies the contents of the DAY field of the JOHN variable
+(declared as a DATE\_STRUCT in the previous example) into AL. The same
+thing could have been achieved by pointing BX to that field (as in the
+second line) and using that register as a pointer to the field. Another
+variant of this approach is to use two pointers: one pointing to the
+variable being referenced and the other to the desired field address
+(relative to the beginning of the structure).
+
+Such a relative address can be got by specifying the name of the structure,
+followed by the period, followed by the field name. In the fifth line
+of the last example, \verb@DATE_STRUCT.DAY@ returns the offset of the
+\verb@DAY@ field relative to the beginning of the structure. Note that
+that offset cannot be used to access memory, given it does not point to
+any structure in particular. That's why the last line of the example
+above is wrong.
+
+As a final remark, because the fields of structures occupy memory addresses
+individually, the total size of a structure is the sum of the sizes of all
+its fields. This value can be returned by the \verb@SIZE@ keyword. For
+example, \verb@SIZE DATE_STRUCT@ returns 4 (DAY and MONTH occupy one byte
+each, plus two bytes due to the YEAR field).
 
 \section{UNION}
 To be written.
