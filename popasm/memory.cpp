@@ -163,7 +163,7 @@ void Memory::MakeMemory32Bits (const GPRegister *Base32, const GPRegister *Index
 
 				// Encodes the displacement in 32-bit form and builds the SIB
 				Code = 4;
-				Displacement.SetSize (32, Number::ANY);
+				Displacement.SetSize (32, Number::RAW);
 				SIB |= (Index32->GetCode() << 3) + 5;
 			}
 		}
@@ -177,23 +177,23 @@ unsigned int GetMinimumSize (Number &n, bool set)
 
 	if (i == 0)
 	{
-		if (set) n.SetSize (0, Number::ANY);
+		if (set) n.SetSize (0, Number::SIGNED);
 		return 0;
 	}
 
 	if ((i >= -128) && (i <= 127))
 	{
-		if (set) n.SetSize (8, Number::ANY);
+		if (set) n.SetSize (8, Number::SIGNED);
 		return 8;
 	}
 
-	if ((i >= -65365) && (i <= 65535))
+	if ((i >= -65535) && (i <= 65535))
 	{
-		if (set) n.SetSize (16, Number::ANY);
+		if (set) n.SetSize (16, Number::RAW);
 		return 16;
 	}
 
-	if (set) n.SetSize (32, Number::ANY);
+	if (set) n.SetSize (32, Number::RAW);
 	return 32;
 }
 
@@ -357,7 +357,9 @@ Argument *Argument::MakeMemory (const Expression &e, unsigned int CurrentAddress
 	// If displacement had no forced size, get the minimum one
 	if (mem->GetDisplacement().GetSize() == 0)
 	{
-		switch (GetMinimumSize (mem->GetDisplacement(), true))
+		unsigned int i = GetMinimumSize (mem->GetDisplacement(), true);
+
+		switch (i)
 		{
 			case 0:
 			case 8:
@@ -366,13 +368,13 @@ Argument *Argument::MakeMemory (const Expression &e, unsigned int CurrentAddress
 
 			case 16:
 				// If the address size is already 32, adjust the displacement size
-				if (mem->GetAddressSize() == 32) mem->GetDisplacement().SetSize (32);
+				if (mem->GetAddressSize() == 32) mem->GetDisplacement().SetSize (32, Number::RAW);
 				break;
 
 			default:
 				// If the displacement requires 32 bits and the user wants a 16-bit mode address, sorry.
 				if (mem->GetAddressSize() == 16) throw DisplacementOverflow();
-				mem->GetDisplacement().SetSize (32, Number::ANY);
+				mem->GetDisplacement().SetSize (32, Number::RAW);
 				break;
 		}
 	}
