@@ -226,17 +226,17 @@ bool AdditiveUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 
 bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
 {
+	vector<Byte> temp;
+
 	// Verifies the type of each argument
 	if (!Match (Arguments)) return false;
 
-	unsigned long int FinalOffset = Output.size();
-
-	// Writes the operand size prefix (if necessary) and the encoding
-	WriteOperandSizePrefix (Arguments, Output);
-	Encoding.Write (Output);
+	// Writes the operand size prefix (if necessary) and the encoding to a temporary location
+	WriteOperandSizePrefix (Arguments, temp);
+	Encoding.Write (temp);
 
 	// Calculates the offset of the byte following the opcode
-	FinalOffset = (Output.size() - FinalOffset) + CurrentAssembler->GetCurrentOffset();
+	unsigned long int FinalOffset = temp.size() + CurrentAssembler->GetCurrentOffset();
 
 	// Calculates the relative distance between the end of the instruction and the address it targets
 	const Immediate *immed = dynamic_cast <const Immediate *> (Arguments[0]->GetData());
@@ -247,9 +247,15 @@ bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 	if (static_cast<RelativeArgument *> (ArgumentTypes[0])->GetRelativeDistance() == SHORT)
 	{
 		RelativeDistance--;
+		if ((RelativeDistance < -128) || (RelativeDistance > 127))
+		{
+			if (immed->GetDistanceType() == SHORT)
+				throw JumpOutOfRange();
+			else
+				return false;
+		}
 
-		if ((RelativeDistance < -128) || (RelativeDistance > 127)) throw JumpOutOfRange();
-		Output.push_back (static_cast<Byte> (RelativeDistance & 0xFF));
+		temp.push_back (static_cast<Byte> (RelativeDistance & 0xFF));
 	}
 	else
 	{
@@ -262,9 +268,10 @@ bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 			RelativeDistance &= 0xFFFF;
 		}
 
-		NaturalNumber (RelativeDistance).Write (Output, size / 8, 0);
+		NaturalNumber (RelativeDistance).Write (temp, size / 8, 0);
 	}
 
+	Output.insert (Output.end(), temp.begin(), temp.end());
 	return true;
 }
 
