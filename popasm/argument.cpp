@@ -122,7 +122,7 @@ Argument *Argument::MakeArgument (const Expression &e)
 				{
 					// Checks for immediate arguments
 					if ((p->first != 0) && (p->second == 0))
-						return new Argument (new Immediate (*p->first), true);
+						return new Argument (new Immediate (*p->first, e.GetDistanceType()), true);
 
 					throw InvalidArgument (e);
 				}

@@ -27,29 +27,30 @@
 
 #include "defs.h"
 #include "lexnum.h"
+#include "type.h"
 #include "type_exp.h"
 #include "functors.h"
 
 class BasicArgument;
 typedef UnaryFunction<const BasicArgument *, bool> BasicIdFunctor;
 
-class BasicArgument
+class BasicArgument : public Type
 {
-	mutable unsigned int Size;		// Size of the argument, in bits. Zero means: no size constraint
-
 	public:
-	BasicArgument (unsigned int sz = 0) throw () : Size(sz) {}
+	BasicArgument (unsigned int sz = 0, Distance dist = NONE) throw () : Type (sz, SCALAR, dist) {}
+	BasicArgument (const Type &t) throw () : Type (t) {}
 	virtual ~BasicArgument () throw () {}
+
+	void SetSize (unsigned int sz) const throw () {const_cast<BasicArgument *> (this)->SetSize (sz);}
+
+	virtual string Print () const throw () = 0;
 
 	class IdFunctor : public BasicIdFunctor
 	{
 		public:
 		bool operator() (const BasicArgument *arg) = 0;
+		virtual ~IdFunctor() throw () {}
 	};
-
-	virtual void SetSize (unsigned int sz) const {Size = sz;}
-	unsigned int GetSize () const throw () {return Size;}
-	virtual string Print () const throw () = 0;
 };
 
 class Argument
