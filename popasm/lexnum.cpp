@@ -261,3 +261,9 @@ Number &Number::operator~ ()
 	Size = 0;
 	return *this;
 }
+
+long int Number::GetInteger (bool Signed = true) const throw (IntegerExpected, Overflow)
+{
+	if (!IsInteger()) throw IntegerExpected (n);
+	return static_cast<IntegerNumber> (n).GetValue(Signed);
+}

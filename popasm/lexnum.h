@@ -72,9 +72,13 @@ class Number : public Token
 	Number (const Number &x) throw () : n(x.n), Size(x.Size) {}
 	~Number () throw () {}
 
-	enum NumberType {SIGNED = 0, UNSIGNED = 1, ANY = 2,};
+	enum NumberType {SIGNED = 0, UNSIGNED = 1, ANY = 2};
 	unsigned int GetSize () const throw () {return Size;}
 	void SetSize (unsigned int s, NumberType t = SIGNED) throw (InvalidSize, CastFailed);
+
+	const RealNumber &GetValue () const throw() {return n;}
+	bool IsInteger () const throw () {return n.GetInteger();}
+	long int GetInteger (bool Signed = true) const throw (IntegerExpected, Overflow);
 
 	// Math operators reset Size constraints
 	Number &operator+= (const Number &x) {n += x.n; Size = 0; return *this;}
@@ -103,11 +107,15 @@ class Number : public Token
 			case 8: s = "byte "; break;
 			case 16: s = "word "; break;
 			case 32: s = "dword "; break;
+			case 48: s = "pword "; break;
+			case 64: s = "qword "; break;
+			case 80: s = "tbyte "; break;
 			default: break;
 		}
 
 		return s + n.Print();
 	}
+
 	virtual Number *Clone() const throw () {return new Number (*this);}
 	virtual bool Zero () const {return n.Zero();}
 
