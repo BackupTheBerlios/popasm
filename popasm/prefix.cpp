@@ -17,6 +17,9 @@
 
 #include "prefix.h"
 #include "instruct.h"
+#include "lexical.h"
+#include "lexop.h"
+#include "parser.h"
 
 InstructionExpected::InstructionExpected (const Token *tt) throw () : t(tt)
 {
@@ -44,25 +47,35 @@ void PrefixInstruction::SetupPrefixTable ()
 		PrefixTable.Insert (&(PrefixInstructions[i]));
 }
 
-void PrefixInstruction::Assemble (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j,
-		vector<Byte> &Output) const
+void PrefixInstruction::Assemble (const Symbol *sym, Parser &p, vector<Byte> &Output) const
 {
 	vector<Byte> temp;
+	Token *NextToken = p.GetToken (Token::COMMAND_EXPECTED);
+	const Operator *op;
 
 	// Checks if the prefix has been used alone with no instruction following it.
-	if (i != j)
+	op = dynamic_cast<const Operator *> (NextToken);
+	if (op == 0)
 	{
 		// Checks if the next token is really an instruction
-		const Symbol *s = dynamic_cast<const Symbol *> (*i);
+		const Symbol *s = dynamic_cast<const Symbol *> (NextToken);
 		if (s == 0)
-			throw InstructionExpected (*i);
+			throw InstructionExpected (NextToken);
 
 		const Instruction *inst = dynamic_cast<const Instruction *> (s->GetData());
 		if (inst == 0)
-			throw InstructionExpected (*i);
+			throw InstructionExpected (NextToken);
 
 		// Attempts to assemble the instruction to a temporary vector
-		inst->Assemble (sym, i + 1, j, temp);
+		inst->Assemble (sym, p, temp);
+		delete inst;
+	}
+	else
+	{
+		if (op->GetName() != "\n")
+			throw CommandExpected (op);
+
+		delete op;
 	}
 
 	Encoding.Write (Output);

@@ -21,6 +21,7 @@
 #include "asmer.h"
 #include "type.h"
 #include "lexop.h"
+#include "defs.h"
 
 BasicSymbol *Directive::Read (const string &str, InputFile &inp)
 {
@@ -32,12 +33,24 @@ BasicSymbol *Directive::Read (const string &str, InputFile &inp)
 HashTable <Directive *, HashFunctor, PointerComparator<BasicSymbol> > Directive::DirectiveTable =
 	HashTable <Directive *, HashFunctor, PointerComparator<BasicSymbol> > ();
 
-void DefinitionDirective::Assemble (const BasicSymbol *sym, vector<Token *>::iterator i,
-	vector<Token *>::iterator j, vector<Byte> &Encoding) const
+void Directive::Assemble (const Symbol *sym, Parser &p, vector<Byte> &Encoding) const
+{
+	vector<Token *> Tokens;
+	p.ReadLine (Tokens);
+
+	vector<Token *>::iterator i = Tokens.begin();
+	vector<Token *>::iterator j = Tokens.end();
+	(*Function) (sym, i, j, Encoding);
+
+	for (; i != j; i++)
+		delete *i;
+}
+
+void DefinitionDirective::Assemble (const Symbol *sym, Parser &p, vector<Byte> &Encoding) const
 {
 	// Converts the tokens into arguments.
 	vector<Argument *> Arguments;
-	Parser::ParseArguments (i, j, Arguments);
+	p.ParseArguments (Arguments);
 	unsigned int length = 0;
 	int NumericalType;
 
@@ -95,7 +108,7 @@ void DefinitionDirective::Assemble (const BasicSymbol *sym, vector<Token *>::ite
 		delete *x;
 }
 
-void FunctionBITS (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+void FunctionBITS (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
 {
 	if (sym != 0)
 	{
@@ -104,7 +117,7 @@ void FunctionBITS (const BasicSymbol *sym, vector<Token *>::iterator i, vector<T
 
 	// Converts the tokens into arguments.
 	vector<Argument *> Arguments;
-	Parser::ParseArguments (i, j, Arguments);
+	Parser::ParseArguments (Arguments, i, j);
 
 	if (Arguments.size() != 1)
 	{
@@ -130,28 +143,18 @@ void FunctionBITS (const BasicSymbol *sym, vector<Token *>::iterator i, vector<T
 			delete *x;
 }
 
-void FunctionEQU (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+void FunctionEQU (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
 {
 	Constant *c;
 
 	if (sym == 0)
 		throw NameMissing ();
 
-	BasicSymbol *bs = CurrentAssembler->Find (sym->GetName());
-	if (bs != 0)
-	{
-		c = dynamic_cast<Constant *> (bs);
-		if (c == 0)
-			throw MultidefinedSymbol (bs->GetName());
-
-		throw RedefinedConstant (bs->GetName());
-	}
-
 	c = new Constant (sym->GetName(), Parser::EvaluateExpression (vector<Token *> (i, j)));
 	CurrentAssembler->DefineSymbol (c);
 }
 
-void FunctionEQUAL (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+void FunctionEQUAL (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
 {
 	Constant *c;
 
@@ -174,7 +177,7 @@ void FunctionEQUAL (const BasicSymbol *sym, vector<Token *>::iterator i, vector<
 	c->SetValue (Parser::EvaluateExpression (vector<Token *> (i, j)));
 }
 
-void FunctionSEGMENT (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+void FunctionSEGMENT (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
 {
 	Segment *seg;
 
@@ -191,7 +194,7 @@ void FunctionSEGMENT (const BasicSymbol *sym, vector<Token *>::iterator i, vecto
 	CurrentAssembler->AddSegment (seg);
 }
 
-void FunctionENDS (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+void FunctionENDS (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
 {
 	if (sym == 0)
 		throw NameMissing ();
@@ -205,7 +208,7 @@ void FunctionENDS (const BasicSymbol *sym, vector<Token *>::iterator i, vector<T
 	CurrentAssembler->CloseSegment (sym->GetName());
 }
 
-void FunctionPROC (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+void FunctionPROC (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
 {
 	if (sym == 0)
 		throw NameMissing ();
@@ -249,7 +252,7 @@ void FunctionPROC (const BasicSymbol *sym, vector<Token *>::iterator i, vector<T
 	CurrentAssembler->AddProcedure (NewProc);
 }
 
-void FunctionENDP (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+void FunctionENDP (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
 {
 	if (sym == 0)
 		throw NameMissing ();

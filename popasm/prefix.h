@@ -51,8 +51,7 @@ class PrefixInstruction : public Command
 	PrefixInstruction (const string &n, const Opcode &op) throw () : Command (n), Encoding(op) {}
 	~PrefixInstruction () throw () {}
 
-	void Assemble (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j,
-		vector<Byte> &Encoding) const;
+	void Assemble (const Symbol *sym, Parser &p, vector<Byte> &Encoding) const;
 	static BasicSymbol *Read (const string &str, InputFile &inp);
 	static void SetupPrefixTable ();
 };

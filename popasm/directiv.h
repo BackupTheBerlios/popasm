@@ -27,7 +27,7 @@
 #include "lexsym.h"
 #include "constant.h"
 
-typedef void (*DirectiveFunction) (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding);
+typedef void (*DirectiveFunction) (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding);
 
 // Assembler directives, such as DB, DW, STRUCT, etc
 class Directive : public Command
@@ -43,8 +43,7 @@ class Directive : public Command
 	static void SetupDirectiveTable () throw ();
 	static BasicSymbol *Read (const string &str, InputFile &inp);
 
-	void Assemble (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j,
-		vector<Byte> &Encoding) const {(*Function) (sym, i, j, Encoding);}
+	void Assemble (const Symbol *sym, Parser &p, vector<Byte> &Encoding) const;
 };
 
 // Directives that define data, like DB, DW, etc.
@@ -58,8 +57,7 @@ class DefinitionDirective : public Directive
 		: Directive (n), Size(sz), AcceptFloat(accept) {}
 	~DefinitionDirective () throw () {}
 
-	void Assemble (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j,
-		vector<Byte> &Encoding) const;
+	void Assemble (const Symbol *sym, Parser &p, vector<Byte> &Encoding) const;
 };
 
 class NameMissing : public exception
