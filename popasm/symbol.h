@@ -65,6 +65,18 @@ class Variable : public BasicSymbol
 	unsigned int GetLength() const throw () {return Length;}
 };
 
+class Label : public BasicSymbol
+{
+	Dword Offset;
+
+	public:
+	Label (const string &n) throw () : BasicSymbol(n), Offset(CurrentAssembler->GetCurrentOffset()) {}
+	Label (const string &n, Dword off) throw () : BasicSymbol(n), Offset(off) {}
+	~Label () throw () {}
+
+	Dword GetOffset() const throw () {return Offset;}
+};
+
 // Aggregates are a common designation for structs, unions and the like
 class Aggregate : public BasicSymbol
 {
