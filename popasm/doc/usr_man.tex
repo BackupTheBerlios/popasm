@@ -117,7 +117,7 @@ at all.
 Besides the benefits discussed so far, \popasm\ is a free open
 source project written in ANSI C++, which means
 that anyone can read its source code, modify, and compile it anywhere
-an ANSI C++ compiler is avaiable. Its peculiar
+an ANSI C++ compiler is available. Its peculiar
 features make it suited for nearly any assembly programming project:
 
 \begin{itemize}
@@ -607,10 +607,10 @@ In order to do so, \popasm\ uses the folowing keywords:
 \item{INFINITY} --- returns the IEEE encoding for $+\infty$. Because \popasm\ 
 supports arithmetics even on such special symbols, -INFINITY can be used to
 get $-\infty$ if needed.
-\item{QNAN n} --- defines a ``quiet NaN'' that hold value $n$ as part of it (see
-\cite{FPUMAN} for details).
-\item{SNAN n} --- defines a ``signaling NaN'' that hold value $n$ as part of
-it (see \cite{FPUMAN} for details).
+\item{QNAN n} --- defines a ``quiet NaN'' that hold value $n$ as its fraction.
+$n$ must not be zero (see \cite{FPUMAN} for details).
+\item{SNAN n} --- defines a ``signaling NaN'' that hold value $n$ as its fraction.
+$n$ must not be zero (see \cite{FPUMAN} for details).
 \end{itemize}
 
 Note that all of the above symbols, as well as all real numbers, are encoded
@@ -619,6 +619,16 @@ example, the 32-bit representation for $+\infty$ is obviously different from
 its 64-bit counterpart. \popasm\ detects which size to use based on commands
 issued previously (eg. if an INFINITY keyword appears after a DQ command, then
 its 64-bit encoding will be used).
+
+The next example shows how those keywords can be used:
+
+\begin{verbatim}
+                DD      INFINITY                ;  7F80_0000h
+                DQ      -INFINITY               ; 0FFE0_0000_0000_0000h
+                DD      QNAN 5                  ;  7FC0_0005h
+                DQ      -SNAN 18                ; 0FFE0_0000_0000_0012h
+                DD      QNAN 0                  ; Error! QNaN being zero
+\end{verbatim}
 
 \chapter{Operators}
 \popasm\ can perform several arithmetic operations on numbers and symbols. The
@@ -673,7 +683,7 @@ Lowest             & OWORD & Oct WORD --- 128-bit qualifier\\
 \hline
                    & : & Segment and offset composition\\
 \hline
-Highest            & . & Member selection in aggregates (see chapter \ref{AGGRCHAP})\\
+Highest            & . & Member selection (see chapter \ref{AGGRCHAP})\\
 \hline
 \end{tabular}
 \caption{Operators and their precedence}
@@ -701,6 +711,124 @@ Real & Real & Real & 3.0 + 2.0 = 5.0\\
 \end{table}
 
 The next sections provide additional details about each operator.
+
+\section{Size specifiers}
+Also known as size qualifiers, these are the BYTE, WORD, DWORD,
+etc. operators. They allow the developer to specify or override
+the size (in bits) of an expression. For example:
+
+\begin{verbatim}
+                ADD     [BX],7                  ; Error! Undefined operand size.
+                ADD     BYTE [BX],7             ; Add 7 to the byte pointed to by BX
+                ADD     WORD [BX],7             ; Add 7 to the word pointed to by BX
+\end{verbatim}
+
+The first line generates an error because \popasm\ has no means to
+figure out whether the user wants to refer to the byte, word or
+dword pointed to by BX. There would be three different instructions
+depending on which size specifier were used.
+
+The next example shows how the size specifiers can be used to override the
+size of a variable:
+
+\begin{verbatim}
+FAR_POINTER     DW      5678h, 1234h
+
+                LDS     SI,DWORD [FAR_POINTER]  ; DS:SI = 1234h:5678h
+\end{verbatim}
+
+As can be seen, the \verb@FAR_POINTER@ variable defines two words. Because
+\popasm\ provides a type checking mechanism, the LDS instruction will check
+whether its second argument is a dword variable. In the example above,
+\verb@FAR_POINTER@ is defined as a word, and thus there would be a type
+mismatch. To tell \popasm\ you are doing so intentionally, use the size
+specifier as in the example. This will instruct \popasm\ to treat
+\verb@FAR_POINTER@ as a dword.
+
+The reason why \popasm\ behaves like that is to allow the developer to
+concentrate on his programming task instead of trying to remember sizes
+of variables. Of course, because \popasm\ never forces people to write
+code in any particular way, anyone who likes specifying variable sizes
+are allowed to do so anytime.
+
+Note that these size specifiers can be used to control the size of
+nearly \emph{any} expressions, as shown bellow.
+
+\begin{verbatim}
+                ADD     EDX,18                  ; Adds 18 to EDX
+                ADD     EDX,BYTE 18             ; Same as above
+                ADD     EDX,DWORD 18            ; 18 encoded as a dword
+\end{verbatim}
+
+The first line can be assembled in two ways. One of them encodes 18
+as a byte, while the second form encodes 18 as a dword. Because the
+first form is more efficient than the second one, and \emph{the
+developer did not explicitly choose any in particular}, \popasm\ uses
+the former as default.
+
+In fact, as a general rule, everytime the developer does not require
+a particular encoding for an instruction, \popasm\ will use its most
+efficient form. That's because we understand that if someone needs an
+specific encoding, than this need should be emphasised by the size
+specifier. Such approach has the following advantages:
+
+\begin{itemize}
+\item The developer does not care about \emph{which} encoding will be
+used, except under special circumstances where the instruction format
+is critical. Because such cases are very rare, the user can benefit
+from the efficiency without having to tell the assembler to generate
+the short encoding \emph{everytime}.
+\item The developer still has full control over his code, because the
+longer encoding can be specified, as in the third line of the example
+above. It's better to make people use the specifiers only in those
+particular cases instead of requiring them to do so everytime (since
+most people prefer the efficient form of the instructions).
+\item The code will not depend on command line options to be assembled
+correctly, since all critical instructions will be shielded from any
+such influence by the size specifiers.
+\end{itemize}
+
+It's important to note that \popasm\ will \emph{never} replace an
+instruction for another one. For instance, \verb@ADD EAX,1@ will
+\emph{never} be replaced by an \verb@INC EAX@ instruction.
+
+Due to compatibility reasons, \popasm\ will accept the qualifiers
+``BYTE PTR'' as a sinonym for just ``BYTE'', ``WORD PTR'' as well
+as just ``WORD'' and so on.
+
+Note that the size specifiers have a slightly
+different meaning than their \nasm\ counterparts. If one assembles
+the last example using \nasm, \emph{even using the size specifiers}
+the encodings are not guaranteed to be size-specific. That's because
+\nasm\ supports optimization levels in command line which may ignore
+such size specifiers altogether, unless the developer uses the ``STRICT''
+keyword. Such keyword is useless in \popasm\ because if someone cares
+about specifying the operand size manually that's because this
+someone \emph{wants} that particular encoding, regardless of any
+optimization level (may be some critical instruction, for example).
+Due to compatibility reasons, however, the ``STRICT'' keyword is
+recognized, but ignored. Because of the stronger nature of \popasm\
+size specifiers there will be no problem in doing so.
+
+%Another point is how \popasm\ handles nesting size qualifiers. In
+%this case, the leftmost size qualifier prevails. This may be useful,
+%as shown in the next example:
+%
+%\begin{verbatim}
+%VALUE           EQU     BYTE 18
+%
+%                MOV     ESI,VALUE               ; Error! Size mismatch.
+%                MOV     ESI,DWORD VALUE         ; Ok!
+%                MOV     ESI,DWORD BYTE 18       ; Same as above
+%\end{verbatim}
+%
+%Initially, \verb@VALUE@ equals 18 as an 8-bit constant. Further in
+%the code, such constant must be written in ESI, which is a 32-bit
+%5register. Because the constant has explicitly been defined as a
+%byte, the first MOV instruction would cause an error. To prevent this,
+%the DWORD qualifier tells \popasm\ that such instruction was issued
+%intentionally, and thus the constant is sign-extended to 32 bits.
+%The last line shows the same nesting explicitly.
 
 \section{+ and -}
 These operators may be either unary or binary; their unary form
@@ -903,12 +1031,12 @@ compatibility with \nasm. ST is an alias for ST(0).
 Register names are case insensitive (i.e. AX, ax, aX and Ax are all the
 same thing).
 
-\chapter{Constants}
+\chapter{Constants\label{CONSTCHAP}}
 Constants can be used to make code easier to understand and maintain.
 There are two kinds of constants supported by \popasm, which are discussed
 in the next sections.
 
-\section{Constant constants}
+\section{Defining constant constants}
 Constant constants are assembly-time symbols that hold values that cannot
 be changed. This may sound redundant at first, because no constant could
 change its value anyway, so there would be no reason to say ``constant
@@ -934,12 +1062,12 @@ For example:
 
 \begin{verbatim}
 LINE_FEED       EQU     0Ah
-BIOS_SIGNATURE  EQU     55AAh
+BIOS_SIGNATURE  EQU     0AA55h
 MAX_RETRIES     EQU     3
 \end{verbatim}
 
 The lines of code above define three constants: LINE\_FEED (equal to 0Ah),
-BIOS\_SIGNATURE (equal to 55AAh) and MAX\_RETRIES (equal to 3).
+BIOS\_SIGNATURE (equal to 0AA55h) and MAX\_RETRIES (equal to 3).
 
 Besides the usual restrictions about defining labels, a constant constant
 is not allowed to be redefined. For example:
@@ -954,7 +1082,7 @@ As the third line of the example above shows, constant constants cannot be
 redefined even if the value of the new definition is the same as the
 previous one.
 
-\section{Variable constants}
+\section{Defining variable constants}
 Variable constants are constants that can be changed (redefined) in
 assembly-time. They can be defined (and redefined) by the $=$ operator.
 Despite sounding paradoxal, this makes sense, as the next example shows:
@@ -963,73 +1091,176 @@ Despite sounding paradoxal, this makes sense, as the next example shows:
 MAX_RETRIES     =       3
 ; Normal code comes here
 
-MAX_RETRIES     EQU     10                      ; Redefinition ok.
+MAX_RETRIES     =       10                      ; Redefinition ok.
 ; Critical code! Must be allowed to retry more times!
 \end{verbatim}
 
 That is, the same constant is being used in different parts of the
 code. Such freedom may lead to bugs if misused, though. If all constants
 are made variable, one may accidentally redefine it thinking he would
-be defining a new one.
+be defining a new one. Because constant constants cannot be redefined,
+you will get an error message if you forget about an existing constant
+and attempt to redefine it. In short: always use constant constants,
+unless you need to redefine it later.
 
+\section{Using constants}
+Once a constant is defined, it can be used the way anyone would expect,
+as shown below:
 
+\begin{verbatim}
+FOO             EQU     5
 
+                MOV     AL,5                    ; AL = 5
+                MOV     AL,FOO                  ; Same as above
+\end{verbatim}
+
+Note that constants may hold expressions, not just numbers. Let's check
+the next example:
+
+\begin{verbatim}
+; Stack image of SI register after a PUSHA instruction
+STACK_SI        EQU     WORD [BP+2]
+
+                PUSHA                           ;
+                MOV     STACK_SI,17h            ; SI = 17h
+                POPA                            ;
+\end{verbatim}
+
+As can be seen, the MOV instruction altered the contents of the SI
+register image in the stack, using the STACK\_SI constant. When \popasm\ 
+finds the MOV instruction, it replaces the constant's contents and
+assemble the instruction normally.
+
+Another key point is that, because \popasm\ is a multi-pass assembler,
+users can reference constants that are defined later on. However, when
+dealing with variable constants, special care should be taken. For example:
+
+\begin{verbatim}
+                MOV     AL,FOO                  ; AL = 5 or 6?
+
+FOO             =       5
+                MOV     BL,FOO                  ; BL = 5
+
+FOO             =       6
+                MOV     CL,FOO                  ; CL = 6
+\end{verbatim}
+
+That is, when referencing a variable constant that has not been defined yet,
+\popasm\ uses the value of the first definition (in this case 5). So, in the
+first line above FOO equals to 5.
 
 \chapter{Expressions\label{EXPR}}
 
 An expression may be either a single term or a sequence of terms
 connected by operators. A term, in turn, can be a number or a symbol.
 This section explains how \popasm\ performs assembly-time arithmetics
-and works with numbers.
+and works with expressions.
 
 \section{Numeric expressions\label{NUMEXPR}}
+As mentioned in chapter \ref{NUMCHAP}, \popasm\ internally stores numbers
+using as many bits as necessary to hold them. As a consequence, the
+expression evaluation in \popasm\ benefits from this facility. \popasm\ 
+also delays number rounding and truncation as much as possible, avoiding
+precision losses and overflows.
 
-\chapter{Memory references}
-Memory references can be specified using square brackets [ ] around an expression.
-For instance:
+For example:
 
 \begin{verbatim}
-                MOV     AX,1234
+                MOV     AL,17014018740175480164581h MOD 100h
 \end{verbatim}
 
-\noindent writes the value $1234$ in AX, but
+\noindent is a valid \popasm\ statement, because the expression on the
+second argument of the MOV instruction evaluates to 81h, which lies in
+the 00h-FFh range, and thus can be written into AL. Note that the first
+term of the expression is clearly larger than the 32-bit maximum value,
+and could cause an overflow in other assemblers.
+
+Numeric terms may be either numbers or numeric constants (see chapter
+\ref{CONSTCHAP}). Also, operators execute in decreasing order of precedence.
+If two or more operators have the same precedence, they are executed from
+left to right. If necessary, parenthesis may be used to alter the evaluation
+sequence. There is no limit for parenthesis nesting. See table \ref{OPTAB}
+for a list of operators and their precedences.
+
+The code below shows some examples of expression evaluation.
+
+\begin{verbatim}
+FOO             EQU     -37
+BAR             EQU      7
+MINUS_ONE       EQU     -1
+
+; MINUS_ONE is always equal to -1, but -1 is encoded as 0FFh, 0FFFFh, etc.
+; depending on the operand size expected. That is, -1 = 0FFh for the DB
+; command, -1 = 0FFFFh for the DW command and so on.
+                DB      MINUS_ONE >> 4          ; 0Fh
+                DW      MINUS_ONE >> 4          ; 0FFFh
+                DD      MINUS_ONE >> 4          ; 0FFF_FFFFh
+                DQ      MINUS_ONE >> 4          ; 0FFF_FFFF_FFFF_FFFFh
+
+; Arithmetic shift examples. Note that only the final results are
+; converted to two's complement.
+                DB      FOO SAR 2               ; -10 = 0F6h
+                DW      FOO SAR 2               ; -10 = 0FFF6h
+                DD      FOO SAR 2               ; -10 = 0FFFF_FFF6h
+                DQ      FOO SAR 2               ; -10 = 0FFFF_FFFF_FFFF_FFF6h
+
+; Shows how parenthesis can be used to alter the evaluation sequence.
+; Because AL must be in [-128, +127] or [0, 255], we have an error in
+; the second line.
+                MOV     AL,-FOO + 5 * BAR       ; AL = 6
+                MOV     AL,(FOO + 5) * BAR      ; AL = -182 <- Error!
+
+; Signed and unsigned division. -37 = 219 because BL is 8 bits wide.
+                MOV     BL,FOO / 5              ; BL = -7 = 0F9h
+                MOV     BL,FOO // 5             ; BL = 43
+
+; Same as above, but -37 = 65499 because BX is 16 bits wide.
+                MOV     BX,FOO / 5              ; BX = -7 = 0FFF9h
+                MOV     BX,FOO // 5             ; BX = 13099
+
+; Signed and unsigned remainer. -37 = 219 because BL is 8 bits wide.
+; In the fourth line, -5 = 251
+                MOV     BL,FOO % 5              ; BL = -2 = 0FEh
+                MOV     BL,FOO %% 5             ; BL = 4
+                MOV     BL,-FOO % -5            ; BL = 2
+                MOV     BL,-FOO %% -5           ; BL = 219
+\end{verbatim}
+
+\section{Memory references}
+Memory references can be specified using square brackets [ ] around an expression.
+For instance:
 
 \begin{verbatim}
                 MOV     AX,[1234]
 \end{verbatim}
 
-\noindent writes the word pointed to by $1234$ in AX. In this case, DS is used as the
+\noindent writes the word pointed to by $1234$ into AX. In this case, DS is used as the
 default segment register. If you wanted to use another segment register (say,
 ES), you would write:
 
 \begin{verbatim}
                 MOV     AX,ES:[1234]
-\end{verbatim}
-
-\noindent or
-
-\begin{verbatim}
-                MOV     AX,[ES:1234]     ; same as above
+                MOV     AX,[ES:1234]            ; same as above
 \end{verbatim}
 
 This latter form was added for compatibility with \nasm\ and \tasm\ ideal mode.
 This document uses the former syntax throughoutly, though.
 
-\section{Weak and strong memory references}
+\subsection{Weak and strong memory references}
 Programmers usually need to store data in variables. Those variables can then
-be referenced by their names. For example, if VALUE is a word variable, its
-contens can be copied to CX by the following command:
+be referenced by their names. For example, if VAR is a word variable, its
+contens can be copied into CX by the following command:
 
 \begin{verbatim}
-                MOV     CX,VALUE         ; CX = VALUE's contents
+                MOV     CX,VAR                  ; CX = VAR's contents
 \end{verbatim}
 
 Unfortunately, different assemblers may give different meanings to the line
 of code above. \tasm\ behaves as described here, but \nasm\ would place the
-variable's offset into CX. Because the name of a variable may be treated both
-as its contents and its offset (depending on the assembler being used), such
-memory references will be called \bf{weak memory references} in \popasm\ 
-documentation.
+variable's offset into CX instead. Because the name of a variable may be
+treated both as its contents and its offset (depending on the assembler
+being used), such memory references will be called \bf{weak memory references}
+in \popasm\ documentation.
 
 \popasm\ behaves as described above (a variable's name means its contens, \bf{not}
 its offset.) with respect to weak memory references. If you wish to refer to
@@ -1037,24 +1268,115 @@ a variable's offset, you should use the \emph{OFFSET} keyword. The example
 above would be rewritten as:
 
 \begin{verbatim}
-                MOV     CX,OFFSET VALUE  ; CX = VALUE's offset
+                MOV     CX,OFFSET VAR           ; CX = VAR's offset
 \end{verbatim}
 
 On the other hand, a \bf{strong memory reference} is always enclosed within a
 pair of matching square brackets. Example:
 
 \begin{verbatim}
-                MOV     CX,[VALUE]       ; CX = VALUE's contents
+                MOV     CX,[VAR]                ; CX = VAR's contents
 \end{verbatim}
 
-The reader is strongly encouraged to avoid weak memory references, for its
-meaning is assembler-dependant. Instead, whenever you refer to a variable's
-offset, you should use the \emph{OFFSET} keyword, and whenever you want the
-variable's contents, a strong memory reference is the best choice. Doing
-that way, your code will rely neither on \popasm's default behavior, nor the
-presence/absence of command-line options.
+The reader is strongly encouraged to avoid using wek memory references, for
+their meaning is assembler-dependant. Instead, whenever you refer to a variable's
+offset, you should use the \emph{OFFSET} keyword, and whenever you want to
+reference the variable's contents, a strong memory reference is the best
+choice. Doing that way, your code will rely neither on \popasm's default
+behavior, nor the presence/absence of command-line options.
 
-To be continued.
+\subsection{Additional memory references}
+\popasm\ has full support to all syntaxes for referencing memory
+in both 16- and 32-bit modes. For the next example, \verb@TABLE@ is an
+array of words:
+
+\begin{verbatim}
+                MOV     AX,[ES:TABLE+BX+SI+10]  ; like NASM
+                MOV     AX,ES:TABLE[BX+SI+10]   ; same as above
+                MOV     AX,ES:TABLE[BX][SI][10] ; same as above
+
+                MOV     AX,TABLE[4]             ; AX = 3rd word of the array
+                MOV     AX,[TABLE+4]            ; same as above
+\end{verbatim}
+
+The first three lines perform the same action. The fourth line is accepted
+due to compatibility with \tasm, despite looking confusing at first glance.
+The fifth line does the same as the fourth one, but looks better.
+
+\popasm\ always encode memory displacements the most efficient way.
+Use size qualifiers if you need to change this behavior. For example:
+
+\begin{verbatim}
+                MOV     AX,[BX+5]               ; Efficient encoding
+                MOV     AX,[BX+BYTE 5]          ; same as above
+                MOV     AX,[BYTE BX+5]          ; same as above
+
+                MOV     AX,[BX+WORD 5]          ; Forces 16-bit displacement
+                MOV     AX,[WORD BX+5]          ; same as above
+\end{verbatim}
+
+The first line encodes the displacement (5) as a byte by default. The
+next line does the same thing, as third one, supported because of
+compatibility  with \nasm. The next two lines force the displacement
+being encoded as a word. 
+
+It is also possible to force a null displacement being encoded as
+a byte or word. See the next example:
+
+\begin{verbatim}
+                MOV     AX,[BX]                 ; No displacement
+
+                MOV     AX,[BX+BYTE 0]          ; Forces a null 8-bit displacement
+                MOV     AX,[BYTE BX]            ; same as above
+
+                MOV     AX,[BX+WORD 0]          ; Forces a null 16-bit displacement
+                MOV     AX,[WORD BX]            ; same as above
+
+                INC     BYTE [WORD BX]          ; Increments the byte pointed to by BX. Uses a zero 16-bit displacement.
+                INC     BYTE [BX+WORD 0]        ; same as above
+                INC     WORD [BYTE BX]          ; Increments the word pointed to by BX. Uses a zero 8-bit displacement.
+                INC     WORD [BX+BYTE 0]        ; same as above
+\end{verbatim}
+
+The first line has no displacement; the second one forces a zero
+dummy displacement being encoded as a byte. The third line does
+the same, despite looking weird (supported due to compatibility
+with \nasm). The fourth and fifth lines use a null 16-bit dummy
+displacement. In 32-bit mode, the displacement may be encoded as
+either a byte or a dword.
+
+The last four lines are there as a warning: one must be careful
+when using \nasm\ syntax for dummy displacements. The size qualifier
+inside the square brackets specify the size of the displacement,
+not the size of the variable being referenced.
+
+The next example shows some memory access in 32-bit mode:
+
+\begin{verbatim}
+                MOV     AX,TABLE[ECX*2]         ; Encoded as TABLE[ECX+ECX]
+                MOV     AX,TABLE[NOSPLIT ECX*2] ; Encoded as TABLE
+
+                MOV     AX,TABLE[ECX+EDX]       ;
+                MOV     AX,TABLE[EDX+ECX]       ;
+
+                MOV     AX,DS:TABLE[EBP+ECX]    ;
+                MOV     AX,SS:TABLE[ECX+EBP]    ;
+
+DS:             MOV     AX,TABLE[EBP+ECX]       ;
+\end{verbatim}
+
+The memory reference of the first line is encoded as \verb@TABLE[ECX+ECX]@.
+Such behavior can be avoided using the \emph{NOSPLIT} keyword, borrowed from
+\nasm, as in the second line.
+
+The second and third lines look equal, but there is a slight difference
+betwwen them: in the third line, ECX is the base register and EDX is the
+index one. In the fourth line, the role of ECX and EDX are exchanged.
+Whenever possible, the first register will always be encoded as a base
+register and the second one as the index register within the SIB.
+
+The next two lines 
+
 
 \chapter{Defining data\label{DEFDATA}}
 To be written.
