@@ -42,6 +42,8 @@ class Register : public BasicArgument, public BasicSymbol
 	static Register *Read (const string &str, InputFile &inp) throw ();
 	unsigned int GetCode () const throw () {return Code;}
 
+	static Argument *MakeArgument (const Expression &e) throw (InvalidArgument, exception);
+
 	template <class T, Byte code, int size>
 	class IdFunctor : public BasicArgument::IdFunctor
 	{

@@ -20,10 +20,10 @@
 
 #include <string>
 #include <exception>
-#include <typeinfo>
 
 #include "argument.h"
 #include "defs.h"
+#include "type_exp.h"
 
 class InvalidFullPointer : public exception
 {
@@ -72,24 +72,12 @@ class FullPointer : public BasicArgument
 	void Write (vector<Byte> &Output) const throw ();
 	string Print () const throw () {return ::Print (Segment) + ':' + ::Print (Offset);}
 
+	static Argument *MakeArgument (const Expression &e) throw (InvalidArgument, exception);
+
 	class IdFunctor : public BasicArgument::IdFunctor
 	{
 		public:
-		bool operator() (Argument &arg)
-		{
-			const FullPointer *fptr = dynamic_cast<const FullPointer *> (arg.GetData());
-
-			if (fptr != 0)
-				return true;
-
-			if (arg.IsUndefined())
-			{
-				arg.SetData (new FullPointer());
-				return true;
-			}
-
-			return false;
-		}
+		bool operator() (Argument &arg);
 	};
 };
 

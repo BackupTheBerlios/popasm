@@ -181,12 +181,12 @@ class Memory : public BasicArgument
 
 	bool SIBUsed () const throw () {return (AddressSize == 32) && ((Code & 7) == 4);}
 
+	void MakeMemory16Bits (const BaseRegister *Base16, const IndexRegister *Index16);
+	void MakeMemory32Bits (const GPRegister *Base32, const GPRegister *Index32, long int scale);
+
 	public:
 	Memory (const Type &t = Type ()) throw () : BasicArgument (t), SegmentPrefix(0), SIB(0), Code(0), AddressSize(0) {}
 	~Memory () throw () {}
-
-	void MakeMemory16Bits (const BaseRegister *Base16, const IndexRegister *Index16);
-	void MakeMemory32Bits (const GPRegister *Base32, const GPRegister *Index32, long int scale);
 
 	Byte GetSegmentPrefix () const throw () {return SegmentPrefix;}
 	void SetSegmentPrefix (Byte s) throw () {SegmentPrefix = s;}
@@ -200,6 +200,8 @@ class Memory : public BasicArgument
 
 	void WriteSIB (vector<Byte> &Output) const throw () {if (SIBUsed()) Output.push_back (SIB);}
 	void WriteDisplacement (vector<Byte> &Output) const throw () {Displacement.Write (Output);}
+
+	static Argument *MakeArgument (const Expression &e) throw (InvalidArgument, exception);
 
 	template <int size, int dist, int type>
 	class IdFunctor : public BasicArgument::IdFunctor

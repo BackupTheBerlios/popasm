@@ -20,6 +20,11 @@
 
 #include "register.h"
 
+Argument *Register::MakeArgument (const Expression &e) throw (InvalidArgument, exception)
+{
+	return 0;
+}
+
 SegmentRegister SegmentRegister::RegisterTable[] =
 {
 	SegmentRegister ("ES", 16, 0, 0x26),

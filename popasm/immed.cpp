@@ -31,3 +31,24 @@ void Immediate::SetSize (unsigned int sz, Number::NumberType t = Number::ANY) co
 	temp.SetSize(sz, t);
 	BasicArgument::SetSize(sz);
 }
+
+Argument *Immediate::MakeArgument (const Expression &e) throw (InvalidArgument, exception)
+{
+	return 0;
+}
+
+bool Immediate::IdFunctor::operator() (Argument &arg)
+{
+	const Immediate *immed = dynamic_cast<const Immediate *> (arg.GetData());
+
+	if (immed != 0)
+		return true;
+
+	if (arg.IsUndefined())
+	{
+		arg.SetData (new Immediate ());
+		return true;
+	}
+
+	return false;
+}

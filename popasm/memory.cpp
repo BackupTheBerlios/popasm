@@ -203,16 +203,21 @@ unsigned int GetMinimumSize (Number &n, bool set)
 	return 32;
 }
 
-Argument *Argument::MakeMemory (const Expression &e)
+Argument *Memory::MakeArgument (const Expression &exp) throw (InvalidArgument, exception)
 {
-	Memory *mem = new Memory (e);
+	const SimpleExpression *e = dynamic_cast<const SimpleExpression *> (&exp.GetConstData());
+	if (e == 0)
+		throw 0;
+
+	Memory *mem = new Memory (*e);
 
 	// Checks for segment override prefixes
-	if (e.GetSegmentPrefix() != 0)
+	if (e->GetSegmentPrefix() != 0)
 	{
-		Symbol *s = static_cast<Symbol *> (*e.GetSegmentPrefix());
+		const Symbol *s = e->GetSegmentPrefix()->GetSymbol();
 		const SegmentRegister *segreg = dynamic_cast <const SegmentRegister *> (s->GetData());
-		if (segreg == 0) throw SegmentPrefixExpected (s);
+		if (segreg == 0)
+			throw SegmentPrefixExpected (s);
 		mem->SetSegmentPrefix(segreg->GetPrefixCode());
 	}
 
@@ -223,9 +228,9 @@ Argument *Argument::MakeMemory (const Expression &e)
 	const BaseRegister *Base16 = 0, *NewBase = 0;
 	const IndexRegister *Index16 = 0, *NewIndex = 0;
 
-	for (unsigned int i = 0; i < e.QuantityOfTerms(); i++)
+	for (SimpleExpression::const_iterator i = e->begin(); i != e->end(); i++)
 	{
-		const pair<Number *, Symbol *> *p = e.TermAt(i);
+		const pair<Number *, Symbol *> *p = *i;
 
 		if (p->second != 0)
 		{

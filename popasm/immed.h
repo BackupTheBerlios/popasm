@@ -28,6 +28,7 @@
 #include "number.h"
 #include "defs.h"
 #include "asmer.h"
+#include "type_exp.h"
 
 class UnknownImmediateSize : public exception
 {
@@ -83,24 +84,12 @@ class Immediate : public BasicArgument
 	// Returns the value of the number as a long int
 	long int GetLong () const throw (Overflow, IntegerExpected) {return Value.GetLong();}
 
+	static Argument *MakeArgument (const Expression &e) throw (InvalidArgument, exception);
+
 	class IdFunctor : public BasicArgument::IdFunctor
 	{
 		public:
-		bool operator() (Argument &arg)
-		{
-			const Immediate *immed = dynamic_cast<const Immediate *> (arg.GetData());
-
-			if (immed != 0)
-				return true;
-
-			if (arg.IsUndefined())
-			{
-				arg.SetData (new Immediate ());
-				return true;
-			}
-
-			return false;
-		}
+		bool operator() (Argument &arg);
 	};
 
 	// Cannot write a number if its size is unknown (zero)

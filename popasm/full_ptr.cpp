@@ -38,3 +38,24 @@ void FullPointer::Write (vector<Byte> &Output) const throw ()
 	TypesUnion.Write (Output, Offset, (GetSize() == 0) ? (CurrentAssembler-> GetCurrentMode() / 8) : (GetSize() / 8));
 	TypesUnion.Write (Output, Segment, 2);
 }
+
+Argument *FullPointer::MakeArgument (const Expression &e) throw (InvalidArgument, exception)
+{
+	return 0;
+}
+
+bool FullPointer::IdFunctor::operator() (Argument &arg)
+{
+	const FullPointer *fptr = dynamic_cast<const FullPointer *> (arg.GetData());
+
+	if (fptr != 0)
+		return true;
+
+	if (arg.IsUndefined())
+	{
+		arg.SetData (new FullPointer());
+		return true;
+	}
+
+	return false;
+}
