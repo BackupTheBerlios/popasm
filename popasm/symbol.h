@@ -31,8 +31,8 @@ class BasicSymbol
 	string Name;
 
 	public:
-	BasicSymbol (const string &n) : Name(n) {}
-	virtual ~BasicSymbol () {}
+	BasicSymbol (const string &n) throw () : Name(n) {}
+	virtual ~BasicSymbol () throw () {}
 
 	const string &GetName () const throw () {return Name;}
 	string Print () const throw () {return Name;}
@@ -43,9 +43,22 @@ class BasicSymbol
 	virtual bool operator< (const BasicSymbol &s) const throw () {return Name < s.Name;}
 };
 
-class Variable : public BasicSymbol
+class UserDefined : public BasicSymbol
 {
+	Dword Line;             // Line where symbol was defined
 	Dword Offset;				// Offset within its segment
+
+	public:
+	UserDefined (const string &n) throw ();
+	UserDefined (const string &n, Dword off) throw ();
+	~UserDefined () throw () {}
+
+	Dword GetOffset() const throw () {return Offset;}
+	Dword GetLine() const throw () {return Line;}
+};
+
+class Variable : public UserDefined
+{
 	unsigned int Size;		// Variable size in bits
 	unsigned int Length;		// Quantity of data items.
 
@@ -56,25 +69,21 @@ class Variable : public BasicSymbol
 // Length = 3 (three doublewords defined in the same line)
 
 	public:
+	Variable (const string &n, unsigned int sz = 0, unsigned int len = 1) throw () :
+		UserDefined(n), Size(sz), Length(len) {}
 	Variable (const string &n, Dword off, unsigned int sz = 0, unsigned int len = 1) throw () :
-		BasicSymbol(n), Offset(off), Size(sz), Length(len) {}
+		UserDefined(n, off), Size(sz), Length(len) {}
 	~Variable () {}
 
-	Dword GetOffset() const throw () {return Offset;}
 	unsigned int GetSize() const throw () {return Size;}
 	unsigned int GetLength() const throw () {return Length;}
 };
 
-class Label : public BasicSymbol
+class Label : public UserDefined
 {
-	Dword Offset;
-
 	public:
-	Label (const string &n) throw () : BasicSymbol(n), Offset(CurrentAssembler->GetCurrentOffset()) {}
-	Label (const string &n, Dword off) throw () : BasicSymbol(n), Offset(off) {}
+	Label (const string &n) throw () : UserDefined(n) {}
 	~Label () throw () {}
-
-	Dword GetOffset() const throw () {return Offset;}
 };
 
 // Aggregates are a common designation for structs, unions and the like
@@ -121,7 +130,7 @@ class AggregateInstance : public Variable
 
 	public:
 	AggregateInstance (const string &n, Dword off, const Aggregate *ag, unsigned int len) throw ()
-		: Variable (n, off, ag->GetSize(), len) {}
+		: Variable (n, ag->GetSize(), len) {}
 	~AggregateInstance () {}
 
 	const Aggregate *GetFather() const throw () {return Father;}

@@ -17,6 +17,18 @@
 
 #include "symbol.h"
 
+UserDefined::UserDefined (const string &n) throw () : BasicSymbol(n)
+{
+	Line = CurrentAssembler->GetCurrentLine();
+	Offset = CurrentAssembler->GetCurrentOffset();
+}
+
+UserDefined::UserDefined (const string &n, Dword off) throw () : BasicSymbol(n)
+{
+	Line = CurrentAssembler->GetCurrentLine();
+	Offset = off;
+}
+
 unsigned int HashFunctor::operator() (const BasicSymbol * const &sd)
 {
 	unsigned int x = 0;
