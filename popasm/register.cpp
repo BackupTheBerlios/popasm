@@ -322,10 +322,7 @@ Register *Register::Read (const string &str, InputFile &inp) throw ()
 {
 	Register *answer;
 	string UppercaseName(str);
-
-	// Gets a copy of the original string in uppercase
-	for (string::iterator i = UppercaseName.begin(); i < UppercaseName.end(); i++)
-		if ((*i <= 'z') && (*i >= 'a')) *i -= 32;
+	UpperCase (UppercaseName);
 
 	answer = SegmentRegister::Read (UppercaseName, inp);
 	if (answer != 0) return answer;
