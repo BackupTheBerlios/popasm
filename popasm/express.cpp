@@ -21,6 +21,5 @@
 #include "express.h"
 
 const char IncompatibleTerms::WhatString[] = "Incompatible terms.";
-const char InvalidTerm::WhatString[] = "Invalid term. Numeric pointer must not be null.";
 const char ConstantExpected::WhatString[] = "Operation expected a constant term.";
 const char DivisionException::WhatString[] = "Division by zero or non-constant expression.";

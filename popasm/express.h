@@ -23,6 +23,7 @@
 
 #include <vector>
 #include <exception>
+#include <string>
 
 // Thrown when terms with different variables are summed or subtracted. Multiplication between two variables
 // also cause this exception (e.g. AX * BX)
@@ -33,18 +34,6 @@ class IncompatibleTerms : public exception
 	public:
 	IncompatibleTerms () {}
 	~IncompatibleTerms () {}
-
-	const char *what() const {return WhatString;}
-};
-
-// Thrown if one attempts to build a BasicTerm whose numeric pointer is null
-class InvalidTerm : public exception
-{
-	static const char WhatString[];
-
-	public:
-	InvalidTerm () {}
-	~InvalidTerm () {}
 
 	const char *what() const {return WhatString;}
 };
@@ -83,9 +72,10 @@ class DivisionException : public ExpressionException
 };
 
 // A BasicTerm is a pair whose first element is a pointer to a numeric constant and the second element is
-// a pointer to the variable being multiplied by that constant. Only the pointer that points to the variable
-// may be null (0). If it is, the term is a numeric-constant. The BasicTerm is supposed to own these variables,
-// so it frees the memory allocated by those elements.
+// a pointer to the variable being multiplied by that constant. If the pointer to the variable is null,
+// the term is a numeric-constant. If the numeric pointer is null, the variable is being implicitly
+// multiplied by one. If both pointers are null, the term represents the numeric constant "1". The
+// BasicTerm is supposed to own these variables, so it frees the memory allocated by those elements.
 //
 // Additionally, the numeric and variable classes must have the following members implemented as virtual public:
 //
@@ -95,13 +85,15 @@ class DivisionException : public ExpressionException
 //						and returns true if they are equal.
 // Zero()			Required by NumberClass only. Takes no argument and returns true if the number is zero.
 //
+// A last requirement is that NumberClass must be constructible from a signed int.
+//
 template <class NumberClass, class VariableClass>
-class BasicTerm : pair <NumberClass *, VariableClass *>
+class BasicTerm : public pair <NumberClass *, VariableClass *>
 {
 	public:
-	BasicTerm (NumberClass *n, VariableClass *v = 0) throw (InvalidTerm);
+	BasicTerm (NumberClass *n, VariableClass *v) throw () : pair<NumberClass *, VariableClass *> (n, v) {}
 	BasicTerm (const BasicTerm &t);
-	~BasicTerm () throw () {delete first; delete second;}
+	~BasicTerm () throw () {delete first; delete second;}	// deleting null pointers causes no problems
 
 	bool Zero () const;
 	bool Compatible (const BasicTerm &t) const;
@@ -127,29 +119,32 @@ class BasicTerm : pair <NumberClass *, VariableClass *>
 	BasicTerm &operator>>= (const BasicTerm &t);
 
 	// For debugging purposes only
-	void Print () const {cout << "("; if (first != 0) first->Print(); cout << ", "; if (second != 0) second->Print(); cout << ")";}
-};
+	string Print () const throw ()
+	{
+		string s("(");
+		if (first != 0) s += first->Print();
+		s += ", ";
+		if (second != 0) s += second->Print();
+		s += ")";
 
-template <class NumberClass, class VariableClass>
-BasicTerm<NumberClass, VariableClass>::BasicTerm (NumberClass *n, VariableClass *v = 0) throw (InvalidTerm)
-	: pair<NumberClass *, VariableClass *> (n, v)
-{
-	// Numeric part of the term must not be null (but its value may be zero, as in
-	// BasicTerm<int, char> (new int(0), 0);
-	if (n == 0) throw InvalidTerm ();
-}
+		return s;
+	}
+};
 
 template <class NumberClass, class VariableClass>
 BasicTerm<NumberClass, VariableClass>::BasicTerm (const BasicTerm &t)
 {
 	// Clones each member
-	first = t.first->Clone();
+	first = (t.first == 0) ? 0 : t.first->Clone();
 	second = (t.second == 0) ? 0 : t.second->Clone();
 }
 
 template <class NumberClass, class VariableClass>
 bool BasicTerm<NumberClass, VariableClass>::Zero () const
 {
+	// If numeric pointer is zero, the implicit "1" makes the term non-zero
+	if (first == 0) return false;
+
 	// Term is zero only if its numerical part is zero too
 	return first->Zero();
 }
@@ -176,7 +171,10 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 
 	// If pointers are equal, do not destroy the original one
 	if (first != t.first) delete first;
-	first = t.first->Clone();
+	if (t.first != 0)
+		first = t.first->Clone();
+	else
+		first = 0;
 
 	// If pointers are equal, do not destroy the original one
 	if (second != t.second) delete second;
@@ -192,7 +190,12 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 template <class NumberClass, class VariableClass>
 BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::operator- ()
 {
-	*first = -*first;
+	// If there is an implicit "1", convert it to a "-1"
+	if (first == 0)
+		first = new NumberClass (-1);
+	else
+		*first = -*first;
+
 	return *this;
 }
 
@@ -203,6 +206,8 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 	// Only constant terms can be complemented
 	if (Constant())
 	{
+		// If the numeric part is implicit, replace it by a true number
+		if (first == 0) first = new NumberClass (1);
 		*first = ~*first;
 	}
 	else
@@ -217,14 +222,11 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 	// Terms can only be added if they own the same variable
 	if (!Compatible (t)) throw IncompatibleTerms ();
 
-	// Performs operation. If numeric part becomes zero, convert the result to a constant term
-	*first += *t.first;
-	if (first->Zero())
-	{
-		delete second;
-		second = 0;
-	}
+	// If the numeric part is implicit, replace it by a true number
+	if (first == 0) first = new NumberClass (1);
 
+	// Performs operation.
+	*first += (t.first != 0) ? *t.first : NumberClass (1);
 	return *this;
 }
 
@@ -234,14 +236,11 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 	// Terms can only be subtracted if they own the same variable
 	if (!Compatible (t)) throw IncompatibleTerms ();
 
-	// Performs operation. If numeric part becomes zero, convert the result to a constant term
-	*first -= *t.first;
-	if (first->Zero())
-	{
-		delete second;
-		second = 0;
-	}
+	// If the numeric part is implicit, replace it by a true number
+	if (first == 0) first = new NumberClass (1);
 
+	// Performs operation.
+	*first -= (t.first != 0) ? *t.first : NumberClass (1);
 	return *this;
 }
 
@@ -251,16 +250,17 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 	// At least one of them MUST be a pure constant
 	if (Constant() || t.Constant())
 	{
-		// Performs operation. If numeric part becomes zero, convert the result to a constant term
-		*first *= *t.first;
-		if (first->Zero())
+		// If the first term is the pure constant, clone the variable to the first term
+		if (Constant()) second = (t.second == 0) ? 0 : t.second->Clone();
+
+		// If the numeric part of the second term is implicit 1, do nothing else
+		if (t.first != 0)
 		{
-			delete second;
-			second = 0;
+			if (first != 0)
+				*first *= *t.first;
+			else
+				first = t.first->Clone();
 		}
-		else
-			// If the first term is the pure constant, clone the variable to the first term
-			if (Constant()) second = (t.second == 0) ? 0 : t.second->Clone();
 	}
 	else throw IncompatibleTerms();
 
@@ -272,7 +272,16 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 {
 	// The second term MUST be a pure constant
 	if (!t.Constant()) throw ConstantExpected();
-	*first /= *t.first;
+
+	// If the second term is an implicit one, there's no need to perform the operation at all
+	if (t.first != 0)
+	{
+		// If the numeric part is implicit, replace it by a true number
+		if (first == 0) first = new NumberClass (1);
+
+		*first /= *t.first;
+	}
+
 	return *this;
 }
 
@@ -282,7 +291,10 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 	// Both terms MUST be pure constants
 	if (Constant() && t.Constant())
 	{
-		*first %= *t.first;
+		// If the numeric part is implicit, replace it by a true number
+		if (first == 0) first = new NumberClass (1);
+
+		*first %= (t.first != 0) ? *t.first : NumberClass (1);
 	}
 	else throw ConstantExpected();
 
@@ -295,7 +307,10 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 	// Both terms MUST be pure constants
 	if (Constant() && t.Constant())
 	{
-		*first &= *t.first;
+		// If the numeric part is implicit, replace it by a true number
+		if (first == 0) first = new NumberClass (1);
+
+		*first &= (t.first != 0) ? *t.first : NumberClass (1);
 	}
 	else throw ConstantExpected();
 
@@ -308,7 +323,10 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 	// Both terms MUST be pure constants
 	if (Constant() && t.Constant())
 	{
-		*first |= *t.first;
+		// If the numeric part is implicit, replace it by a true number
+		if (first == 0) first = new NumberClass (1);
+
+		*first |= (t.first != 0) ? *t.first : NumberClass (1);
 	}
 	else throw ConstantExpected();
 
@@ -321,7 +339,10 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 	// Both terms MUST be pure constants
 	if (Constant() && t.Constant())
 	{
-		*first ^= *t.first;
+		// If the numeric part is implicit, replace it by a true number
+		if (first == 0) first = new NumberClass (1);
+
+		*first ^= (t.first != 0) ? *t.first : NumberClass (1);
 	}
 	else throw ConstantExpected();
 
@@ -334,7 +355,10 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 	// Both terms MUST be pure constants
 	if (Constant() && t.Constant())
 	{
-		*first <<= *t.first;
+		// If the numeric part is implicit, replace it by a true number
+		if (first == 0) first = new NumberClass (1);
+
+		*first <<= (t.first != 0) ? *t.first : NumberClass (1);
 	}
 	else throw ConstantExpected();
 
@@ -347,7 +371,10 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 	// Both terms MUST be pure constants
 	if (Constant() && t.Constant())
 	{
-		*first >>= *t.first;
+		// If the numeric part is implicit, replace it by a true number
+		if (first == 0) first = new NumberClass (1);
+
+		*first >>= (t.first != 0) ? *t.first : NumberClass (1);
 	}
 	else throw ConstantExpected();
 
@@ -357,19 +384,18 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::op
 //------- BasicExpression
 
 // Performs arithmetics on expressions
-template <class NumberClass, class VariableClass>
+template <class NumberClass, class VariableClass, bool Redundant=true>
 class BasicExpression
 {
 	protected:
 	typedef BasicTerm <NumberClass, VariableClass> Term;
 
-	// The value of the expression is the sum of all its terms
+	// The value of the expression is the sum of all its terms. An empty vector means ZERO, NOT 1.
 	vector <Term *> Terms;
 
-	BasicExpression () throw () {}
-
 	public:
-	BasicExpression (NumberClass *n, VariableClass *v = 0) throw () {Terms.push_back(new Term(n, v));}
+	BasicExpression () throw () {}
+	BasicExpression (NumberClass *n, VariableClass *v) throw ();
 	BasicExpression (const BasicExpression &t);
 
 	// Adds a term to the expression. Duplicates it if necessary.
@@ -377,47 +403,75 @@ class BasicExpression
 	// Deletes all terms and removes them from the expression
 	void Clear ();
 	// Checks if expression is zero
-	bool Zero () const {if (Terms.size() == 1) return Terms.back()->Zero(); else return false;}
-	// Checks if expression is a single constant number
-	bool Constant () const {if (Terms.size() == 1) return Terms.back()->Constant(); else return false;}
-	~BasicExpression () {Clear();}
+	bool Zero () const;
+	// Checks if expression is a single constant number or zero
+	bool Constant () const {if (Terms.empty()) return true; return (Terms.size() == 1) && Terms.back()->Constant();}
+	virtual ~BasicExpression () {Clear();}
 
-	BasicExpression &operator=  (const BasicExpression &t);
-	BasicExpression &operator+= (const BasicExpression &t);
-	BasicExpression &operator-= (const BasicExpression &t);
-	BasicExpression &operator*= (const BasicExpression &t);
-	BasicExpression &operator/= (const BasicExpression &t);
-	BasicExpression &operator%= (const BasicExpression &t);
+	virtual BasicExpression &operator=  (const BasicExpression &t);
+	virtual BasicExpression &operator+= (const BasicExpression &t);
+	virtual BasicExpression &operator-= (const BasicExpression &t);
+	virtual BasicExpression &operator*= (const BasicExpression &t);
+	virtual BasicExpression &operator/= (const BasicExpression &t);
+	virtual BasicExpression &operator%= (const BasicExpression &t);
 
-	BasicExpression &operator- ();
-	BasicExpression &operator~ ();
+	virtual BasicExpression &operator- ();
+	virtual BasicExpression &operator~ ();
 
-	BasicExpression &operator&= (const BasicExpression &t);
-	BasicExpression &operator|= (const BasicExpression &t);
-	BasicExpression &operator^= (const BasicExpression &t);
-	BasicExpression &operator<<= (const BasicExpression &t);
-	BasicExpression &operator>>= (const BasicExpression &t);
+	virtual BasicExpression &operator&= (const BasicExpression &t);
+	virtual BasicExpression &operator|= (const BasicExpression &t);
+	virtual BasicExpression &operator^= (const BasicExpression &t);
+	virtual BasicExpression &operator<<= (const BasicExpression &t);
+	virtual BasicExpression &operator>>= (const BasicExpression &t);
 
 	// For debugging purposes only
-	void Print () const
+	virtual string Print () const
 	{
+		if (Terms.empty()) return string ("(0, )");
+
+		string s;
+
 		for (vector<Term *>::const_iterator i = Terms.begin(); i != Terms.end(); i++)
 		{
-			(*i)->Print();
-			cout << endl;
+			s += (*i)->Print();
+			s += ' ';
 		}
+
+		return s;
 	}
 };
 
-template <class NumberClass, class VariableClass>
-void BasicExpression<NumberClass, VariableClass>::Clear ()
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant>::BasicExpression (NumberClass *n, VariableClass *v) throw ()
+{
+	// Prevents the creation of expressions from zero terms
+	if (!Redundant && (n != 0))
+		if (n->Zero()) return;
+
+	Terms.push_back(new Term(n, v));
+}
+
+template <class NumberClass, class VariableClass, bool Redundant=true>
+void BasicExpression<NumberClass, VariableClass, Redundant>::Clear ()
 {
 	for (vector<Term *>::iterator i = Terms.begin(); i != Terms.end(); i++) delete *i;
 	Terms.clear();
 }
 
-template <class NumberClass, class VariableClass>
-BasicExpression<NumberClass, VariableClass>::BasicExpression (const BasicExpression<NumberClass, VariableClass> &t)
+template <class NumberClass, class VariableClass, bool Redundant=true>
+bool BasicExpression<NumberClass, VariableClass, Redundant>::Zero () const
+{
+	// An expression is zero only if it is empty or all of its terms are zero
+	for (vector<Term *>::const_iterator i = Terms.begin(); i != Terms.end(); i++)
+	{
+		if (!(*i)->Zero()) return false;
+	}
+
+	return true;
+}
+
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant>::BasicExpression (const BasicExpression<NumberClass, VariableClass, Redundant> &t)
 {
 	for (vector<Term *>::const_iterator i = t.Terms.begin(); i != t.Terms.end(); i++)
 	{
@@ -425,8 +479,8 @@ BasicExpression<NumberClass, VariableClass>::BasicExpression (const BasicExpress
 	}
 }
 
-template <class NumberClass, class VariableClass>
-BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, VariableClass>::operator= (const BasicExpression &t)
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::operator= (const BasicExpression &t)
 {
 	// Prevents self assignment
 	if (this == &t) return *this;
@@ -440,8 +494,8 @@ BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, Variab
 	return *this;
 }
 
-template <class NumberClass, class VariableClass>
-BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, VariableClass>::operator+= (const BasicExpression &t)
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::operator+= (const BasicExpression &t)
 {
 	// There's no problem if adding to itself because the vector's size would remain constant during the operation
 	for (vector<Term *>::const_iterator i = t.Terms.begin(); i != t.Terms.end(); i++)
@@ -450,33 +504,22 @@ BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, Variab
 	return *this;
 }
 
-template <class NumberClass, class VariableClass>
-BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, VariableClass>::operator-= (const BasicExpression &t)
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::operator-= (const BasicExpression &t)
 {
-	if (this == &t)
+	// Adds each term with its sign inverted
+	for (vector<Term *>::const_iterator i = t.Terms.begin(); i != t.Terms.end(); i++)
 	{
-		// Subtraction between empty expressions will lead to an empty expression as well
-		if (Terms.empty()) return *this;
-
-		// Self-subtracting will lead to zero
-		Clear();
-		Terms.push_back (new Term (new NumberClass (), 0));
-	}
-	else
-	{	// Adds each term with its sign inverted
-		for (vector<Term *>::const_iterator i = t.Terms.begin(); i != t.Terms.end(); i++)
-		{
-			// aux is necessary because unary operator- would change **i, which is constant
-			Term aux (**i);
-			AddTerm (-aux);
-		}
+		// aux is necessary because unary operator- would change **i, which is constant
+		Term aux (**i);
+		AddTerm (-aux);
 	}
 
 	return *this;
 }
 
-template <class NumberClass, class VariableClass>
-BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, VariableClass>::operator*= (const BasicExpression &t)
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::operator*= (const BasicExpression &t)
 {
 	BasicExpression <NumberClass, VariableClass> Result;
 
@@ -495,8 +538,8 @@ BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, Variab
 	return *this;
 }
 
-template <class NumberClass, class VariableClass>
-BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, VariableClass>::operator/= (const BasicExpression &t)
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::operator/= (const BasicExpression &t)
 {
 	// Prevents division by zero or non-constant
 	if (!t.Constant()) throw ConstantExpected ();
@@ -510,94 +553,128 @@ BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, Variab
 	return *this;
 }
 
-template <class NumberClass, class VariableClass>
-BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, VariableClass>::operator%= (const BasicExpression &t)
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::operator%= (const BasicExpression &t)
 {
 	// Only constants may be used in this operation
 	if ((!Constant()) || (!t.Constant())) throw ConstantExpected ();
 	if (t.Zero()) throw DivisionException ();
+
+	// Zero divided by anything yields zero
+	if (Zero()) return *this;
 
 	// Performs modulus operation
 	*Terms.back() %= *(t.Terms.back());
 	return *this;
 }
 
-template <class NumberClass, class VariableClass>
-BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, VariableClass>::operator&= (const BasicExpression &t)
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::operator&= (const BasicExpression &t)
 {
 	// Only constants may be used in this operation
 	if ((!Constant()) || (!t.Constant())) throw ConstantExpected ();
+
+	if (Zero()) return *this;
+	if (t.Zero())
+	{
+		Clear();
+		return *this;
+	}
 
 	// Performs operation
 	*Terms.back() &= *(t.Terms.back());
 	return *this;
 }
 
-template <class NumberClass, class VariableClass>
-BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, VariableClass>::operator|= (const BasicExpression &t)
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::operator|= (const BasicExpression &t)
 {
 	// Only constants may be used in this operation
 	if ((!Constant()) || (!t.Constant())) throw ConstantExpected ();
+
+	if (t.Zero()) return *this;
+	if (Zero())
+	{
+		*this = t;
+		return *this;
+	}
 
 	// Performs operation
 	*Terms.back() |= *(t.Terms.back());
 	return *this;
 }
 
-template <class NumberClass, class VariableClass>
-BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, VariableClass>::operator^= (const BasicExpression &t)
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::operator^= (const BasicExpression &t)
 {
 	// Only constants may be used in this operation
 	if ((!Constant()) || (!t.Constant())) throw ConstantExpected ();
+
+	if (t.Zero()) return *this;
+	if (Zero())
+	{
+		*this = t;
+		return *this;
+	}
 
 	// Performs operation
 	*Terms.back() ^= *(t.Terms.back());
 	return *this;
 }
 
-template <class NumberClass, class VariableClass>
-BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, VariableClass>::operator<<= (const BasicExpression &t)
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::operator<<= (const BasicExpression &t)
 {
 	// Only constants may be used in this operation
 	if ((!Constant()) || (!t.Constant())) throw ConstantExpected ();
+
+	if (Zero() || t.Zero())	return *this;
 
 	// Performs operation
 	*Terms.back() <<= *(t.Terms.back());
 	return *this;
 }
 
-template <class NumberClass, class VariableClass>
-BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, VariableClass>::operator>>= (const BasicExpression &t)
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::operator>>= (const BasicExpression &t)
 {
 	// Only constants may be used in this operation
 	if ((!Constant()) || (!t.Constant())) throw ConstantExpected ();
+
+	if (Zero() || t.Zero())	return *this;
 
 	// Performs operation
 	*Terms.back() >>= *(t.Terms.back());
 	return *this;
 }
 
-template <class NumberClass, class VariableClass>
-BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, VariableClass>::operator- ()
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::operator- ()
 {
+	if (Zero()) return *this;
+
 	// Performs operation
 	-*Terms.back();
 	return *this;
 }
 
-template <class NumberClass, class VariableClass>
-BasicExpression<NumberClass, VariableClass> &BasicExpression<NumberClass, VariableClass>::operator~ ()
+template <class NumberClass, class VariableClass, bool Redundant=true>
+BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::operator~ ()
 {
 	// Only constants may be used in this operation
 	if (!Constant()) throw ConstantExpected ();
 
+	// Zero expressions can be complemented.
+	if (Zero())	Terms.push_back (new Term (new NumberClass (0), 0));
+
 	// Performs operation
 	~*Terms.back();
+
 	return *this;
 }
 
-template <class NumberClass, class VariableClass>
-void BasicExpression<NumberClass, VariableClass>::AddTerm (const Term &t)
+template <class NumberClass, class VariableClass, bool Redundant=true>
+void BasicExpression<NumberClass, VariableClass, Redundant>::AddTerm (const Term &t)
 {
 	// Searches for one compatible term
 	for (vector<Term *>::iterator i = Terms.begin(); i != Terms.end(); i++)
@@ -606,12 +683,15 @@ void BasicExpression<NumberClass, VariableClass>::AddTerm (const Term &t)
 		{
 			// Found one. Add them together.
 			(**i) += t;
+
+			// If term got zero, take it out!
+			if (!Redundant && (*i)->Zero()) Terms.erase(i);
 			return;
 		}
 	}
 
 	// No compatible term found. Just include the new term.
-	Terms.push_back (new Term (t));
+	if (Redundant || !t.Zero()) Terms.push_back (new Term (t));
 }
 
 #endif
