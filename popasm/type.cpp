@@ -20,12 +20,15 @@
 
 #include "type.h"
 
-Type &Type::operator+= (const Type &t) throw ()
+string MultipleBrackets::WhatString = "Illegal: Multiple brackets.";
+
+Type &Type::operator+= (const Type &t) throw (IncompatibleTypes)
 {
 	switch (t.CurrentType)
 	{
 		case SCALAR:
-			// Adding a scalar to a number does not change its original type
+			// Adding a scalar to a number does not change its original type, but STRONG_MEMORY + SCALAR is not allowed
+			if (CurrentType == STRONG_MEMORY) throw IncompatibleTypes();
 			break;
 
 		case WEAK_MEMORY:
@@ -40,19 +43,20 @@ Type &Type::operator+= (const Type &t) throw ()
 					break;
 
 				case STRONG_MEMORY:
-					break;							// STRONG_MEMORY + Anything = STRONG_MEMORY
+					throw IncompatibleTypes();	// STRONG_MEMORY + WEAK_MEMORY = error!
+					break;
 			}
 
 			break;
 
 		case STRONG_MEMORY:
-			CurrentType = STRONG_MEMORY;		// Anything + STRONG_MEMORY = STRONG_MEMORY
+			throw IncompatibleTypes ();		// Anything + STRONG_MEMORY = error!
 	}
 
 	return *this;
 }
 
-Type &Type::operator-= (const Type &t) throw ()
+Type &Type::operator-= (const Type &t) throw (IncompatibleTypes)
 {
 	// += and -= share the same behavior
 	return *this += t;
@@ -121,4 +125,10 @@ Type Type::operator- () const throw (IncompatibleTypes)
 {
 	// - and ~ share the same behavior
 	return ~*this;
+}
+
+void Type::operator[] (int) throw (MultipleBrackets)
+{
+	if (CurrentType == STRONG_MEMORY) throw MultipleBrackets();
+	CurrentType = STRONG_MEMORY;
 }

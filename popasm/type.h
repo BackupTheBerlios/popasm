@@ -22,12 +22,26 @@
 #define TYPE_H
 
 #include <exception>
+#include <string>
 
+// Thrown when types cannot be operated. E.g.: [5] + 1 = STRONG_MEMORY + SCALAR = error!
 class IncompatibleTypes : public exception
 {
 	public:
 	IncompatibleTypes () {}
 	~IncompatibleTypes () {}
+};
+
+// Thrown if user attempts to use brackets twice. E.g.: [[bx]]
+class MultipleBrackets : public exception
+{
+	static string WhatString;
+
+	public:
+	MultipleBrackets () throw () {}
+	~MultipleBrackets () throw () {}
+
+	const char *what() const throw() {return WhatString.c_str();}
 };
 
 class Type
@@ -42,8 +56,8 @@ class Type
 	Type (TypeName t = SCALAR) throw () : CurrentType (t) {}
 	~Type () throw () {}
 
-	Type &operator+= (const Type &t) throw ();
-	Type &operator-= (const Type &t) throw ();
+	Type &operator+= (const Type &t) throw (IncompatibleTypes);
+	Type &operator-= (const Type &t) throw (IncompatibleTypes);
 	Type &operator*= (const Type &t) throw (IncompatibleTypes);
 	Type &operator/= (const Type &t) throw (IncompatibleTypes);
 	Type &operator%= (const Type &t) throw (IncompatibleTypes);
@@ -59,6 +73,8 @@ class Type
 
 	bool operator== (const Type &t) const throw () {return CurrentType == t.CurrentType;}
 	bool operator!= (const Type &t) const throw () {return CurrentType != t.CurrentType;}
+
+	void operator[] (int) throw (MultipleBrackets);
 };
 
 #endif
