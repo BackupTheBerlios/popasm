@@ -19,71 +19,61 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <vector>
+#include <iostream>
+
 #include "asmer.h"
-#include "instruct.h"
-#include "directiv.h"
+#include "defs.h"
+#include "parser.h"
 
-const OperatorData<Expression> *PopAsm::OperatorTable[] =
+void PrintVector (const vector<Byte> &v)
 {
-	new PlusEqual<Expression> ("+", 600, 400),
-	new MinusEqual<Expression> ("-", 600, 400),
-	new TimesEqual<Expression> ("*", 0, 500),
-	new DividesEqual<Expression> ("/", 0, 500),
-	new ModEqual<Expression> ("MOD", 0, 500),
-	new Colon<Expression> (":", 0, 900),
-	new Period<Expression> (".", 0, 1000),
-	new OperatorData<Expression> (",", 0, 0),
-	new And<Expression> ("AND", 0, 200),
-	new Or<Expression> ("OR", 0, 100),
-	new Xor<Expression> ("XOR", 0, 100),
-	new Not<Expression> ("NOT", 600, 0),
-	new ShiftLeft<Expression> ("SHL", 0, 500),
-	new ShiftRight<Expression> ("SHR", 0, 500),
-	new SizeCast<Expression> ("BYTE", 50, 0, 8),
-	new SizeCast<Expression> ("WORD", 50, 0, 16),
-	new SizeCast<Expression> ("DWORD", 50, 0, 32),
-	new SizeCast<Expression> ("PWORD", 50, 0, 48),
-	new SizeCast<Expression> ("FWORD", 50, 0, 48),
-	new SizeCast<Expression> ("QWORD", 50, 0, 64),
-	new SizeCast<Expression> ("TBYTE", 50, 0, 80),
-	new SizeCast<Expression> ("TWORD", 50, 0, 80),
-	0	// End of list
-};
+	for (vector<Byte>::const_iterator i = v.begin(); i != v.end(); i++)
+	{
+		Byte b = *i;
+		if (b < 16) cout << "0";
+		cout << hex << (unsigned int) b << " ";
+	}
 
-const EncloserData<Expression> *PopAsm::EncloserTable[] =
-{
-	new OpenBracket<Expression> ("[", "]"),
-	new CloseBracket<Expression> ("]"),
-	new OpenParenthesis<Expression> ("(", ")"),
-	new CloseParenthesis<Expression> (")"),
-	0	// End of list
-};
-
-PopAsm::PopAsm () throw ()
-{
-	SetupOperatorTable ();
-	SetupEncloserTable ();
-	Instruction::SetupInstructionTable ();
-	Directive::SetupDirectiveTable ();
+	cout << endl;
 }
 
-PopAsm::~PopAsm () throw ()
+Assembler::~Assembler () throw () {}
+
+void Assembler::AssembleFile (InputFile &File) throw ()
 {
-	for (unsigned int i = 0; OperatorTable[i] != 0; i++)
-		delete OperatorTable[i];
+	bool NeedAnotherPass;
 
-	for (unsigned int i = 0; EncloserTable[i] != 0; i++)
-		delete EncloserTable[i];
-
-	// Still pending: destroy instruction and directive tables.
+	do
+	{
+		NeedAnotherPass = PerformPass (File);
+	} while (NeedAnotherPass);
 }
 
-void PopAsm::SetupOperatorTable () throw ()
+bool Assembler::PerformPass (InputFile &File) throw ()
 {
-	Operator::SetupOperatorTable (OperatorTable);
-}
+	vector<Byte> LineEncoding;
+	Parser p (File);
 
-void PopAsm::SetupEncloserTable () throw ()
-{
-	Encloser::SetupEncloserTable (EncloserTable);
+	CurrentPass++;
+	File.ResetFile();
+
+	while (File)
+	{
+		try
+		{
+			LineEncoding = p.ParseLine ();
+			PrintVector (LineEncoding);
+		}
+		catch (exception &e)
+		{
+			cerr << "Line " << File.GetCurrentLine() - 1 << ": Error - " << e.what() << endl;
+		}
+		catch (...)
+		{
+			cerr << "Line " << File.GetCurrentLine() - 1 << ": Internal error. Please send a bug report." << endl;
+		}
+	}
+
+	return false;
 }

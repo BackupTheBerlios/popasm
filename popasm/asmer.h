@@ -22,32 +22,26 @@
 #ifndef ASMER_H
 #define ASMER_H
 
-#include "lexical.h"
-#include "express.h"
-#include "lexop.h"
+#include "inp_file.h"
 
 class Assembler
 {
-	protected:
-	virtual void SetupOperatorTable () throw () {};
+	// Operating mode the assembler is reset to at the beginning of each pass
+	unsigned int InitialMode;
+
+	unsigned int CurrentMode;
+	unsigned int CurrentPass;
+	unsigned long int CurrentOffset;
+
+	bool PerformPass (InputFile &File) throw ();
 
 	public:
-	Assembler () throw () {}
-	virtual ~Assembler () throw () {}
-};
+	Assembler (unsigned int im) throw () : InitialMode (im), CurrentPass(0) {}
+	virtual ~Assembler () throw () = 0;
 
-class PopAsm : public Assembler
-{
-	protected:
-	void SetupOperatorTable () throw ();
-	void SetupEncloserTable () throw ();
-
-	static const OperatorData<Expression> *OperatorTable[];
-	static const EncloserData<Expression> *EncloserTable[];
-
-	public:
-	PopAsm () throw ();
-	~PopAsm () throw ();
+	unsigned int GetCurrentMode () const throw () {return CurrentMode;}
+	unsigned long int GetCurrentOffset () const throw () {return CurrentOffset;}
+	void AssembleFile (InputFile &File) throw ();
 };
 
 #endif
