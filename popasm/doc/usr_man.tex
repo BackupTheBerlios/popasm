@@ -4224,14 +4224,165 @@ Valid Syntaxes               Example
 HLT (no arguments)           HLT
 \end{verbatim}
 
+\section{IDIV --- signed DIVide}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+IDIV reg8/mem8               IDIV    CL
+IDIV reg16/mem16             IDIV    WORD FS:[COUNTER]
+IDIV reg32/mem32             IDIV    ESI
+\end{verbatim}
 
+\section{IMUL --- signed MULtiply}
+\begin{verbatim}
+Valid Syntaxes                  Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+IMUL reg8/mem8                  IMUL    CL
+IMUL reg16/mem16                IMUL    WORD FS:[COUNTER]
+IMUL reg32/mem32                IMUL    ESI
+IMUL reg16,reg16/mem16          IMUL    BX,GS:[500h]
+IMUL reg32,reg32/mem32          IMUL    ESI,EDI
+IMUL reg16,reg16/mem16,signed8  IMUL    BX,GS:[500h],-78
+IMUL reg32,reg32/mem32,signed8  IMUL    ESI,EDI,13
+IMUL reg16,signed8              IMUL    BX,7
+IMUL reg32,signed8              IMUL    ESI,-90
+IMUL reg16,reg16/mem16,signed16 IMUL    BX,GS:[500h],-78
+IMUL reg32,reg32/mem32,signed32 IMUL    ESI,EDI,13
+IMUL reg16,signed16             IMUL    BX,200h
+IMUL reg32,signed32             IMUL    ESI,12345h
+\end{verbatim}
 
+\subsection{Notes}
+Because this instruction deals with signed arithmetics, all immediate
+values are treated as signed numbers. Thus, the next statements will
+cause an error if included in a source file:
 
+\begin{verbatim}
+                IMUL    BX,0FFFFh
+                IMUL    DX, 8000h
+\end{verbatim}
 
+\noindent because the processor would treat \verb@0FFFFh@ as -1 and
+\verb@8000h@ as \verb@-8000h@.
 
+\section{IN --- INput from port}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+IN accum,unsigned8           IN      AL,60h
+IN accum,DX                  IN      EAX,DX
+\end{verbatim}
 
+\section{INC --- INCrement by 1}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+INC reg8/mem8                INC     CH
+INC reg16/mem16              INC     WORD [BX]
+INC reg32/mem32              INC     EBP
+\end{verbatim}
 
+\section{INS / INSB / INSW / INSD --- INput from port to String}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+INS mem8,DX                  INS     BYTE DS:[ESI],DX
+INS mem16,DX                 INS     WORD [BX],DX
+INS mem32,DX                 INS     DWORD [BUFFER],DX
+INSB (no arguments)          INSB
+INSW (no arguments)          INSW
+INSD (no arguments)          INSD
+\end{verbatim}
 
+\section{INT --- call to INTerrupt procedure}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+INT unsigned8                INT     80h
+\end{verbatim}
+
+\subsection{Notes}
+There is a special single-byte encoding for the \verb@INT 3@ command.
+\popasm\ uses that optimized encoding as default, unless the developer
+explictly uses a BYTE specifier. Also, for compatibility with \nasm,
+\popasm\ also suports its ``INT3'' command (which uses the optimized
+encoding). The next example shows all assembly possibilities for the
+INT command when its argument's value is 3.
+
+\begin{verbatim}
+                INT     3                       ; 1 byte
+                INT3                            ; 1 byte
+                INT     BYTE 3                  ; 2 bytes
+\end{verbatim}
+
+\section{INTO --- INTerrupt of Overflow}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+INTO (no arguments)          INTO
+\end{verbatim}
+
+\section{INVD --- INValiDate internal caches}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+INVD (no arguments)          INVD
+\end{verbatim}
+
+\section{INVLPG --- INValidate tlb entry}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+INVLPG mem                   INVLPG  GS:[BP+SI]
+\end{verbatim}
+
+\section{IRET / IRETD --- Interrupt RETurn}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+IRET (no arguments)          IRET
+IRETD (no arguments)         IRETD
+\end{verbatim}
 
 
 
