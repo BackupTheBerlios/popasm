@@ -157,9 +157,15 @@ Operator *GetBinaryOperator (const vector<Token *> &v, vector<Token *>::const_it
 	enc = dynamic_cast<Encloser *> (BinaryOp);
 	if (enc != 0)
 	{
+		// If a closing encloser is issued without its opening counterpart stop parsing here.
+		if (Opener == 0)
+			return 0;
+
 		// If it is, check if enclosers match
-		if (Opener->Matches (*enc)) return enc;
-		else throw EncloserMismatch (Opener, enc);
+		if (Opener->Matches (*enc))
+			return enc;
+		else
+			throw EncloserMismatch (Opener, enc);
 	}
 
 	return BinaryOp;
@@ -267,14 +273,6 @@ void Parser::ReadLine (vector<Token *> &Tokens) throw ()
 			if (s->GetName() == "\n")
 			{
 				delete t;
-				break;
-			}
-
-			// Checks for comment
-			if (s->GetName() == ";")
-			{
-				delete t;
-				Input.SkipLine ();
 				break;
 			}
 		}
