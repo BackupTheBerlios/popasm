@@ -78,6 +78,7 @@ class Expression : BasicExpression<Number, Symbol>, public Type
 	Expression &operator^= (const Expression &e);
 	Expression &operator<<= (const Expression &e);
 	Expression &operator>>= (const Expression &e);
+	bool operator== (const Expression &e) const throw ();
 
 	// Methods for implementing NASM >>, // and %% operators
 	Expression &BinaryShiftRight (const Expression &e);

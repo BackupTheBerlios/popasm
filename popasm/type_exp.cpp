@@ -220,6 +220,25 @@ Expression &Expression::operator>>= (const Expression &e)
 	return *this;
 }
 
+bool Expression::operator== (const Expression &e) const throw ()
+{
+	if (SegmentPrefix == 0)
+	{
+		if (e.SegmentPrefix != 0)
+			return false;
+	}
+	else
+	{
+		if (e.SegmentPrefix == 0)
+			return false;
+
+		if (*SegmentPrefix != *e.SegmentPrefix)
+			return false;
+	}
+
+	return Type::operator== (e) && BasicExpression<Number, Symbol>::operator== (e);
+}
+
 Expression &Expression::BinaryShiftRight (const Expression &e)
 {
 	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);

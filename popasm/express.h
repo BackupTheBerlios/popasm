@@ -117,6 +117,7 @@ class BasicTerm : public pair <NumberClass *, VariableClass *>
 	BasicTerm &operator^= (const BasicTerm &t);
 	BasicTerm &operator<<= (const BasicTerm &t);
 	BasicTerm &operator>>= (const BasicTerm &t);
+	bool operator== (const BasicTerm &t);
 
 	BasicTerm &BinaryShiftRight (const BasicTerm &t);
 	BasicTerm &UnsignedDivision (const BasicTerm &t);
@@ -437,6 +438,34 @@ BasicTerm<NumberClass, VariableClass> &BasicTerm<NumberClass, VariableClass>::Un
 	return *this;
 }
 
+template <class NumberClass, class VariableClass>
+bool BasicTerm<NumberClass, VariableClass>::operator== (const BasicTerm<NumberClass, VariableClass> &t)
+{
+	if ((first != 0) && (t.first != 0))
+	{
+		if (*first != *t.first)
+			return false;
+	}
+	else
+	{
+		if (first != t.first)
+			return false;
+	}
+
+	if ((second != 0) && (t.second != 0))
+	{
+		if (*second != *t.second)
+			return false;
+	}
+	else
+	{
+		if (second != t.second)
+			return false;
+	}
+
+	return true;
+}
+
 //------- BasicExpression
 
 // Performs arithmetics on expressions
@@ -481,6 +510,7 @@ class BasicExpression
 	virtual BasicExpression &operator^= (const BasicExpression &t);
 	virtual BasicExpression &operator<<= (const BasicExpression &t);
 	virtual BasicExpression &operator>>= (const BasicExpression &t);
+	virtual bool operator== (const BasicExpression &t) const;
 
 	virtual BasicExpression &BinaryShiftRight (const BasicExpression &t);
 	virtual BasicExpression &UnsignedDivision (const BasicExpression &t);
@@ -795,6 +825,27 @@ void BasicExpression<NumberClass, VariableClass, Redundant>::AddTerm (const Term
 
 	// No compatible term found. Just include the new term.
 	if (Redundant || !t.Zero()) Terms.push_back (new Term (t));
+}
+
+template <class NumberClass, class VariableClass, bool Redundant=true>
+bool BasicExpression<NumberClass, VariableClass, Redundant>::operator== (const BasicExpression &t) const
+{
+	if (Terms.size() != t.Terms.size())
+		return false;
+
+	for (vector<Term *>::const_iterator i = Terms.begin(); i != Terms.end(); i++)
+	{
+		for (vector<Term *>::const_iterator j = t.Terms.begin();; j++)
+		{
+			if (j == t.Terms.end())
+				return false;
+
+			if (**i == **j)
+				break;
+		}
+	}
+
+	return true;
 }
 
 #endif
