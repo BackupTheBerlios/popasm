@@ -16,6 +16,7 @@
  ***************************************************************************/
 
 #include "symbol.h"
+#include "asmer.h"
 
 UserDefined::UserDefined (const string &n) throw () : BasicSymbol(n)
 {

@@ -26,8 +26,6 @@
 #include <vector>
 #include <algorithm>
 
-#include "asmer.h"
-
 // typedefs used here to save some typing and increase portability
 typedef unsigned char Byte;
 typedef unsigned short int Word;
@@ -55,6 +53,7 @@ union BasicDataTypes
 
 string Print (unsigned long int i) throw ();
 
+class Assembler;
 extern Assembler *CurrentAssembler;
 
 #endif

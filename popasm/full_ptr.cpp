@@ -17,6 +17,7 @@
 
 #include "full_ptr.h"
 #include "defs.h"
+#include "asmer.h"
 
 const char InvalidFullPointer::WhatString[] = "Invalid immediate full-pointer.";
 const char SegmentOverflow::WhatString[] = "Segment value must be less than 0FFFFh.";

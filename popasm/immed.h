@@ -23,9 +23,11 @@
 #define IMMED_H
 
 #include <exception>
+
 #include "argument.h"
 #include "number.h"
 #include "defs.h"
+#include "asmer.h"
 
 class UnknownImmediateSize : public exception
 {
@@ -88,7 +90,7 @@ class Immediate : public BasicArgument
 	};
 
 	// Cannot write a number if its size is unknown (zero)
-	void Write (vector<Byte> &Output) const throw (UnknownImmediateSize)
+	void Write (vector<Byte> &Output) const throw (UnknownImmediateSize, Overflow)
 	{
 		if (GetSize() == 0) throw UnknownImmediateSize();
 		Value.Write(Output, GetSize() / 8);

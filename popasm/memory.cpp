@@ -21,6 +21,7 @@
 
 #include "memory.h"
 #include "lexsym.h"
+#include "asmer.h"
 
 void Memory::MakeMemory16Bits (const BaseRegister *Base16, const IndexRegister *Index16)
 {
