@@ -22,19 +22,117 @@
 #define REGISTER_H
 
 #include <string>
-#include "defs.h"
+#include "symbol.h"
+#include "inp_file.h"
+#include "argument.h"
 
-class RegisterData
+class Register : public BasicSymbol
 {
-	string Name;
-	Byte Size;		// Register size in bits
-	Byte Code;		// Register code
+	unsigned int Size;	// Register size in bits
+	unsigned int Code;	// Register code
 
 	public:
-	RegisterData (const string &n, Byte s, Byte c) throw () : Name (n), Size (s), Code (c) {}
-	~RegisterData () throw () {}
+	Register (const string &n, unsigned int s, unsigned int c) throw () : BasicSymbol (n), Size (s), Code (c) {}
+	~Register () throw () = 0;
 
-	const string &GetName () const throw () {return Name;}
+	// Attempts to read a register from the given string. Gets more from inp if necessary. Returns 0 if failed.
+	static Register *Read (const string &str, InputFile &inp) throw ();
+};
+
+// Segment Registers
+class SegmentRegister : public Register
+{
+	static SegmentRegister RegisterTable[];
+
+	public:
+	SegmentRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
+	~SegmentRegister () throw () {}
+
+	// Attempts to read a register from the given string. Gets more from inp if necessary. Returns 0 if failed.
+	static Register *Read (const string &str, InputFile &inp) throw ();
+};
+
+// General-Purpose Registers
+class GPRegister : public Register
+{
+	static GPRegister RegisterTable[];
+
+	public:
+	GPRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
+	~GPRegister () throw () {}
+
+	static Register *Read (const string &str, InputFile &inp) throw ();
+};
+
+// Control Registers
+class ControlRegister : public Register
+{
+	static ControlRegister RegisterTable[];
+
+	public:
+	ControlRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
+	~ControlRegister () throw () {}
+
+	static Register *Read (const string &str, InputFile &inp) throw ();
+};
+
+// Test Registers
+class TestRegister : public Register
+{
+	static TestRegister RegisterTable[];
+
+	public:
+	TestRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
+	~TestRegister () throw () {}
+
+	static Register *Read (const string &str, InputFile &inp) throw ();
+};
+
+// Debug Registers
+class DebugRegister : public Register
+{
+	static DebugRegister RegisterTable[];
+
+	public:
+	DebugRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
+	~DebugRegister () throw () {}
+
+	static Register *Read (const string &str, InputFile &inp) throw ();
+};
+
+// MMX Registers
+class MMXRegister : public Register
+{
+	static MMXRegister RegisterTable[];
+
+	public:
+	MMXRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
+	~MMXRegister () throw () {}
+
+	static Register *Read (const string &str, InputFile &inp) throw ();
+};
+
+// XMM Registers
+class XMMRegister : public Register
+{
+	static XMMRegister RegisterTable[];
+
+	public:
+	XMMRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
+	~XMMRegister () throw () {}
+
+	static Register *Read (const string &str, InputFile &inp) throw ();
+};
+
+class FPURegister : public Register
+{
+	static FPURegister RegisterTable[];
+
+	public:
+	FPURegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
+	~FPURegister () throw () {}
+
+	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
 #endif
