@@ -40,11 +40,13 @@ class Symbol : public Token
 {
 	protected:
 	static HashTable<BasicSymbol *, HashFunctor, PointerComparator<BasicSymbol> > SymbolTable;
-	const BasicSymbol *s;
+
+	BasicSymbol *s;
+	bool Owner;
 
 	public:
-	Symbol (const BasicSymbol *bs) : s(bs) {}
-	~Symbol () {}
+	Symbol (BasicSymbol *bs, bool own) : s(bs), Owner(own) {}
+	~Symbol () {if (Owner) delete s;}
 
 	// Attempts to read a symbol from the given string.
 	// Returns 0 if there's currently no symbol with that name in the SymbolTable.
@@ -54,8 +56,10 @@ class Symbol : public Token
 	string Print() const throw () {return s->Print();}
 
 	const string &GetName () const throw () {return s->GetName();}
+	const BasicSymbol *GetData () const throw () {return s;}
+	void SetData (BasicSymbol *bs, bool own) throw ();
 
-	virtual Symbol *Clone () const throw () {return new Symbol (s);}
+	virtual Symbol *Clone () const throw () {return new Symbol (Owner ? s->Clone() : s, false);}
 	virtual bool operator== (const Symbol &x) const throw () {return s == x.s;}
 };
 

@@ -33,14 +33,22 @@ HashTable<BasicSymbol *, HashFunctor, PointerComparator<BasicSymbol> > Symbol::S
 
 Token *Symbol::Read (const string &str, InputFile &inp) throw ()
 {
+	// Tests for registers
 	BasicSymbol *t = Register::Read (str, inp);
-	if (t != 0) return new Symbol (t);
+	if (t != 0) return new Symbol (t, false);
 
+	// Tests for symbols defined in the symbol table
 	BasicSymbol bs (str);
-	const BasicSymbol * const *sd = SymbolTable.Find (&bs);
+	BasicSymbol * const *sd = SymbolTable.Find (&bs);
+	if (sd != 0) return new Symbol (*sd, false);
 
 	// Returns zero if not found
-	if (sd == 0) return 0;
+	return 0;
+}
 
-	return new Symbol (*sd);
+void Symbol::SetData (BasicSymbol *bs, bool own) throw ()
+{
+	if (Owner) delete s;
+	s = bs;
+	Owner = own;
 }
