@@ -72,7 +72,7 @@ class Number : public Token
 	Number (const Number &x) throw () : n(x.n), Size(x.Size) {}
 	~Number () throw () {}
 
-	enum NumberType {SIGNED = 0, UNSIGNED = 1, ANY = 2};
+	enum NumberType {SIGNED = 0, UNSIGNED = 1, ANY = 2, RAW = 3};
 	unsigned int GetSize () const throw () {return Size;}
 	void SetSize (unsigned int s, NumberType t = SIGNED) throw (InvalidSize, CastFailed);
 

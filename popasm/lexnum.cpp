@@ -44,7 +44,7 @@ void Number::SetSize (unsigned int s, NumberType t = SIGNED) throw (InvalidSize,
 
 			if (i >= limit) throw CastFailed (n, s);
 
-			// The lower bound is zero for unsigned numbers and 2^(n-1) for signed or any.
+			// The lower bound is zero for unsigned numbers and -2^(n-1) for signed or any. -2^n for raw
 			if (t == UNSIGNED)
 				limit = 0;
 			else
