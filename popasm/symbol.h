@@ -63,10 +63,11 @@ class BasicSymbol
 	unsigned int GetDefinitionPass () const throw () {return DefinitionPass;}
 	string Print () const throw () {return Name;}
 
-	virtual BasicSymbol *Clone() const throw () {cout << "Not implemented: BasicSymbol::Clone()" << endl; return 0; }
+	virtual BasicSymbol *Clone() const throw () {return new BasicSymbol (*this);}
 
 	// This method is used to compare symbols' names, to put them in lexicographical order in a set
 	virtual bool operator< (const BasicSymbol &s) const throw () {return Name < s.Name;}
+	virtual bool Changed (const BasicSymbol *s) throw () {return false;}
 };
 
 class HashFunctor
