@@ -49,7 +49,7 @@ class UserDefined : public BasicSymbol
 	Dword Offset;				// Offset within its segment
 
 	public:
-	UserDefined (const string &n) throw ();
+ 	UserDefined (const string &n) throw ();
 	UserDefined (const string &n, Dword off) throw ();
 	~UserDefined () throw () {}
 
@@ -136,31 +136,7 @@ class AggregateInstance : public Variable
 	const Aggregate *GetFather() const throw () {return Father;}
 };
 
-class Segment : public BasicSymbol
-{
-	Word Address;
-	bool AddressSpecified;
-
-	public:
-	Segment (const string &n) : BasicSymbol (n), AddressSpecified(false) {}
-	Segment (Word at) : BasicSymbol (""), Address(at), AddressSpecified(true) {}
-	Segment (const string &n, Word at) : BasicSymbol (n), Address(at), AddressSpecified(true) {}
-	~Segment () {}
-};
-
 /*
-class Constant : public BasicSymbol
-{
-	Number Value;
-
-	public:
-	Constant (const string &n, const Number &val) : BasicSymbol (n), Value(val) {}
-	~Constant () {}
-
-	const Number &GetValue () const throw () {return Value;}
-	void Print () const;
-};
-
 class Macro : public BasicSymbol
 {
 	public:
