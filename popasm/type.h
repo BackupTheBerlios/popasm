@@ -24,6 +24,13 @@
 #include <exception>
 #include <string>
 
+enum {UNDEFINED = 1, ANY = 255};
+enum {BYTE = 2, WORD = 4, DWORD = 8, PWORD = 16, QWORD = 32, TBYTE = 64, OWORD = 128};
+enum {SHORT = 2, NEAR = 4, FAR = 8};
+enum {INTEGER = 2, FLOAT = 4, BCD = 8};
+bool Match (int Restriction, int i) throw ();
+bool MatchSize (int sz);
+
 // Thrown when types cannot be operated. E.g.: [5] + 1 = STRONG_MEMORY + SCALAR = error!
 class IncompatibleTypes : public exception
 {
@@ -64,15 +71,14 @@ class Type
 {
 	public:
 	enum TypeName {SCALAR, WEAK_MEMORY, STRONG_MEMORY};
-	enum Distance {NONE, SHORT, NEAR, FAR};
 
 	private:
 	unsigned int Size;
 	TypeName CurrentType;
-	Distance DistanceType;
+	int DistanceType;
 
 	public:
-	Type (unsigned int sz = 0, TypeName t = SCALAR, Distance dist = NONE) throw () : Size (sz), CurrentType (t), DistanceType(dist) {}
+	Type (unsigned int sz = 0, TypeName t = SCALAR, int dist = UNDEFINED) throw () : Size (sz), CurrentType (t), DistanceType(dist) {}
 	virtual ~Type () throw () {}
 
 	// Methods for reading and writing each member
@@ -82,8 +88,8 @@ class Type
 	TypeName GetCurrentType () const throw () {return CurrentType;}
 	void SetCurrentType (TypeName NewType) throw () {CurrentType = NewType;}
 
-	Distance GetDistanceType () const throw () {return DistanceType;}
-	void SetDistanceType (Distance dist) throw () {DistanceType = dist;}
+	int GetDistanceType () const throw () {return DistanceType;}
+	void SetDistanceType (int dist) throw () {DistanceType = dist;}
 
 	Type &operator+= (const Type &t) throw (IncompatibleTypes);
 	Type &operator-= (const Type &t) throw (IncompatibleTypes);

@@ -27,7 +27,7 @@ const char IncompatibleTypes::WhatString[] = "Error: Incompatible types that can
 Type &Type::operator+= (const Type &t) throw (IncompatibleTypes)
 {
 	// Cannot operate on SHORT, NEAR or FAR expressions
-	if ((DistanceType != NONE) && (t.DistanceType != NONE)) throw IncompatibleTypes();
+	if ((DistanceType != UNDEFINED) && (t.DistanceType != UNDEFINED)) throw IncompatibleTypes();
 
 	switch (t.CurrentType)
 	{
@@ -87,7 +87,7 @@ Type &Type::operator*= (const Type &t) throw (IncompatibleTypes)
 	// Strong memory cannot multiply or divide.
 	if ((CurrentType == STRONG_MEMORY) || (t.CurrentType == STRONG_MEMORY)) throw IncompatibleTypes();
 	// Cannot operate on SHORT, NEAR or FAR expressions
-	if ((DistanceType != NONE) && (t.DistanceType != NONE)) throw IncompatibleTypes();
+	if ((DistanceType != UNDEFINED) && (t.DistanceType != UNDEFINED)) throw IncompatibleTypes();
 
 	// The result of any valid operation will be scalar
 	CurrentType = SCALAR;
@@ -142,7 +142,7 @@ Type Type::operator~ () throw (IncompatibleTypes)
 	// Strong memory cannot negate or complement.
 	if (CurrentType == STRONG_MEMORY) throw IncompatibleTypes();
 	// Cannot operate on SHORT, NEAR or FAR expressions
-	if (DistanceType != NONE) throw IncompatibleTypes();
+	if (DistanceType != UNDEFINED) throw IncompatibleTypes();
 
 	Size = 0;
 	return *this;
@@ -157,8 +157,28 @@ Type Type::operator- () throw (IncompatibleTypes)
 void Type::operator[] (int) throw (MultipleBrackets, DistanceSizedMemory)
 {
 	// Cannot operate on SHORT, NEAR or FAR expressions
-	if (DistanceType != NONE) throw DistanceSizedMemory();
+	if (DistanceType != UNDEFINED) throw DistanceSizedMemory();
 	if (CurrentType == STRONG_MEMORY) throw MultipleBrackets();
 
 	CurrentType = STRONG_MEMORY;
+}
+
+bool Match (int Restriction, int i) throw ()
+{
+	return (Restriction & i) != 0;
+}
+
+bool MatchSize (int Restriction, int i)
+{
+	static const char Sizes[] = {0, 8, 16, 32, 48, 64, 80, 128};
+
+	for (int i = 0; i < 8; i++)
+	{
+		if (Sizes[i] == rest)
+		{
+			return (Restriction & (1 << i)) != 0;
+		}
+	}
+
+	return false;
 }
