@@ -71,11 +71,11 @@ class Immediate : public BasicArgument
 
 	public:
 	Immediate () {}
-	Immediate (const Number &n, int dist) throw () : BasicArgument(n.GetSize(), dist), Value(n.GetValue()) {}
+	Immediate (const Number &n, int dist) throw ()
+		: BasicArgument(Type (n.GetSize(), SCALAR, dist, n.IsInteger() ? INTEGER : FLOAT)), Value(n.GetValue()) {}
 	~Immediate () throw () {}
 
 	const RealNumber &GetValue() const throw () {return Value;}
-	bool IsInteger () const throw () {return Value.IsInteger();}
 	void SetSize (unsigned int sz, Number::NumberType t = Number::ANY) const throw (InvalidSize, CastFailed);
 
 	// Returns the value of the number as an unsigned long int
@@ -108,7 +108,7 @@ class ImmedEqual : public UnaryFunction<const BasicArgument *, bool>
 		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
 		if (immed == 0) return false;
 		if (!MatchSize (sz, immed->GetSize())) return false;
-		if (!immed->IsInteger()) return false;
+		if (immed->GetNumericalType() != INTEGER) return false;
 		return immed->GetLong() == n;
 	}
 };
@@ -122,7 +122,7 @@ class ImmedRange : public UnaryFunction<const BasicArgument *, bool>
 		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
 		if (immed == 0) return false;
 
-		if (!immed->IsInteger())
+		if (immed->GetNumericalType() != INTEGER)
 			throw IntegerExpected (immed->GetValue());
 
 		if ((immed->GetSize() != n) && (immed->GetSize() != 0))
@@ -146,7 +146,7 @@ class Immed : public UnaryFunction<const BasicArgument *, bool>
 		// Checks whether we have an integer immediate value
 		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
 		if (immed == 0) return false;
-		if (!immed->IsInteger()) throw IntegerExpected (immed->GetValue());
+		if (immed->GetNumericalType() != INTEGER) throw IntegerExpected (immed->GetValue());
 
 		// If the size is the same but the type is different, throw exception.
 		if ((immed->GetSize() != n) && (immed->GetSize() != 0))
