@@ -33,30 +33,29 @@
 class UnexpectedSegmentPrefix;
 class InvalidSizeCast;
 
-class Expression : BasicExpression<Number, Symbol>
+class Expression : BasicExpression<Number, Symbol>, public Type
 {
-	Type t;								// Expression type
 	Expression *SegmentPrefix;		// Segment prefix (0 if none)
 
 	public:
-	Expression () throw () : t(0, Type::SCALAR, UNDEFINED), SegmentPrefix(0) {}
-	Expression (Number *n, Symbol *s) throw ();
-	Expression (const Expression &e) : BasicExpression<Number, Symbol> (e)
+	Expression () throw () : Type(0, Type::SCALAR, UNDEFINED), SegmentPrefix(0) {}
+	Expression (Number *n, Symbol *s, const Type &tt = Type ()) throw ()
+		: BasicExpression<Number, Symbol> (n, s), Type(tt)
 	{
-		t = e.t;
+		SegmentPrefix = 0;
+	}
+
+	Expression (const Expression &e) : BasicExpression<Number, Symbol> (e), Type(e)
+	{
 		SegmentPrefix = (e.SegmentPrefix == 0) ? 0 : e.SegmentPrefix->Clone();
 	}
 
 	~Expression () throw () {delete SegmentPrefix;}
 	virtual Expression *Clone() const {return new Expression(*this);}
 
-	unsigned int GetSize () const throw () {return t.GetSize();}
 	void SetSize (unsigned int s, Number::NumberType nt = Number::ANY) throw (InvalidSize, CastFailed, CastConflict);
-	Type::TypeName GetType () const throw () {return t.GetCurrentType();}
-	void SetType (Type::TypeName tt) throw () {t.SetCurrentType (tt);}
 	const Expression *GetSegmentPrefix () const throw () {return SegmentPrefix;}
 
-	int GetDistanceType () const throw () {return t.GetDistanceType();}
 	void SetDistanceType (int dist) throw (InvalidSizeCast, CastConflict);
 
 	unsigned int QuantityOfTerms () const throw () {return Terms.size();}
@@ -85,7 +84,6 @@ class Expression : BasicExpression<Number, Symbol>
 	Expression &UnsignedDivision (const Expression &e);
 	Expression &UnsignedModulus (const Expression &e);
 
-	void operator[] (int) {t[0];}
 	Expression &MemberSelect (const Expression &e);
 	Expression &Compose (const Expression &e);
 

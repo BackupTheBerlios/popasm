@@ -22,10 +22,10 @@
 
 void Expression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) throw (InvalidSize, CastFailed, CastConflict)
 {
-	if (!Type::CombineSD (s, t.GetDistanceType()))
-		throw CastConflict (Type::PrintDistance(t.GetDistanceType()), Type::PrintSize(s));
+	if (!Type::CombineSD (s, GetDistanceType()))
+		throw CastConflict (Type::PrintDistance(GetDistanceType()), Type::PrintSize(s));
 
-	if (t.GetCurrentType() == Type::SCALAR)
+	if (GetCurrentType() == Type::SCALAR)
 	{
 		// Searches the constant term in the expression and set its size. This is necessary to
 		// make [BYTE eax+3] be the same as [eax + BYTE 3]
@@ -34,7 +34,7 @@ void Expression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) t
 			if ((*i)->Constant())
 			{
 				(*i)->first->SetSize (s, nt);
-				t.SetSize (s);
+				Type::SetSize (s);
 				return;
 			}
 		}
@@ -43,21 +43,21 @@ void Expression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) t
 		Number *dummy = new Number (0);
 		dummy->SetSize (s, nt);
 		BasicExpression<Number, Symbol>::operator+= (BasicExpression<Number, Symbol> (dummy, 0));
-		t.SetSize (s);
+		Type::SetSize (s);
 	}
 	else
 	{
 		// STRONG or WEAK memory. The user is allowed to change the Size at will
-		t.SetSize(s);
+		Type::SetSize(s);
 	}
 }
 
 void Expression::SetDistanceType (int dist) throw (InvalidSizeCast, CastConflict)
 {
-	if (!Type::CombineSD (t.GetSize(), dist))
-		throw CastConflict (Type::PrintSize(t.GetSize()), Type::PrintDistance(dist));
+	if (!Type::CombineSD (GetSize(), dist))
+		throw CastConflict (Type::PrintSize(GetSize()), Type::PrintDistance(dist));
 
-	if (t.GetCurrentType() != Type::STRONG_MEMORY)
+	if (GetCurrentType() != Type::STRONG_MEMORY)
 	{
 		// Must be a single term
 		if (QuantityOfTerms() != 1) throw InvalidSizeCast();
@@ -70,15 +70,15 @@ void Expression::SetDistanceType (int dist) throw (InvalidSizeCast, CastConflict
 		}
 	}
 
-	t.SetDistanceType(dist);
+	Type::SetDistanceType(dist);
 }
-
-Expression::Expression (Number *n, Symbol *s) throw () : BasicExpression<Number, Symbol> (n, s)
+/*
+Expression::Expression (Number *n, Symbol *s, const Type &tt = Type()) throw ()
+	: BasicExpression<Number, Symbol> (n, s), t(tt)
 {
-	t = Type (0, Type::SCALAR, UNDEFINED);
 	SegmentPrefix = 0;
 }
-
+*/
 Expression::operator Symbol *() const
 {
 	if (Terms.size() != 1) throw SymbolExpected (*this);
@@ -97,7 +97,7 @@ Expression &Expression::operator=  (const Expression &e) throw ()
 	else
 		SegmentPrefix = e.SegmentPrefix->Clone();
 
-	t = e.t;
+	Type::operator= (e);
 	return *this;
 }
 
@@ -110,7 +110,7 @@ Expression &Expression::operator+= (const Expression &e)
 	}
 
 	BasicExpression<Number, Symbol>::operator+= (e);
-	t += e.t;
+	Type::operator+= (e);
 	return *this;
 }
 
@@ -120,7 +120,7 @@ Expression &Expression::operator-= (const Expression &e)
 
 	BasicExpression<Number, Symbol>::operator-= (e);
 
-	t -= e.t;
+	Type::operator-= (e);
 	return *this;
 }
 
@@ -130,7 +130,7 @@ Expression &Expression::operator*= (const Expression &e)
 
 	BasicExpression<Number, Symbol>::operator*= (e);
 
-	t *= e.t;
+	Type::operator*= (e);
 	return *this;
 }
 
@@ -140,7 +140,7 @@ Expression &Expression::operator/= (const Expression &e)
 
 	BasicExpression<Number, Symbol>::operator/= (e);
 
-	t /= e.t;
+	Type::operator/= (e);
 	return *this;
 }
 
@@ -150,7 +150,7 @@ Expression &Expression::operator%= (const Expression &e)
 
 	BasicExpression<Number, Symbol>::operator%= (e);
 
-	t %= e.t;
+	Type::operator%= (e);
 	return *this;
 }
 
@@ -158,7 +158,7 @@ Expression &Expression::operator- ()
 {
 	BasicExpression<Number, Symbol>::operator- ();
 
-	t = -t;
+	Type::operator= (Type::operator-());
 	return *this;
 }
 
@@ -166,7 +166,7 @@ Expression &Expression::operator~ ()
 {
 	BasicExpression<Number, Symbol>::operator~ ();
 
-	t = ~t;
+	Type::operator= (Type::operator~());
 	return *this;
 }
 
@@ -176,7 +176,7 @@ Expression &Expression::operator&= (const Expression &e)
 
 	BasicExpression<Number, Symbol>::operator&= (e);
 
-	t &= e.t;
+	Type::operator&= (e);
 	return *this;
 }
 
@@ -186,7 +186,7 @@ Expression &Expression::operator|= (const Expression &e)
 
 	BasicExpression<Number, Symbol>::operator|= (e);
 
-	t |= e.t;
+	Type::operator|= (e);
 	return *this;
 }
 
@@ -196,7 +196,7 @@ Expression &Expression::operator^= (const Expression &e)
 
 	BasicExpression<Number, Symbol>::operator^= (e);
 
-	t ^= e.t;
+	Type::operator^= (e);
 	return *this;
 }
 
@@ -206,7 +206,7 @@ Expression &Expression::operator<<= (const Expression &e)
 
 	BasicExpression<Number, Symbol>::operator<<= (e);
 
-	t <<= e.t;
+	Type::operator<<= (e);
 	return *this;
 }
 
@@ -216,7 +216,7 @@ Expression &Expression::operator>>= (const Expression &e)
 
 	BasicExpression<Number, Symbol>::operator>>= (e);
 
-	t >>= e.t;
+	Type::operator>>= (e);
 	return *this;
 }
 
@@ -227,7 +227,7 @@ Expression &Expression::BinaryShiftRight (const Expression &e)
 	BasicExpression<Number, Symbol>::BinaryShiftRight (e);
 
 	// The effect on the type is the same as the arithmetic counterpart
-	t >>= e.t;
+	Type::operator>>= (e);
 	return *this;
 }
 
@@ -238,7 +238,7 @@ Expression &Expression::UnsignedDivision (const Expression &e)
 	BasicExpression<Number, Symbol>::UnsignedDivision (e);
 
 	// The effect on the type is the same as the signed counterpart
-	t /= e.t;
+	Type::operator/= (e);
 	return *this;
 }
 
@@ -249,7 +249,7 @@ Expression &Expression::UnsignedModulus (const Expression &e)
 	BasicExpression<Number, Symbol>::UnsignedModulus (e);
 
 	// The effect on the type is the same as the arithmetic counterpart
-	t %= e.t;
+	Type::operator%= (e);
 	return *this;
 }
 
@@ -274,7 +274,7 @@ Expression &Expression::MemberSelect (const Expression &e)
 
 	// Replaces the contents of this expression with a weak memory variable
 	s1->SetData (v2, true);
-	t.SetCurrentType (Type::WEAK_MEMORY);
+	SetCurrentType (Type::WEAK_MEMORY);
 	return *this;
 }
 
