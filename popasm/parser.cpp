@@ -49,28 +49,15 @@ Expression *MakeTerm (Token *t)
 	{
 		Expression *exp;
 		const UserDefined *ud = dynamic_cast<const UserDefined *> (s->GetData());
-		const Variable *v;
 		const Constant *c;
 
 		if (ud != 0)
 		{
-			v = dynamic_cast<const Variable *> (ud);
-
-			// Labels are treated as scalar; variables as weak memories
-			exp = new Expression (new Number (ud->GetOffset()), 0);
-			if (v != 0)
-			{
-				exp->SetType (Type::WEAK_MEMORY);
-				exp->SetSize (v->GetSize());
-			}
+			c = dynamic_cast<const Constant *> (ud);
+			if (c != 0)
+				exp = c->GetValue()->Clone();
 			else
-			{
-				c = dynamic_cast<const Constant *> (ud);
-				if (c != 0)
-				{
-					exp = c->GetValue()->Clone();
-				}
-			}
+				exp = new Expression (new Number (ud->GetOffset()), 0, *ud);
 		}
 		else
 		{
