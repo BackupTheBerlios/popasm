@@ -26,10 +26,10 @@
 
 class DupArgument : public BasicArgument
 {
-	Expression DupExpression;
+	DupExpression Data;
 
 	public:
-	DupArgument (const Expression &exp) : BasicArgument (exp.GetConstData()), DupExpression(exp) {}
+	DupArgument (const DupExpression &exp) : BasicArgument (exp), Data(exp) {}
 	~DupArgument () {}
 
 	static Argument *MakeArgument (const Expression &e) throw (InvalidArgument, exception);

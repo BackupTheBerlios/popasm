@@ -19,19 +19,26 @@
 
 Argument *DupArgument::MakeArgument (const Expression &e) throw (InvalidArgument, exception)
 {
-	return 0;
+	const DupExpression *dexp = e.GetDupExpression();
+	if (dexp == 0)
+		return 0;
+
+	if (dexp->GetCount() == 0)
+		throw 0;
+
+	return new Argument (new DupArgument (*dexp));
 }
 
 void DupArgument::Write (vector<Byte> &Output) const throw (UnknownImmediateSize, Overflow)
 {
-	if (DupExpression.GetConstData().GetSize() == 0)
-		DupExpression.GetConstData().SetSize(GetSize());
+	// Copies the type info to the underlying expression
+	if (Data.GetSize() == 0)
+		Data.SetSize(GetSize());
 
-	DupExpression.Write (Output);
+	Data.Write (Output);
 }
 
 string DupArgument::Print () const throw ()
 {
-	// Preliminary version
-	return string();
+	return Data.Print();
 }
