@@ -92,6 +92,13 @@ Dword SAR (Dword d, int n) throw ()
 	return d;
 }
 
+void BasicDataTypes::Write (vector<Byte> &v, Dword dd, unsigned int n) throw ()
+{
+	d = dd;
+	for (unsigned int i = 0; i < n; i++)
+		v.push_back (b[i]);
+}
+
 string Print (unsigned long int i) throw ()
 {
 	string s;

@@ -23,6 +23,7 @@
 #define DEFS_H
 
 #include <string>
+#include <vector>
 #include <algorithm>
 
 #include "asmer.h"
@@ -41,6 +42,16 @@ Dword SignExtend (Word w) throw ();
 // SHR and SAR stand for SHift Right and Shift Arithmetic Right, respectivelly
 Dword SHR (Dword d, int n) throw ();
 Dword SAR (Dword d, int n) throw ();
+
+union BasicDataTypes
+{
+	private:
+	Byte b[4];
+	Dword d;
+
+	public:
+	void Write (vector<Byte> &v, Dword dd, unsigned int n) throw ();
+};
 
 string Print (unsigned long int i) throw ();
 
