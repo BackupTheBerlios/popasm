@@ -243,7 +243,7 @@ bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 	long int RelativeDistance = Target -= FinalOffset;
 
 	// Checks for SHORT or NEAR
-	if (static_cast<RelativeArgument *> (ArgumentTypes[0])->GetRelativeDistance() == Type::SHORT)
+	if (static_cast<RelativeArgument *> (ArgumentTypes[0])->GetRelativeDistance() == SHORT)
 	{
 		RelativeDistance--;
 
