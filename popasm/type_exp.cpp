@@ -22,171 +22,238 @@
 
 #include <algorithm>
 
+Expression::Expression () throw ()
+{
+	Data = new SimpleExpression ();
+}
+
 Expression::Expression (Number *n, Symbol *v, const Type &t) throw ()
 {
-	Data = new ReferenceCount<ExpressionData> (new SimpleExpression (n, v, t));
+	Data = new SimpleExpression (n, v, t);
+}
+
+Expression::Expression (const Expression &e) throw ()
+{
+	Data = e.Data->Clone();
+}
+
+Expression::~Expression () throw ()
+{
 }
 
 Expression &Expression::operator[] (int)
 {
-	GetData()[0];
+	(*Data)[0];
 	return *this;
 }
 
 void Expression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) const throw (InvalidSize, CastFailed, CastConflict)
 {
-	GetConstData().SetSize (s, nt);
+	Data->SetSize (s, nt);
 }
 
 void Expression::SetDistanceType (int dist) const throw (InvalidSizeCast, CastConflict)
 {
-	GetConstData().SetDistanceType (dist);
+	Data->SetDistanceType (dist);
 }
 
 string Expression::Print () const throw ()
 {
-	return GetConstData().Print();
+	return Data->Print();
 }
 
 void Expression::Write (vector<Byte> &Output) const throw ()
 {
-	return GetConstData().Write(Output);
+	Data->Write(Output);
+}
+
+const SimpleExpression *Expression::GetSegmentPrefix () const throw ()
+{
+	const SimpleExpression *exp = GetSimpleExpression ();
+	if (exp == 0)
+		return 0;
+
+	return exp->GetSegmentPrefix();
+}
+
+const Symbol *Expression::GetSymbol () const throw ()
+{
+	const SimpleExpression *exp = GetSimpleExpression ();
+	if (exp == 0)
+		return 0;
+
+	return exp->GetSymbol();
+}
+
+const Symbol *Expression::GetSymbol (const SimpleExpression * &Prefix) const throw ()
+{
+	const SimpleExpression *exp = GetSimpleExpression ();
+	if (exp == 0)
+		return 0;
+
+	return exp->GetSymbol(Prefix);
+}
+
+const Number *Expression::GetNumber () const throw ()
+{
+	const SimpleExpression *exp = GetSimpleExpression ();
+	if (exp == 0)
+		return 0;
+
+	return exp->GetNumber();
+}
+
+const Number *Expression::GetNumber (const SimpleExpression * &Prefix) const throw ()
+{
+	const SimpleExpression *exp = GetSimpleExpression ();
+	if (exp == 0)
+		return 0;
+
+	return exp->GetNumber(Prefix);
 }
 
 Expression &Expression::operator=  (const Expression &e) throw ()
 {
-	kill (Data);
+	delete Data;
 	Data = e.Data->Clone();
 	return *this;
 }
 
 Expression &Expression::operator+= (const Expression &e)
 {
-	GetData() += e;
+	*Data += *e.Data;
 	return *this;
 }
 
 Expression &Expression::operator-= (const Expression &e)
 {
-	GetData() -= e;
+	*Data -= *e.Data;
 	return *this;
 }
 
 Expression &Expression::operator*= (const Expression &e)
 {
-	GetData() *= e;
+	*Data *= *e.Data;
 	return *this;
 }
 
 Expression &Expression::operator/= (const Expression &e)
 {
-	GetData() /= e;
+	*Data /= *e.Data;
 	return *this;
 }
 
 Expression &Expression::operator%= (const Expression &e)
 {
-	GetData() %= e;
+	*Data %= *e.Data;
 	return *this;
 }
 
 Expression &Expression::operator- ()
 {
-	-GetData();
+	-*Data;
 	return *this;
 }
 
 Expression &Expression::operator~ ()
 {
-	~GetData();
+	~*Data;
 	return *this;
 }
 
 
 Expression &Expression::operator&= (const Expression &e)
 {
-	GetData() &= e;
+	*Data &= *e.Data;
 	return *this;
 }
 
 Expression &Expression::operator|= (const Expression &e)
 {
-	GetData() |= e;
+	*Data |= *e.Data;
 	return *this;
 }
 
 Expression &Expression::operator^= (const Expression &e)
 {
-	GetData() ^= e;
+	*Data ^= *e.Data;
 	return *this;
 }
 
 Expression &Expression::operator<<= (const Expression &e)
 {
-	GetData() <<= e;
+	*Data <<= *e.Data;
 	return *this;
 }
 
 Expression &Expression::operator>>= (const Expression &e)
 {
-	GetData() >>= e;
+	*Data >>= *e.Data;
 	return *this;
 }
 
 bool Expression::operator== (const Expression &e) const throw ()
 {
-	// Check if they are identical
-	if (Data == e.Data)
-		return true;
-
 	// Compare numerical values
-	return GetConstData() == e;
+	return *Data == *e.Data;
 }
 
 Expression &Expression::BinaryShiftRight (const Expression &e)
 {
-	GetData().BinaryShiftRight (e);
+	Data->BinaryShiftRight (*e.Data);
 	return *this;
 }
 
 Expression &Expression::UnsignedDivision (const Expression &e)
 {
-	GetData().UnsignedDivision (e);
+	Data->UnsignedDivision (*e.Data);
 	return *this;
 }
 
 Expression &Expression::UnsignedModulus (const Expression &e)
 {
-	GetData().UnsignedModulus (e);
+	Data->UnsignedModulus (*e.Data);
 	return *this;
 }
 
 Expression &Expression::MemberSelect (const Expression &e)
 {
-	GetData().MemberSelect (e);
+	// Member select here
+
 	return *this;
 }
 
 Expression &Expression::Compose (const Expression &e)
 {
-	GetData().Compose (e);
+	Data->Compose (*e.Data);
 	return *this;
 }
 
+// This method must check compatibility between types before doing anything else
 Expression &Expression::AddToList (const Expression &e)
 {
-	ReferenceCount<ExpressionData> *NewData = GetData().AddToList (e);
+/*
+	DupExpression *dexp = GetDupExpression ();
 
-	kill (Data);
-	Data = NewData;
+	if (dexp == 0)
+	{
+		ReferenceCount<ExpressionData> *temp = Data;
+		Data = new ReferenceCount<ExpressionData> (new DupExpression());
+		Data->GetData().AddToList (temp);
+	}
+
+	Data->GetData().AddToList (e.Data);
+*/
 	return *this;
 }
 
 Expression &Expression::DUP (const Expression &e)
 {
+/*
 	ReferenceCount<ExpressionData> *NewData = GetData().DUP (e);
 	kill (Data);
 	Data = NewData;
+*/
 	return *this;
 }
 
@@ -195,12 +262,21 @@ const SimpleExpression *Expression::GetSimpleExpression() const throw ()
 	return dynamic_cast <const SimpleExpression *> (& GetConstData());
 }
 
+const DupExpression *Expression::GetDupExpression() const throw ()
+{
+	return dynamic_cast <const DupExpression *> (& GetConstData());
+}
+
 ExpressionData::~ExpressionData () throw () {}
 
-ReferenceCount<ExpressionData> *ExpressionData::AddToList (const Expression &e)
+const SimpleExpression *ExpressionData::GetSimpleExpression() const throw ()
 {
-	// Must check if types conflict
-	return 0;
+	return dynamic_cast <const SimpleExpression *> (this);
+}
+
+const DupExpression *ExpressionData::GetDupExpression() const throw ()
+{
+	return dynamic_cast <const DupExpression *> (this);
 }
 
 SimpleExpression::SimpleExpression (Number *n, Symbol *s, const Type &tt) throw () : ExpressionData (tt), Value (n, s)
@@ -218,7 +294,8 @@ SimpleExpression::SimpleExpression (const SimpleExpression &e) : ExpressionData 
 
 void SimpleExpression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) const throw (InvalidSize, CastFailed, CastConflict)
 {
-/*
+	SimpleExpression *This = const_cast<SimpleExpression *> (this);
+
 	if (!Type::CombineSD (s, GetDistanceType()))
 		throw CastConflict (Type::PrintDistance(GetDistanceType()), Type::PrintSize(s));
 
@@ -231,7 +308,7 @@ void SimpleExpression::SetSize (unsigned int s, Number::NumberType nt = Number::
 			if ((*i)->Constant())
 			{
 				(*i)->first->SetSize (s, nt);
-				Type::SetSize (s);
+				This->Type::SetSize (s);
 				return;
 			}
 		}
@@ -239,15 +316,14 @@ void SimpleExpression::SetSize (unsigned int s, Number::NumberType nt = Number::
 		// If no constant term found, add a dummy zero. This is required for compatibility with NASM
 		Number *dummy = new Number (0);
 		dummy->SetSize (s, nt);
-		Value += BasicExpression<Number, Symbol> (dummy, 0);
-		Type::SetSize (s);
+		This->Value += BasicExpression<Number, Symbol> (dummy, 0);
+		This->Type::SetSize (s);
 	}
 	else
 	{
 		// STRONG or WEAK memory. The user is allowed to change the Size at will
-		Type::SetSize(s);
+		This->Type::SetSize(s);
 	}
-*/
 }
 
 void SimpleExpression::SetDistanceType (int dist) const throw (InvalidSizeCast, CastConflict)
@@ -276,11 +352,31 @@ void SimpleExpression::SetDistanceType (int dist) const throw (InvalidSizeCast, 
 
 const Symbol *SimpleExpression::GetSymbol () const throw ()
 {
+	const SimpleExpression *pref;
+	const Symbol *sym;
+
+	sym = GetSymbol (pref);
+	return (pref == 0) ? sym : 0;
+}
+
+const Symbol *SimpleExpression::GetSymbol (const SimpleExpression * &Prefix) const throw ()
+{
+	Prefix = SegmentPrefix;
 	return Value.GetVariable();
 }
 
 const Number *SimpleExpression::GetNumber () const throw ()
 {
+	const SimpleExpression *pref;
+	const Number *num;
+
+	num = GetNumber(pref);
+	return (pref == 0) ? num : 0;
+}
+
+const Number *SimpleExpression::GetNumber (const SimpleExpression * &Prefix) const throw ()
+{
+	Prefix = SegmentPrefix;
 	return Value.GetNumber();
 }
 
@@ -293,15 +389,21 @@ void SimpleExpression::Write (vector<Byte> &Output) const
 		throw 0;
 }
 
-const SimpleExpression *SimpleExpression::GetSegmentPrefix () const throw ()
+SimpleExpression &SimpleExpression::operator=  (const SimpleExpression &e)
 {
-	if (SegmentPrefix == 0)
-		return 0;
+	// Prevents self-assignment
+	if (&e != this)
+	{
+		Value = e.Value;
+		delete SegmentPrefix;
+		SegmentPrefix = e.SegmentPrefix->Clone();
+		ExpressionData::operator= (e);
+	}
 
-	return &SegmentPrefix->GetData();
+	return *this;
 }
 
-SimpleExpression &SimpleExpression::operator+= (const Expression &exp)
+SimpleExpression &SimpleExpression::operator+= (const ExpressionData &exp)
 {
 	const SimpleExpression *e = exp.GetSimpleExpression();
 	if (e == 0)
@@ -320,7 +422,7 @@ SimpleExpression &SimpleExpression::operator+= (const Expression &exp)
 	return *this;
 }
 
-SimpleExpression &SimpleExpression::operator-= (const Expression &exp)
+SimpleExpression &SimpleExpression::operator-= (const ExpressionData &exp)
 {
 	const SimpleExpression *e = exp.GetSimpleExpression();
 	if (e == 0)
@@ -334,7 +436,7 @@ SimpleExpression &SimpleExpression::operator-= (const Expression &exp)
 	return *this;
 }
 
-SimpleExpression &SimpleExpression::operator*= (const Expression &exp)
+SimpleExpression &SimpleExpression::operator*= (const ExpressionData &exp)
 {
 	const SimpleExpression *e = exp.GetSimpleExpression();
 	if (e == 0)
@@ -348,7 +450,7 @@ SimpleExpression &SimpleExpression::operator*= (const Expression &exp)
 	return *this;
 }
 
-SimpleExpression &SimpleExpression::operator/= (const Expression &exp)
+SimpleExpression &SimpleExpression::operator/= (const ExpressionData &exp)
 {
 	const SimpleExpression *e = exp.GetSimpleExpression();
 	if (e == 0)
@@ -362,7 +464,7 @@ SimpleExpression &SimpleExpression::operator/= (const Expression &exp)
 	return *this;
 }
 
-SimpleExpression &SimpleExpression::operator%= (const Expression &exp)
+SimpleExpression &SimpleExpression::operator%= (const ExpressionData &exp)
 {
 	const SimpleExpression *e = exp.GetSimpleExpression();
 	if (e == 0)
@@ -390,7 +492,7 @@ SimpleExpression &SimpleExpression::operator~ ()
 	return *this;
 }
 
-SimpleExpression &SimpleExpression::operator&= (const Expression &exp)
+SimpleExpression &SimpleExpression::operator&= (const ExpressionData &exp)
 {
 	const SimpleExpression *e = exp.GetSimpleExpression();
 	if (e == 0)
@@ -404,7 +506,7 @@ SimpleExpression &SimpleExpression::operator&= (const Expression &exp)
 	return *this;
 }
 
-SimpleExpression &SimpleExpression::operator|= (const Expression &exp)
+SimpleExpression &SimpleExpression::operator|= (const ExpressionData &exp)
 {
 	const SimpleExpression *e = exp.GetSimpleExpression();
 	if (e == 0)
@@ -418,7 +520,7 @@ SimpleExpression &SimpleExpression::operator|= (const Expression &exp)
 	return *this;
 }
 
-SimpleExpression &SimpleExpression::operator^= (const Expression &exp)
+SimpleExpression &SimpleExpression::operator^= (const ExpressionData &exp)
 {
 	const SimpleExpression *e = exp.GetSimpleExpression();
 	if (e == 0)
@@ -432,7 +534,7 @@ SimpleExpression &SimpleExpression::operator^= (const Expression &exp)
 	return *this;
 }
 
-SimpleExpression &SimpleExpression::operator<<= (const Expression &exp)
+SimpleExpression &SimpleExpression::operator<<= (const ExpressionData &exp)
 {
 	const SimpleExpression *e = exp.GetSimpleExpression();
 	if (e == 0)
@@ -446,7 +548,7 @@ SimpleExpression &SimpleExpression::operator<<= (const Expression &exp)
 	return *this;
 }
 
-SimpleExpression &SimpleExpression::operator>>= (const Expression &exp)
+SimpleExpression &SimpleExpression::operator>>= (const ExpressionData &exp)
 {
 	const SimpleExpression *e = exp.GetSimpleExpression();
 	if (e == 0)
@@ -492,7 +594,7 @@ bool SimpleExpression::operator== (const Expression &exp) const throw ()
 	return (*this)==*e;
 }
 
-SimpleExpression &SimpleExpression::BinaryShiftRight (const Expression &exp)
+SimpleExpression &SimpleExpression::BinaryShiftRight (const ExpressionData &exp)
 {
 	const SimpleExpression *e = exp.GetSimpleExpression();
 	if (e == 0)
@@ -508,7 +610,7 @@ SimpleExpression &SimpleExpression::BinaryShiftRight (const Expression &exp)
 	return *this;
 }
 
-SimpleExpression &SimpleExpression::UnsignedDivision (const Expression &exp)
+SimpleExpression &SimpleExpression::UnsignedDivision (const ExpressionData &exp)
 {
 	const SimpleExpression *e = exp.GetSimpleExpression();
 	if (e == 0)
@@ -524,7 +626,7 @@ SimpleExpression &SimpleExpression::UnsignedDivision (const Expression &exp)
 	return *this;
 }
 
-SimpleExpression &SimpleExpression::UnsignedModulus (const Expression &exp)
+SimpleExpression &SimpleExpression::UnsignedModulus (const ExpressionData &exp)
 {
 	const SimpleExpression *e = exp.GetSimpleExpression();
 	if (e == 0)
@@ -540,7 +642,7 @@ SimpleExpression &SimpleExpression::UnsignedModulus (const Expression &exp)
 	return *this;
 }
 
-SimpleExpression &SimpleExpression::MemberSelect (const Expression &exp)
+SimpleExpression &SimpleExpression::MemberSelect (const ExpressionData &exp)
 {
 /*
 	if (e->SegmentPrefix != 0)
@@ -568,25 +670,227 @@ SimpleExpression &SimpleExpression::MemberSelect (const Expression &exp)
 	return *this;
 }
 
-SimpleExpression &SimpleExpression::Compose (const Expression &exp)
+SimpleExpression &SimpleExpression::Compose (const ExpressionData &exp)
 {
-/*
-	if ((SegmentPrefix != 0) || (e.SegmentPrefix != 0))
+	const SimpleExpression *e = exp.GetSimpleExpression();
+	if (e == 0)
+		throw 0;
+
+	if ((SegmentPrefix != 0) || (e->SegmentPrefix != 0))
 		throw UnexpectedSegmentPrefix (*e);
 
 	SimpleExpression *seg = Clone();
-	(*this) = e;
+	(*this) = *e;
 	SegmentPrefix = seg;
-*/
+
 	return *this;
 }
 
-ReferenceCount<ExpressionData> *SimpleExpression::AddToList (const Expression &e)
+void SimpleExpression::AddToList (Expression &e1, const Expression &e2)
 {
-	return 0;
 }
 
-ReferenceCount<ExpressionData> *SimpleExpression::DUP (const Expression &e)
+void SimpleExpression::DUP (Expression &e1, const Expression &e2)
 {
-	return 0;
+}
+
+DupExpression::DupExpression (const Type &t) throw () : ExpressionData(t)
+{
+	Count = 0;
+}
+
+DupExpression::DupExpression (const DupExpression &t) throw () : ExpressionData(t)
+{
+	Count = t.Count->Clone();
+
+	for (vector<ExpressionData *>::const_iterator i = t.DupList.begin(); i != t.DupList.end(); i++)
+		DupList.push_back ((*i)->Clone());
+}
+
+DupExpression::~DupExpression () throw ()
+{
+	delete Count;
+
+	for (vector<ExpressionData *>::iterator i = DupList.begin(); i != DupList.end(); i++)
+		delete *i;
+}
+
+string DupExpression::Print () const throw ()
+{
+	return string();
+}
+
+void DupExpression::Write (vector<Byte> &Output) const throw ()
+{
+}
+
+void DupExpression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) const throw (InvalidSize, CastFailed, CastConflict)
+{
+}
+
+void DupExpression::SetDistanceType (int dist) const throw (InvalidSizeCast, CastConflict)
+{
+}
+
+void DupExpression::SetNumericalType (int num) throw ()
+{
+}
+
+DupExpression &DupExpression::operator= (const ExpressionData &e)
+{
+	const DupExpression *exp = e.GetDupExpression();
+	if (exp == 0)
+		throw 0;
+
+	delete Count;
+	Count = exp->Count->Clone();
+
+	for (vector<ExpressionData *>::iterator i = DupList.begin(); i != DupList.end(); i++)
+		delete *i;
+
+	DupList.clear();
+
+	for (vector<ExpressionData *>::const_iterator i = exp->DupList.begin(); i != exp->DupList.end(); i++)
+		DupList.push_back ((*i)->Clone());
+
+	return *this;
+}
+
+DupExpression &DupExpression::operator+= (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::operator-= (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::operator*= (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::operator/= (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::operator%= (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::operator- ()
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::operator~ ()
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::operator&= (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::operator|= (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::operator^= (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::operator<<= (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::operator>>= (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+bool DupExpression::operator== (const DupExpression &exp) const throw ()
+{
+	if ((Count != 0) && (exp.Count != 0))
+	{
+		if (*Count != *exp.Count)
+			return false;
+	}
+	else
+		if (Count != exp.Count)
+			return false;
+
+	if (DupList.size() != exp.DupList.size())
+		return false;
+
+	vector<ExpressionData *>::const_iterator i, j;
+	for (i = DupList.begin(), j = exp.DupList.begin(); i != DupList.end(); i++, j++)
+	{
+		if (**i != **j)
+			return false;
+	}
+
+	return true;
+}
+
+bool DupExpression::operator== (const Expression &e) const throw ()
+{
+	const DupExpression *exp = e.GetDupExpression();
+	if (exp == 0)
+		throw 0;
+
+	return operator== (*exp);
+}
+
+DupExpression &DupExpression::BinaryShiftRight (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::UnsignedDivision (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::UnsignedModulus (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::MemberSelect (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+DupExpression &DupExpression::Compose (const ExpressionData &e)
+{
+	throw 0;
+	return *this;
+}
+
+void DupExpression::AddToList (Expression &e1, const Expression &e2)
+{
 }

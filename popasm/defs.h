@@ -54,68 +54,6 @@ union BasicDataTypes
 string Print (unsigned long int i) throw ();
 void UpperCase (string &s) throw ();
 
-#include <iostream>
-
-template <class T>
-class ReferenceCount
-{
-	T *Data;
-	mutable int count;
-
-	// Prevents copy
-	ReferenceCount (const ReferenceCount &) {}
-
-	public:
-	ReferenceCount (T *d) {Data = d; count = 1;}
-	~ReferenceCount ()
-	{
-		#ifdef DEBUG
-		if (count != 0)
-			throw 0;
-		#endif
-
-		delete Data;
-	}
-
-	T &GetData () throw () {return *Data;}
-	const T &GetConstData () const throw () {return *Data;}
-	friend void kill<T> (const ReferenceCount<T> *&ref);
-	ReferenceCount *Clone () throw () {count++; return this;}
-	bool operator== (const ReferenceCount &ref) const throw ();
-};
-
-template <class T>
-bool ReferenceCount<T>::operator== (const ReferenceCount<T> &ref) const throw ()
-{
-	if (Data != ref.Data)
-		return false;
-
-	if (Data != 0)
-		return *Data == *ref.Data;
-
-	return true;
-}
-
-template <class T>
-void kill (const ReferenceCount<T> *&ref)
-{
-	if (ref == 0)
-		return;
-
-	if (ref->count != 0)
-		ref->count--;
-	#ifdef DEBUG
-	else
-		throw 0;
-	#endif
-
-	if (ref->count == 0)
-	{
-		delete ref;
-		ref = 0;
-	}
-}
-
 class Assembler;
 extern Assembler *CurrentAssembler;
 

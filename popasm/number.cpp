@@ -1,23 +1,18 @@
-/***************************************************************************
-                          number.cpp  -  description
-                             -------------------
-    begin                : Fri Sep 7 2001
-    copyright            : (C) 2001 by Helcio Mello
-    email                : helcio@users.sourceforge.net
- ***************************************************************************/
+/** @file
 
-//--------------------------------------------------------------------------
-// Allows the user to create huge numbers and operate on them
-//--------------------------------------------------------------------------
+	@brief Huge numbers definitions
+	@author Helcio Mello (helcio@users.sourceforge.net)
+	@since Fri Sep 7 2001
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+	This file contains NaturalNumber, IntegerNumber and RealNumber classes,
+	which allow one to define arbitrarily large numbers and perform several
+	mathematical operations on them.
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+*/
 
 #include "number.h"
 #include <iostream>
@@ -26,7 +21,10 @@
 // Numbers default to be decimal
 Word NaturalNumber::DefaultBase = 10;
 
-// Enables the construction of a number given its initial value
+/**
+	@param d The value which must be converted to a NaturalNumber. Its 16 most significant bits
+		are ignored in case they are null. If (d == 0) no storage is allocated at all.
+*/
 NaturalNumber::NaturalNumber (Dword d = 0) throw ()
 {
 	// Null initial values require no storage
@@ -35,18 +33,42 @@ NaturalNumber::NaturalNumber (Dword d = 0) throw ()
 	if (d != 0) push_back (static_cast<Word> (d));
 }
 
+/**
+	@return Size of the number in bytes
+
+	Note that if the most significant word has its most significant byte equal to zero, only the least
+	significant one will be taken into account.
+
+	Example: If the vector contents are [0x1234, 0x0056] the number is 0x561234
+	and SizeInBytes() will return 3, not 4.
+*/
 Dword NaturalNumber::SizeInBytes() const throw ()
 {
 	Dword answer = size() * 2;
-	if (answer == 0) return 0;
-	if (back() < 256) answer--;
+
+	if (answer == 0)
+		return 0;
+
+	// Ignores the most significant byte if it is zero
+	if (back() < 256)
+		answer--;
+
 	return answer;
 }
 
+/**
+	@return Size of the number in bits
+
+	Note that only bits 0 thru the most significant one are taken into account.
+
+	Example: If the vector contents are [0x1234, 0x0056] the number is 0x561234 =
+	10101100001001000110100B and SizeInBits() will return 23, not 24, nor 32.
+*/
 Dword NaturalNumber::SizeInBits() const throw (LeadingZero)
 {
 	if (size() == 0) return 0;
 
+	// Seeks the most significant bit within the most significant word.
 	Word msw = back();
 	for (Dword i = 16; i != 0;)
 	{
@@ -57,8 +79,24 @@ Dword NaturalNumber::SizeInBits() const throw (LeadingZero)
 	throw LeadingZero();
 }
 
-// Gets a numeric string and strips leading and trailing underscores and radices. Also checks for the
-// first digit being 0-9
+/**
+	@param s String to be handled
+	@param Base A Word where this method will return the base of the number
+	@param Negative A pointer to bool where this method will write true if the number is negative; false
+		otherwise. If the pointer is NULL (0) then it is assumed the caller does not care about the sign
+		and thus the pointer is not used.
+	@throw InvalidNumber if the string is not a valid number
+	@return Preprocessed string
+
+	This method strips a numeric string from its sign, radix and leading or trailing underscores. It will also
+	detect which base the number uses (DefautBase if not specified by means of a radix) and the size of the
+	number.
+
+	@attention Only leading and trailing underscores are removed. Underscores found between two digits are
+		left untouched.
+
+	Example: Preprocessing "-0x56_1234__" returns "56_1234" with Base = 16 and Negative
+*/
 string SimplifyString (const string &s, Word &Base, bool *Negative = 0) throw (InvalidNumber)
 {
 	// Find the radix (if any). Any number can be followed by as many underscores
@@ -73,23 +111,29 @@ string SimplifyString (const string &s, Word &Base, bool *Negative = 0) throw (I
 	// Gets the sign
 	if ((s[0] == '+') || (s[0] == '-'))
 	{
-		if (Negative != 0) *Negative = s[0] == '-';
+		if (Negative != 0)
+			*Negative = s[0] == '-';
 		i++;
 	}
 	else
 	{
-		if (Negative != 0) *Negative = false;
+		if (Negative != 0)
+			*Negative = false;
 	}
 
-	if (i == j) throw InvalidNumber (s);
+	if (i == j)
+		throw InvalidNumber (s);
+
 	// Leading '$' means hex...
 	if (s[i] == '$')
 	{
 		i++;
 		Base = 16;
-		if (i == j) throw InvalidNumber (s);
+		if (i == j)
+			throw InvalidNumber (s);
 		// ... if followed by at least one decimal digit
-		if ((s[i] < '0') || (s[i] > '9')) throw InvalidNumber (s);
+		if ((s[i] < '0') || (s[i] > '9'))
+			throw InvalidNumber (s);
 	}
 	else
 	{
@@ -108,8 +152,10 @@ string SimplifyString (const string &s, Word &Base, bool *Negative = 0) throw (I
 
 					// "0x______" is an invalid number
 					unsigned int k = s.find_first_not_of ("_", i);
-					if ((k >= j) || (k == string::npos)) throw InvalidNumber(s);
-					if (!(((s[k] >= '0') && (s[k] <= '9')) || (s[k] == '_'))) throw InvalidNumber(s);
+					if ((k >= j) || (k == string::npos))
+						throw InvalidNumber(s);
+					if (!(((s[k] >= '0') && (s[k] <= '9')) || (s[k] == '_')))
+						throw InvalidNumber(s);
 					i = k;
 				}
 				else
@@ -123,16 +169,15 @@ string SimplifyString (const string &s, Word &Base, bool *Negative = 0) throw (I
 	if (Base == 0)
 	{
 		// If no prefix was specified, the number must be led by a 0-9 digit
-		if ((s[i] < '0') || (s[i] > '9')) throw InvalidNumber (s);
+		if ((s[i] < '0') || (s[i] > '9'))
+			throw InvalidNumber (s);
 
 		// Translates the trailing radix to its base (i.e. h to 16, b to 2, etc)
 		Base = NaturalNumber::IsRadix (s[j-1]);
 
 		// The last digit is not a radix; assume default base
 		if (Base == 0)
-		{
 			Base = NaturalNumber::GetDefaultBase ();
-		}
 		else
 		{
 			// Last character was a radix, so skip it
@@ -143,7 +188,15 @@ string SimplifyString (const string &s, Word &Base, bool *Negative = 0) throw (I
 	return string (s, i, j - i);
 }
 
-// Translates the contents of the string to a possibly huge number
+/**
+	@param s The string to be parsed.
+	@param ForcedBase The base of the number. If this value is zero then DefaultBase is used instead.
+	@throw InvalidNumber If the supplied string does not hold a valid number.
+	@throw InvalidDigit If any of the digits are not valid in the used base.
+
+	This constructor converts a numeric string into a NaturalNumber. Any underscores found between digits
+	are ignored (and can thus be used to make the number more readable).
+*/
 NaturalNumber::NaturalNumber (const string &s, Word ForcedBase = 0) throw (InvalidNumber, InvalidDigit)
 {
 	Word Base;
@@ -159,14 +212,18 @@ NaturalNumber::NaturalNumber (const string &s, Word ForcedBase = 0) throw (Inval
 	{
 		bool Negative;
 		n = SimplifyString (s, Base, &Negative);
-		if (Negative) throw InvalidNumber (s);
+
+		// Negative numbers cannot be NaturalNumbers
+		if (Negative)
+			throw InvalidNumber (s);
 	}
 
 	// Now, it's time to convert the string to a number
 	for (string::iterator i = n.begin(); i != n.end(); i++)
 	{
 		// If the separator is found, it must be ignored
-		if (*i == '_') continue;
+		if (*i == '_')
+			continue;
 
 		// Multiply the current value by its base and add the new digit,
 		// which is found by decoding its ASCII code to its value. Eg: 'F' to 15
@@ -194,11 +251,19 @@ NaturalNumber::NaturalNumber (const string &s, Word ForcedBase = 0) throw (Inval
 	// Prevents leading zero
 	if (size() == 1)
 	{
-		if (back() == 0) pop_back();
+		if (back() == 0)
+			pop_back();
 	}
 }
 
-// Prints the number
+/**
+	@param Base The base to be used to print the number. If ommitted, 10 will be assumed (i.e. the number
+		will be printed in decimal.
+
+	@attention The name of this method is confusing indeed. It prints nothing to the screen; actually it
+	writes the number to a string. The string contains the number as it would be seen if printed in the
+	specified base.
+*/
 string NaturalNumber::Print (Word Base = 10) const throw ()
 {
 	string s;
@@ -218,8 +283,16 @@ string NaturalNumber::Print (Word Base = 10) const throw ()
 	return s;
 }
 
-// Writes the number in little-endian form, using n bytes, padding using the given byte
-void NaturalNumber::Write (vector<Byte> &Output, unsigned int n, Byte pad = 0) const
+/**
+	@param Output The vector which the data must be sent to.
+	@param n The length of output in bytes.
+	@param pad The value to be used to pad the output to be as large as n. If not specified, 0 will be used.
+
+	@attention If the output vector is not empty the bytes output to the vector will be appended to it.
+
+	Writes the number in little-endian form to an output, using n bytes, padding using the given byte.
+*/
+void NaturalNumber::Write (vector<Byte> &Output, unsigned int n = 0, Byte pad = 0) const
 {
 	NaturalNumber temp(*this);
 
@@ -423,42 +496,6 @@ char NaturalNumber::EncodeDigit (Byte d) throw ()
 	return d + '0';
 }
 
-NaturalNumber &NaturalNumber::Increment () throw()
-{
-	for (unsigned int i = 0;; i++)
-	{
-		// Checks if the increment causes a new word to be included
-		if (i == size()) push_back (0);
-
-		(*this)[i]++;
-		// Checks for carry
-		if ((*this)[i] != 0) break;
-	}
-
-	return *this;
-}
-
-NaturalNumber &NaturalNumber::Decrement () throw (Underflow)
-{
-	if (Zero())
-	{
-		// If number is zero then throws -1 in two's complement
-		push_back (0xFFFF);
-		throw Underflow(*this);
-	}
-
-	// Decrements each word until borrows no longer occurs
-	for (unsigned int i = 0;; i++)
-	{
-		(*this)[i]--;
-		if ((*this)[i] != 0xFFFF) break;
-	}
-
-	// Prevents leading zeroes, in case the decrement operation causes the most significant word to disappear
-	if (back() == 0) pop_back();
-	return *this;
-}
-
 bool NaturalNumber::operator>  (const NaturalNumber &n) const throw ()
 {
 	return Compare (n) == 1;
@@ -489,30 +526,55 @@ bool NaturalNumber::operator!= (const NaturalNumber &n) const throw ()
 	return Compare (n) != 0;
 }
 
-// Prefix
+// Prefix increment
 NaturalNumber &NaturalNumber::operator++ () throw ()
 {
-	return Increment();
+	for (unsigned int i = 0;; i++)
+	{
+		// Checks if the increment causes a new word to be included
+		if (i == size()) push_back (0);
+
+		(*this)[i]++;
+		// Checks for carry
+		if ((*this)[i] != 0) break;
+	}
+
+	return *this;
 }
 
+// Postfix increment
 const NaturalNumber NaturalNumber::operator++ (int) throw ()
 {
 	NaturalNumber copy(*this);
-	Increment();
-	return copy;
+	return ++copy;
 }
 
 // Prefix
-NaturalNumber &NaturalNumber::operator-- () throw ()
+NaturalNumber &NaturalNumber::operator-- () throw (Underflow)
 {
-	return Decrement();
+	if (Zero())
+	{
+		// If number is zero then throws -1 in two's complement
+		push_back (0xFFFF);
+		throw Underflow(*this);
+	}
+
+	// Decrements each word until borrows no longer occur
+	for (unsigned int i = 0;; i++)
+	{
+		(*this)[i]--;
+		if ((*this)[i] != 0xFFFF) break;
+	}
+
+	// Prevents leading zeroes, in case the decrement operation causes the most significant word to disappear
+	if (back() == 0) pop_back();
+	return *this;
 }
 
-const NaturalNumber NaturalNumber::operator-- (int) throw ()
+const NaturalNumber NaturalNumber::operator-- (int) throw (Underflow)
 {
 	NaturalNumber copy(*this);
-	Decrement();
-	return copy;
+	return --copy;
 }
 
 void NaturalNumber::MatchSize (const NaturalNumber &n, Word w) throw ()
@@ -561,11 +623,10 @@ NaturalNumber &NaturalNumber::OnesComplement (Dword sz = 0) throw (Overflow)
 
 NaturalNumber &NaturalNumber::TwosComplement (Dword sz = 0) throw (Overflow)
 {
-	if (empty()) return *this;
+	if (empty())
+		return *this;
 
-	OnesComplement(sz);
-	Increment();
-	return *this;
+	return ++OnesComplement(sz);
 }
 
 // Divides this by Divisor and returns the result. Optionally the remainer can

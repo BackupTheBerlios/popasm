@@ -1,23 +1,18 @@
-/***************************************************************************
-                          number.h  -  description
-                             -------------------
-    begin                : Fri Sep 7 2001
-    copyright            : (C) 2001 by Helcio Mello
-    email                : helcio@users.sourceforge.net
- ***************************************************************************/
+/** @file
 
-//--------------------------------------------------------------------------
-// Allows the user to create huge numbers and operate on them
-//--------------------------------------------------------------------------
+	@brief Huge numbers declarations
+	@author Helcio Mello (helcio@users.sourceforge.net)
+	@since Fri Sep 7 2001
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+	This file contains NaturalNumber, IntegerNumber and RealNumber classes,
+	which allow one to define arbitrarily large numbers and perform several
+	mathematical operations on them.
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+*/
 
 #ifndef NUMBER_H
 #define NUMBER_H
@@ -40,66 +35,77 @@ class NegativeShift;
 class InvalidFormat;
 class IntegerExpected;
 
+/** \brief Preprocess a string and get its base and sign */
 string SimplifyString (const string &s, Word &Base, bool *Negative = 0) throw (InvalidNumber);
 
-// Natural number is a vector of words capable of storing any number, no
-// matter how huge it is. IMPORTANT: No leading zeroes must be allowed!!
-// Remember that if you plan to add any new function.
+/**
+	Natural number is a vector of words capable of storing any number, no matter how huge they are.
+	@warning No leading zeroes are allowed! Remember that if you plan to add any new function. If
+	(back() == 0) the number is invalid and unpredictable behavior may occur.
+*/
 class NaturalNumber : vector <Word>
 {
-	// Current default base for all numbers, specified by .RADIX; Default is 10.
+	/// Current default base for all numbers, specified by .RADIX; Default is 10.
 	static Word DefaultBase;
 
-	// Increment and decrement functions. Called by operator++ and operator--
-	NaturalNumber &Increment () throw ();
-	NaturalNumber &Decrement () throw (Underflow);
-
 	protected:
-	// Shift each element in the array n times
+	/// Shifts the vector n elements (words) to the left
 	void WordShiftLeft (NaturalNumber n) throw ();
+	/// Shifts the vector n elements (words) to the right
 	void WordShiftRight (NaturalNumber n) throw ();
 
 	public:
-	// Builds a NaturalNumber from either a Dword or a numeric string
+	/// Builds a NaturalNumber from a Dword
 	NaturalNumber (Dword d = 0) throw ();
+	/// Builds a NaturalNumber from a string
 	NaturalNumber (const string &n, Word ForcedBase = 0) throw (InvalidNumber, InvalidDigit);
 	virtual ~NaturalNumber () throw () {}
 
-	// Returns the size of the underlying vector
+	/** Gets the size of the underlying vector in Words.
+
+		@returns How many words are currently stored within the underlying vector.
+		This method does nothing more than calling vector<Word>::size() method().
+	*/
 	Dword Size() const throw () {return size();}
+	/// Returns the size of the underlying vector in bits
 	Dword SizeInBits() const throw (LeadingZero);
+	/// Returns the size of the underlying vector in bytes
 	Dword SizeInBytes() const throw ();
 
+	/// Adds leading zeroes to make the underlying vector as long as the vector of the other number
 	void MatchSize (const NaturalNumber &n, Word w) throw ();
 
-	// Converts a character to its value. Case is ignored. Eg.: 'F' = 'f' = 15
+	/// Converts a character to its value. Case is ignored. Eg.: 'F' = 'f' = 15
 	static Word DecodeDigit (char c, Word Base) throw (InvalidDigit);
-	// Converts a digit to a character. Eg.: 15 to 'F' (hex)
+	/// Converts a digit to a character. Eg.: 15 to 'F' (hex)
 	static char EncodeDigit (Byte d) throw ();
-	// Tests if the given character is a valid digit in the specified base
+	/// Tests if the given character is a valid digit in the specified base
 	static bool ValidDigit (char c, Word Base) throw ();
-	// Checks if a given character is a radix
+	/// Checks if a given character is a radix. If so, returns the base the character refers to.
 	static Word IsRadix (char c) throw ();
 
-	// Gets and sets the default bases. Accepted values are 2, 8, 10 and 16
+	/// Gets the current default base.
 	static Word GetDefaultBase () throw () {return DefaultBase;}
+	/// Sets the current default base. Accepted values are 2, 8, 10 and 16.
 	static void SetDefaultBase (Word NewBase) throw (InvalidBase);
 
-	// Returns 1 if *this > n, 0 if equal or -1 otherwise
+	/// Compares two numbers. The result is an integer 0, 1 or -1.
 	int Compare (const NaturalNumber &n) const throw ();
 
-	// Returns *this / n. If Remainer is not a NULL pointer, it will hold the remainer
+	/// Divides two numbers. Calculates also the remainer if requested.
 	const NaturalNumber Divide (const NaturalNumber &n, NaturalNumber *Remainer = 0) const throw (DivisionByZero);
 
-	// Multiplies or divides the number by its base (given as argument)
+	/// Multiplies a number by a Word
 	void BaseShiftLeft (Word Base) throw ();
+	/// Divides a number by a Word
 	Word BaseShiftRight (Word Base) throw ();
 
-	// Checks parity
+	/// Returns whether a number is even
 	bool Even () const throw ();
+	/// Returns whether a number is odd
 	bool Odd () const throw () {return !Even();}
 
-	// Returns *this raised to nth power. This number remains unchanged
+	/// Returns a number raised to nth power.
 	const NaturalNumber Power (const NaturalNumber &n) const throw ();
 
 	const NaturalNumber operator+  (const NaturalNumber &n) const throw ();
@@ -124,11 +130,14 @@ class NaturalNumber : vector <Word>
 	NaturalNumber &operator|=  (const NaturalNumber &n) throw ();
 	NaturalNumber &operator^=  (const NaturalNumber &n) throw ();
 
-	// Unary operators
+	/// Prefix increment operator
 	NaturalNumber &operator++ () throw ();
+	/// Postfix increment operator
 	const NaturalNumber operator++ (int) throw ();
-	NaturalNumber &operator-- () throw ();
-	const NaturalNumber operator-- (int) throw ();
+	/// Prefix decrement operator
+	NaturalNumber &operator-- () throw (Underflow);
+	/// Postfix decrement operator
+	const NaturalNumber operator-- (int) throw (Underflow);
 
 	bool operator>  (const NaturalNumber &n) const throw ();
 	bool operator>= (const NaturalNumber &n) const throw ();
@@ -139,24 +148,25 @@ class NaturalNumber : vector <Word>
 
 	NaturalNumber &OnesComplement (Dword sz = 0) throw (Overflow);
 	NaturalNumber &TwosComplement (Dword sz = 0) throw (Overflow);
+	/// Replaces the number with its one's complement
 	NaturalNumber &operator~ () throw ();
 
 	void SetBit (Dword n) throw ();
 	void ClearBit (Dword n) throw ();
 	bool TestBit (Dword n) throw ();
 
-	// Prints the number in any base. Default is 10.
+	/// Prints the number in any base to a string. Default base is 10.
 	string Print (Word Base = 10) const throw ();
-	// Writes the number in little-endian form, using n bytes, padding using the given byte
+	/// Writes the number in little-endian form to an output vector
 	void Write (vector<Byte> &Output, unsigned int n, Byte pad = 0) const;
-	// Detects if a number is zero
+	/// Detects if a number is zero.
 	bool Zero() const throw (LeadingZero);
-	// Returns the value of the number as an unsigned long int
+	/// Returns the value of the number as an unsigned long int
 	unsigned long int GetUnsignedLong () const throw (Overflow);
-	// Returns the value of the number as a long int
+	/// Returns the value of the number as a long int
 	long int GetLong () const throw (Overflow);
 
-	// Performs basic tests to check if the class is working without bugs
+	/// Performs basic tests to check if the class is working without bugs
 	static bool Test () throw ();
 };
 

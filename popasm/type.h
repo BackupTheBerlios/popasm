@@ -108,14 +108,14 @@ class Type
 	static string PrintSize (unsigned int sz) throw ();
 
 	TypeName GetCurrentType () const throw () {return CurrentType;}
-	void SetCurrentType (TypeName NewType) throw () {CurrentType = NewType;}
+	virtual void SetCurrentType (TypeName NewType) throw () {CurrentType = NewType;}
 
 	int GetDistanceType () const throw () {return DistanceType;}
-	void SetDistanceType (int dist) throw () {DistanceType = dist;}
+	virtual void SetDistanceType (int dist) throw () {DistanceType = dist;}
 	static string PrintDistance (unsigned int dist) throw ();
 
 	int GetNumericalType () const throw () {return NumericalType;}
-	void SetNumericalType (int num) throw () {NumericalType = num;}
+	virtual void SetNumericalType (int num) throw () {NumericalType = num;}
 	static string PrintNumerical (unsigned int num) throw ();
 
 	// Check whether it makes sense for a type to be sz sizes and
