@@ -289,8 +289,8 @@ class RealNumber
 	static bool GetWatchPrecisionLoss () throw () {return WatchPrecisionLoss;}
 	static void SetWatchPrecisionLoss (const bool yes) throw () {WatchPrecisionLoss = yes;}
 
-	bool GetInteger () const throw () {return Integer;}
-	void SetInteger (bool NewInteger) throw () {Integer = NewInteger;}
+	bool IsInteger () const throw () {return Integer;}
+	void SetIntegerBit (bool NewInteger) throw () {Integer = NewInteger;}
 
 	const RealNumber operator+ (const RealNumber &n) const throw ();
 	const RealNumber operator- (const RealNumber &n) const throw ();

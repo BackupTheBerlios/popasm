@@ -1741,7 +1741,7 @@ string RealNumber::Print (Word Base = 10, Dword n = 8) const throw ()
 
 void RealNumber::Write (vector<Byte> &Output, unsigned int n) const
 {
-	if (GetInteger())
+	if (IsInteger())
 	{
 		(Mantissa * NaturalNumber (10).Power(Exponent.Abs())).Write (Output, n);
 	}
