@@ -23,7 +23,60 @@
 #define PARSER_H
 
 #include <vector>
-#include "lexical.h"
+#include <exception>
+#include <string>
+#include "lexop.h"
+
+// Thrown when a pair of enclosers do not match. Eg. "(2 + 2]"
+class EncloserMismatch : public exception
+{
+	const Encloser *Opener, *Closer;
+	string WhatString;
+
+	public:
+	EncloserMismatch (const Encloser *op, const Encloser *cl) throw ();
+	~EncloserMismatch () throw () {}
+
+	const char *what() const throw () {return WhatString.c_str();}
+};
+
+// Thrown when the user opens an encloser pair but forgets to close it. Eg. "(2 + 2"
+class UnmatchedEncloser : public exception
+{
+	Encloser *Opener;
+	string WhatString;
+
+	public:
+	UnmatchedEncloser (Encloser *op) throw (): Opener(op), WhatString ("Unmatched ") {WhatString += op->GetName();}
+	~UnmatchedEncloser () throw () {}
+
+	const char *what() const throw () {return WhatString.c_str();}
+};
+
+// Thrown when a token cannot be converted to an expression. Eg. "MACRO_NAME + 2"
+class UnexpectedToken : public exception
+{
+	const Token *t;
+	string WhatString;
+
+	public:
+	UnexpectedToken (const Token *tt) throw ();
+	~UnexpectedToken () throw () {}
+
+	const char *what() const throw () {return WhatString.c_str();}
+};
+
+// Thrown when the end of Tokens list (and thus the expression itself) ends unexpectedly. Eg. "1 + 2 +"
+class UnexpectedEnd : public exception
+{
+	static const char *WhatString;
+
+	public:
+	UnexpectedEnd () throw () {}
+	~UnexpectedEnd () throw () {}
+
+	const char *what() const throw () {return WhatString;}
+};
 
 class Parser
 {

@@ -21,21 +21,37 @@
 
 #include "parser.h"
 
+EncloserMismatch::EncloserMismatch (const Encloser *op, const Encloser *cl) throw () : Opener(op), Closer(cl)
+{
+	WhatString = "Encloser mismatch between ";
+	WhatString += op->GetName();
+	WhatString += " and ";
+	WhatString += cl->GetName();
+}
+
 Expression *MakeTerm (Token *t)
 {
 	Number *n;
-	Register *r;
+	Symbol *s;
 
 	// Checks for numbers
 	n = dynamic_cast<Number *> (t);
 	if (n != 0) return new Expression (n, 0);
 
-	// Checks for registers
-	r = dynamic_cast<Register *> (t);
-	if (r != 0) return new Expression (new Number (1), r);
+	// Checks for symbols
+	s = dynamic_cast<Symbol *> (t);
+	if (s != 0) return new Expression (0, s);
 
-	throw 0;
+	throw UnexpectedToken (t);
 }
+
+UnexpectedToken::UnexpectedToken (const Token *tt) throw () : t(tt)
+{
+	WhatString = "Unexpected token: ";
+	WhatString += t->Print();
+}
+
+const char *UnexpectedEnd::WhatString = "Unexpected end of expression reached.";
 
 enum StopCondition {END_REACHED, TERM_REACHED, ENCLOSER_REACHED};
 
@@ -59,7 +75,7 @@ StopCondition ReadPrefixOperators (vector<Operator *> &UnaryOps, vector<Token *>
 		if (enc != 0)
 		{
 			// If it is and is not an opening one, throw exception
-			if (!enc->Opens()) throw 0;
+			if (!enc->Opens()) throw UnexpectedToken (*i);
 			return ENCLOSER_REACHED;
 		}
 
@@ -76,11 +92,15 @@ Operator *GetBinaryOperator (vector<Token *> &v, vector<Token *>::iterator &i, E
 	Operator *BinaryOp;
 	Encloser *enc;
 
-	if (i == v.end()) return 0;
+	if (i == v.end())
+	{
+		if (Opener == 0) return 0;
+		throw UnmatchedEncloser (Opener);
+	}
 
 	// Checks for a binary operator after the term just read. If not found, we have two consecutive terms
 	BinaryOp = dynamic_cast<Operator *> (*i);
-	if (BinaryOp == 0) throw 0;
+	if (BinaryOp == 0) return 0;
 
 	// Checks if the operator is an encloser
 	enc = dynamic_cast<Encloser *> (BinaryOp);
@@ -88,7 +108,7 @@ Operator *GetBinaryOperator (vector<Token *> &v, vector<Token *>::iterator &i, E
 	{
 		// If it is, check if enclosers match
 		if (Opener->Matches (*enc)) return enc;
-		else throw 0;
+		else throw EncloserMismatch (Opener, enc);
 	}
 
 	return BinaryOp;
@@ -105,7 +125,7 @@ Expression *GetExpression (vector<Token *> &v, vector<Token *>::iterator &i, uns
 	switch (ReadPrefixOperators(UnaryOps, v, i))
 	{
 		case END_REACHED:
-			throw 0;
+			throw UnexpectedEnd();
 
 		case TERM_REACHED:
 			// Gets the term that follows the unary operators
@@ -123,7 +143,7 @@ Expression *GetExpression (vector<Token *> &v, vector<Token *>::iterator &i, uns
 			break;
 
 		default:
-			throw 0;
+			throw UnexpectedEnd();
 	}
 
 	BinaryOp = GetBinaryOperator (v, i, Opener);
