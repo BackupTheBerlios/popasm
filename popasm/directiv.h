@@ -19,10 +19,13 @@
 #define DIRECTIV_H
 
 #include <string>
+#include <exception>
 
 #include "command.h"
 #include "hashtab.h"
 #include "symbol.h"
+#include "lexsym.h"
+#include "constant.h"
 
 typedef void (*DirectiveFunction) (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding);
 
@@ -57,6 +60,17 @@ class DefinitionDirective : public Directive
 
 	void Assemble (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j,
 		vector<Byte> &Encoding) const;
+};
+
+class NameMissing : public exception
+{
+	static char WhatString[];
+
+	public:
+	NameMissing () throw () {}
+	~NameMissing () throw () {}
+
+	const char *what() const throw () {return WhatString;}
 };
 
 #endif
