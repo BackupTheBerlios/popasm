@@ -40,47 +40,77 @@ Register *SegmentRegister::Read (const string &str, InputFile &inp) throw ()
 	return 0;
 }
 
-GPRegister GPRegister::RegisterTable[] =
-{
-	GPRegister ("ECX", 32, 1),
-	GPRegister ("EDX", 32, 2),
-	GPRegister ("EBX", 32, 3),
-	GPRegister ("ESP", 32, 4),
-	GPRegister ("EBP", 32, 5),
-	GPRegister ("ESI", 32, 6),
-	GPRegister ("EDI", 32, 7),
-
-	GPRegister ("CX", 16, 1),
-	GPRegister ("DX", 16, 2),
-	GPRegister ("SP", 16, 4),
-
-	GPRegister ("CL", 8, 1),
-	GPRegister ("DL", 8, 2),
-	GPRegister ("BL", 8, 3),
-	GPRegister ("AH", 8, 4),
-	GPRegister ("CH", 8, 5),
-	GPRegister ("DH", 8, 6),
-	GPRegister ("BH", 8, 7)
-};
+GPRegister::~GPRegister () throw () {}
 
 Register *GPRegister::Read (const string &str, InputFile &inp) throw ()
 {
-	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (GPRegister); i++)
+	Register *answer;
+
+	answer = GPRegister8Bits::Read (str, inp);
+	if (answer != 0) return answer;
+
+	answer = GPRegister16Bits::Read (str, inp);
+	if (answer != 0) return answer;
+
+	return GPRegister32Bits::Read (str, inp);
+}
+
+GPRegister8Bits GPRegister8Bits::RegisterTable[] =
+{
+	GPRegister8Bits ("AL", 8, 0),
+	GPRegister8Bits ("CL", 8, 1),
+	GPRegister8Bits ("DL", 8, 2),
+	GPRegister8Bits ("BL", 8, 3),
+	GPRegister8Bits ("AH", 8, 4),
+	GPRegister8Bits ("CH", 8, 5),
+	GPRegister8Bits ("DH", 8, 6),
+	GPRegister8Bits ("BH", 8, 7)
+};
+
+Register *GPRegister8Bits::Read (const string &str, InputFile &inp) throw ()
+{
+	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (GPRegister8Bits); i++)
 		if (RegisterTable[i].GetName() == str) return RegisterTable + i;
 
 	return 0;
 }
 
-Accumulator Accumulator::RegisterTable[] =
+GPRegister16Bits GPRegister16Bits::RegisterTable[] =
 {
-	Accumulator ("EAX", 32, 0),
-	Accumulator ("AX", 16, 0),
-	Accumulator ("AL", 8, 0)
+	GPRegister16Bits ("AX", 16, 0),
+	GPRegister16Bits ("CX", 16, 1),
+	GPRegister16Bits ("DX", 16, 2),
+	GPRegister16Bits ("SP", 16, 4)
 };
 
-Register *Accumulator::Read (const string &str, InputFile &inp) throw ()
+Register *GPRegister16Bits::Read (const string &str, InputFile &inp) throw ()
 {
-	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (Accumulator); i++)
+	Register *answer;
+
+	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (GPRegister16Bits); i++)
+		if (RegisterTable[i].GetName() == str) return RegisterTable + i;
+
+	answer = BaseRegister::Read (str, inp);
+	if (answer != 0) return 0;
+
+	return IndexRegister::Read (str, inp);
+}
+
+GPRegister32Bits GPRegister32Bits::RegisterTable[] =
+{
+	GPRegister32Bits ("EAX", 32, 0),
+	GPRegister32Bits ("ECX", 32, 1),
+	GPRegister32Bits ("EDX", 32, 2),
+	GPRegister32Bits ("EBX", 32, 3),
+	GPRegister32Bits ("ESP", 32, 4),
+	GPRegister32Bits ("EBP", 32, 5),
+	GPRegister32Bits ("ESI", 32, 6),
+	GPRegister32Bits ("EDI", 32, 7)
+};
+
+Register *GPRegister32Bits::Read (const string &str, InputFile &inp) throw ()
+{
+	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (GPRegister32Bits); i++)
 		if (RegisterTable[i].GetName() == str) return RegisterTable + i;
 
 	return 0;
@@ -287,9 +317,6 @@ Register *Register::Read (const string &str, InputFile &inp) throw ()
 	if (answer != 0) return answer;
 
 	answer = GPRegister::Read (UppercaseName, inp);
-	if (answer != 0) return answer;
-
-	answer = Accumulator::Read (UppercaseName, inp);
 	if (answer != 0) return answer;
 
 	answer = BaseRegister::Read (UppercaseName, inp);

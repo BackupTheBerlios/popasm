@@ -22,6 +22,7 @@
 #define REGISTER_H
 
 #include <string>
+
 #include "symbol.h"
 #include "inp_file.h"
 #include "argument.h"
@@ -62,27 +63,55 @@ class SegmentRegister : public Register
 // General-Purpose Registers
 class GPRegister : public Register
 {
-	static GPRegister RegisterTable[];
-
 	public:
 	GPRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
-	~GPRegister () throw () {}
+	GPRegister (const GPRegister &gpr) throw () : Register (gpr) {}
+	~GPRegister () throw () = 0;
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
 class Accumulator : public GPRegister
 {
-	static Accumulator RegisterTable[];
+	public:
+	Accumulator (const GPRegister &gpr) : GPRegister (gpr) {if (gpr.GetCode() != 0) throw 0;}
+	~Accumulator () {}
+};
+
+class GPRegister8Bits : public GPRegister
+{
+	static GPRegister8Bits RegisterTable[];
 
 	public:
-	Accumulator (const string &n, unsigned int s, unsigned int c) throw () : GPRegister (n, s, c) {}
-	~Accumulator () {}
+	GPRegister8Bits (const string &n, unsigned int s, unsigned int c) throw () : GPRegister (n, s, c) {}
+	~GPRegister8Bits () throw () {}
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
-class BaseRegister : public GPRegister
+class GPRegister16Bits : public GPRegister
+{
+	static GPRegister16Bits RegisterTable[];
+
+	public:
+	GPRegister16Bits (const string &n, unsigned int s, unsigned int c) throw () : GPRegister (n, s, c) {}
+	~GPRegister16Bits () throw () {}
+
+	static Register *Read (const string &str, InputFile &inp) throw ();
+};
+
+class GPRegister32Bits : public GPRegister
+{
+	static GPRegister32Bits RegisterTable[];
+
+	public:
+	GPRegister32Bits (const string &n, unsigned int s, unsigned int c) throw () : GPRegister (n, s, c) {}
+	~GPRegister32Bits () throw () {}
+
+	static Register *Read (const string &str, InputFile &inp) throw ();
+};
+
+class BaseRegister : public GPRegister16Bits
 {
 	static BaseRegister RegisterTable[];
 
@@ -90,13 +119,13 @@ class BaseRegister : public GPRegister
 	Byte BaseCode, BaseIndexCode;
 
 	BaseRegister (const string &n, unsigned int s, unsigned int c, Byte bc, Byte bic) throw ()
-		: GPRegister (n, s, c), BaseCode (bc), BaseIndexCode (bic) {}
+		: GPRegister16Bits (n, s, c), BaseCode (bc), BaseIndexCode (bic) {}
 	~BaseRegister () {}
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
-class IndexRegister : public GPRegister
+class IndexRegister : public GPRegister16Bits
 {
 	static IndexRegister RegisterTable[];
 
@@ -104,7 +133,7 @@ class IndexRegister : public GPRegister
 	Byte BaseCode, IndexCode;
 
 	IndexRegister (const string &n, unsigned int s, unsigned int c, Byte bc, Byte ic) throw ()
-		: GPRegister (n, s, c), BaseCode (bc), IndexCode (ic) {}
+		: GPRegister16Bits (n, s, c), BaseCode (bc), IndexCode (ic) {}
 	~IndexRegister () {}
 
 	static Register *Read (const string &str, InputFile &inp) throw ();
