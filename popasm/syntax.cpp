@@ -117,6 +117,19 @@ bool ZerarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 	return true;
 }
 
+bool RetSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
+{
+	// Verifies the type of procedure
+	if (!(*ArgumentTypes.back())(0)) return false;
+
+	// Writes the operand size prefix if necessary
+	WriteOperandSizePrefix (Arguments, Output);
+
+	// Writes the basic encoding and return success.
+	Encoding.Write(Output);
+	return true;
+}
+
 UnarySyntax::UnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, Byte dwm = 0)
 	throw () : Syntax (op, dep), dw_mask(dwm)
 {

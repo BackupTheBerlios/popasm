@@ -105,12 +105,26 @@ class AddressSizeMix : public exception
 class ZerarySyntax : public Syntax
 {
 	public:
-	ZerarySyntax (const Opcode &op, OperandSizeDependsOn dep) throw () : Syntax (op, dep) {}
-	ZerarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg) throw ()
-		: Syntax (op, dep) {ArgumentTypes.push_back (arg);}
-	ZerarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, BasicIdFunctor *arg2) throw ()
-		: Syntax (op, dep) {ArgumentTypes.push_back (arg); ArgumentTypes.push_back (arg2);}
+	ZerarySyntax (const Opcode &op, OperandSizeDependsOn dep = NOTHING, BasicIdFunctor *arg1 = 0, BasicIdFunctor *arg2 = 0) throw ()
+		: Syntax (op, dep)
+	{
+		if (arg1 != 0)
+			ArgumentTypes.push_back (arg1);
+
+		if (arg2 != 0)
+			ArgumentTypes.push_back (arg2);
+	}
+
 	~ZerarySyntax () throw () {}
+
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
+};
+
+class RetSyntax : public ZerarySyntax
+{
+	public:
+	RetSyntax (const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg) : ZerarySyntax (op, dep, arg) {}
+	~RetSyntax () {}
 
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
 };
