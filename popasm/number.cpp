@@ -24,6 +24,7 @@ Word NaturalNumber::DefaultBase = 10;
 /**
 	@param d The value which must be converted to a NaturalNumber. Its 16 most significant bits
 		are ignored in case they are null. If (d == 0) no storage is allocated at all.
+	@return Nothing.
 */
 NaturalNumber::NaturalNumber (Dword d = 0) throw ()
 {
@@ -191,6 +192,7 @@ string SimplifyString (const string &s, Word &Base, bool *Negative = 0) throw (I
 /**
 	@param s The string to be parsed.
 	@param ForcedBase The base of the number. If this value is zero then DefaultBase is used instead.
+	@return Nothing
 	@throw InvalidNumber If the supplied string does not hold a valid number.
 	@throw InvalidDigit If any of the digits are not valid in the used base.
 
@@ -259,6 +261,7 @@ NaturalNumber::NaturalNumber (const string &s, Word ForcedBase = 0) throw (Inval
 /**
 	@param Base The base to be used to print the number. If ommitted, 10 will be assumed (i.e. the number
 		will be printed in decimal.
+	@return A string containing the number the way it would look if printed to screen.
 
 	@attention The name of this method is confusing indeed. It prints nothing to the screen; actually it
 	writes the number to a string. The string contains the number as it would be seen if printed in the
@@ -287,6 +290,7 @@ string NaturalNumber::Print (Word Base = 10) const throw ()
 	@param Output The vector which the data must be sent to.
 	@param n The length of output in bytes.
 	@param pad The value to be used to pad the output to be as large as n. If not specified, 0 will be used.
+	@return Nothing.
 
 	@attention If the output vector is not empty the bytes output to the vector will be appended to it.
 
@@ -306,7 +310,13 @@ void NaturalNumber::Write (vector<Byte> &Output, unsigned int n = 0, Byte pad = 
 	Output.insert (Output.end(), n, pad);
 }
 
-// Multiply a number by its own base
+/**
+	@param Base The value the NaturalNumber is to be multiplied by.
+	@return Nothing.
+
+	This method is often used when one wishes to build a number from its algarisms.
+	Eg. 123 = (((1 * 10) + 2) * 10) + 3
+*/
 void NaturalNumber::BaseShiftLeft (Word Base) throw ()
 {
 	Dword carry = 0;
@@ -326,7 +336,15 @@ void NaturalNumber::BaseShiftLeft (Word Base) throw ()
 	if (carry != 0) push_back (carry);
 }
 
-// Divide the number by its own base and return the remainer
+/**
+	@param Base The value the NaturalNumber is to be divided by.
+	@return The remainer of that division
+
+	This method is often used when one wishes to get the digits of a number
+	Eg. 3 = 123 MOD 10
+	    2 = 12  MOD 10
+		 1 = 1   MOD 10
+*/
 Word NaturalNumber::BaseShiftRight (Word Base) throw ()
 {
 	Dword carry = 0;
@@ -354,17 +372,28 @@ Word NaturalNumber::BaseShiftRight (Word Base) throw ()
 	return static_cast<Word> (carry);
 }
 
+/**
+	@return true if number is even.
+
+	The test is performed at the least significant word of the number, which can only be accessed if the number is not zero.
+	We thus have a boundary condition: if the number is zero, return true, otherwise get its least significant word and test it.
+*/
 bool NaturalNumber::Even () const throw ()
 {
 	if (Zero()) return true;
 	return (front() & 1) == 0;
 }
 
+/**
+	@param n The exponent the number must be raised to
+	@return The number raised to the nth power
+
+	This method implements the russian peasant algorithm.
+*/
 const NaturalNumber NaturalNumber::Power (const NaturalNumber &n) const throw ()
 {
 	NaturalNumber answer (1), Multiplier (*this), count(n);
 
-	// Russian Peasant Algorithm. See documentation for details
 	while (!count.Zero())
 	{
 		if (count.Odd()) answer *= Multiplier;
@@ -375,14 +404,19 @@ const NaturalNumber NaturalNumber::Power (const NaturalNumber &n) const throw ()
 	return answer;
 }
 
-// Shifts left whole words n times.
+/**
+	@param n How many words (positions in the vector) the number will be shifted.
+	@return Nothing.
+*/
 void NaturalNumber::WordShiftLeft (NaturalNumber n) throw ()
 {
 	// Something to shift?
 	if (Zero() || n.Zero()) return;
 
 	// Shifts the first n[0] words
-	if (n[0] != 0) insert (begin(), static_cast<long int> (n[0]), 0);
+	if (n[0] != 0)
+		insert (begin(), static_cast<long int> (n[0]), 0);
+
 	n.erase(n.begin());
 
 	// Shifts the remaining words
@@ -393,7 +427,10 @@ void NaturalNumber::WordShiftLeft (NaturalNumber n) throw ()
 	}
 }
 
-// Shifts right whole words n times.
+/**
+	@param n How many words (positions in the vector) the number will be shifted.
+	@return Nothing.
+*/
 void NaturalNumber::WordShiftRight (NaturalNumber n) throw ()
 {
 	// Shifting more words than we have?
