@@ -171,7 +171,7 @@ Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, e
 
 						Dword seg = q->first->GetUnsignedLong ();
 						Dword off = p->first->GetUnsignedLong ();
-						if (seg > 0xFFFF) throw InvalidFullPointer();
+						if (seg > 0xFFFF) throw SegmentOverflow();
 						return new Argument (new FullPointer (p->first->GetSize(), static_cast<Word> (seg), off), true);
 					}
 
