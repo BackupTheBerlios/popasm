@@ -116,14 +116,14 @@ bool ZerarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 	return true;
 }
 
-UnarySyntax::UnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, Byte dwm = 0)
-	throw () : Syntax (p, op, dep), dw_mask(dwm)
+UnarySyntax::UnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, Byte dwm = 0)
+	throw () : Syntax (op, dep), dw_mask(dwm)
 {
 	ArgumentTypes.push_back (arg);
 }
 
-UnarySyntax::UnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg1, BasicIdFunctor *arg2, Byte dwm = 0)
-	throw () : Syntax (p, op, dep), dw_mask(dwm)
+UnarySyntax::UnarySyntax (const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg1, BasicIdFunctor *arg2, Byte dwm = 0)
+	throw () : Syntax (op, dep), dw_mask(dwm)
 {
 	ArgumentTypes.push_back (arg1);
 	ArgumentTypes.push_back (arg2);
@@ -267,8 +267,8 @@ bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 	return true;
 }
 
-BinarySyntax::BinarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, bool i, Argument::CheckType chk,
-	Byte dwm, ModRegRM_Usage usage, BasicIdFunctor *arg1, BasicIdFunctor *arg2, BasicIdFunctor *arg3 = 0) throw () : Syntax (p, op, dep, i)
+BinarySyntax::BinarySyntax (const Opcode &op, OperandSizeDependsOn dep, bool i, Argument::CheckType chk,
+	Byte dwm, ModRegRM_Usage usage, BasicIdFunctor *arg1, BasicIdFunctor *arg2, BasicIdFunctor *arg3 = 0) throw () : Syntax (op, dep, i)
 {
 	Check = chk;
 	dw_mask = dwm;
@@ -414,10 +414,10 @@ bool BinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 	return true;
 }
 
-SuffixedBinarySyntax::SuffixedBinarySyntax (unsigned int p, const Opcode &op,
+SuffixedBinarySyntax::SuffixedBinarySyntax (const Opcode &op,
 	OperandSizeDependsOn dep, bool i, Argument::CheckType chk, Byte dwm, ModRegRM_Usage usage,
 	BasicIdFunctor *arg1, BasicIdFunctor *arg2, Byte suf) throw ()
-	: BinarySyntax (p, op, dep, i, chk, dwm, usage, arg1, arg2), Suffix(suf) {}
+	: BinarySyntax (op, dep, i, chk, dwm, usage, arg1, arg2), Suffix(suf) {}
 
 bool SuffixedBinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
 {
@@ -426,8 +426,8 @@ bool SuffixedBinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte>
 	return Result;
 }
 
-FPUBinarySyntax::FPUBinarySyntax (unsigned int p, const Opcode &op, BasicIdFunctor *arg1, BasicIdFunctor *arg2) throw ()
-	: Syntax (p, op, NOTHING, false)
+FPUBinarySyntax::FPUBinarySyntax (const Opcode &op, BasicIdFunctor *arg1, BasicIdFunctor *arg2) throw ()
+	: Syntax (op, NOTHING, false)
 {
 	ArgumentTypes.push_back (arg1);
 	ArgumentTypes.push_back (arg2);
@@ -446,9 +446,9 @@ bool FPUBinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Out
 	return true;
 }
 
-StringSyntax::StringSyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep,
+StringSyntax::StringSyntax (const Opcode &op, OperandSizeDependsOn dep,
 	Argument::CheckType chk, BasicIdFunctor *arg1, BasicIdFunctor *arg2, unsigned int ovr) throw ()
-	: Syntax (p, op, dep, false), Overrideable (ovr), Check (chk)
+	: Syntax (op, dep, false), Overrideable (ovr), Check (chk)
 {
 	ArgumentTypes.push_back (arg1);
 	if (arg2 != 0)	ArgumentTypes.push_back (arg2);
