@@ -50,7 +50,7 @@ BitOutOfBounds::BitOutOfBounds (const BasicArgument *arg, unsigned int n) : What
 	WhatString += arg->Print();
 }
 
-void Argument::TypeCheck (const vector<Argument *> &args, CheckType ct) throw (TypeMismatch, BitOutOfBounds)
+void Argument::TypeCheck (const vector<Argument *> &args, CheckType ct) throw (TypeMismatch, BitOutOfBounds, UndefinedSize)
 {
 	unsigned int Sizes[3];
 	for (unsigned int i = 0; i != args.size(); i++)
@@ -64,6 +64,7 @@ void Argument::TypeCheck (const vector<Argument *> &args, CheckType ct) throw (T
 			// If either argument has no defined size, match them
 			if (Sizes[0] == 0)
 			{
+				if (Sizes[1] == 0) throw UndefinedSize();
 				args[0]->SetSize (Sizes[1]);
 				break;
 			}

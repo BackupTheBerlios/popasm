@@ -115,7 +115,7 @@ class Argument
 	bool Match (BasicIdFunctor *arg) const {return (*arg)(Data);}
 
 	enum CheckType {NONE, EQUAL, GREATER, HALF, MINUS_16BITS, BIT_NUMBER};
-	static void TypeCheck (const vector<Argument *> &args, CheckType ct) throw (TypeMismatch, BitOutOfBounds);
+	static void TypeCheck (const vector<Argument *> &args, CheckType ct) throw (TypeMismatch, BitOutOfBounds, UndefinedSize);
 
 	unsigned int GetSize () const throw () {return Data->GetSize();}
 	void SetSize (unsigned int sz) const {Data->SetSize(sz);}
