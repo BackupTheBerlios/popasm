@@ -153,7 +153,7 @@ Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, e
 {
 	const Expression *Prefix = e.GetSegmentPrefix();
 
-	switch (e.GetType())
+	switch (e.GetCurrentType())
 	{
 		case Type::SCALAR:
 			if (e.QuantityOfTerms() == 1)
@@ -206,7 +206,7 @@ Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, e
 		{
 			Expression temp(e);
 
-			temp.SetType (CurrentAssembler->TranslateWeakMemory());
+			temp.SetCurrentType (CurrentAssembler->TranslateWeakMemory());
 			return MakeArgument (temp);
 		}
 

@@ -41,7 +41,8 @@ class Constant : public UserDefined
 	bool Mutable;
 
 	public:
-	Constant (const string &n, Expression *exp = 0, bool m = false) throw () : UserDefined (n), Value(exp), Mutable(m) {}
+	Constant (const string &n, Expression *exp = 0, bool m = false) throw ()
+		: UserDefined (n, Type(UNDEFINED, SCALAR)), Value(exp), Mutable(m) {}
 	~Constant () throw () {delete Value;}
 
 	const Expression *GetValue() const throw () {return Value;}
