@@ -60,6 +60,15 @@ void Syntax::WriteOperandSizePrefix (vector<Argument *> &Arguments, vector<Byte>
 		case MODE_32BITS:
 			if (CurrentAssembler->GetCurrentMode() == 32) return;
 			break;
+
+		case FULL_POINTER:
+			Argument *arg = Arguments[0];
+			unsigned int CurrentMode = CurrentAssembler->GetCurrentMode();
+
+			if (((CurrentMode == 16) && (arg->GetSize() == 48)) ||
+			    ((CurrentMode == 32) && (arg->GetSize() == 32))) break;
+
+			return;
 	}
 
 	// Writes the operand size prefix
@@ -194,6 +203,47 @@ bool AdditiveUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 	{
 		const Immediate *immed = dynamic_cast<const Immediate *> (Arguments[1]->GetData());
 		if (immed != 0) immed->Write (Output);
+	}
+
+	return true;
+}
+
+bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ()
+{
+	unsigned long int FinalOffset = Output.size();
+
+	// Writes the operand size prefix (if necessary) and the encoding
+	WriteOperandSizePrefix (Arguments, Output);
+	Encoding.Write (Output);
+
+	// Calculates the offset of the byte following the opcode
+	FinalOffset = (Output.size() - FinalOffset) + CurrentAssembler->GetCurrentOffset();
+
+	// Calculates the relative distance between the end of the instruction and the address it targets
+	const Immediate *immed = dynamic_cast <const Immediate *> (Arguments[0]->GetData());
+	unsigned long int Target = static_cast <IntegerNumber> (immed->GetValue()).GetValue (false);
+	long int RelativeDistance = Target -= FinalOffset;
+
+	// Checks for SHORT or NEAR
+	if (static_cast<RelativeArgument *> (ArgumentTypes[0])->GetRelativeDistance() == Type::SHORT)
+	{
+		RelativeDistance--;
+
+		if ((RelativeDistance < -128) || (RelativeDistance > 127)) throw 0;
+		Output.push_back (static_cast<Byte> (RelativeDistance & 0xFF));
+	}
+	else
+	{
+		unsigned int size = (immed->GetSize() == 0) ? CurrentAssembler->GetCurrentMode() : immed->GetSize();
+		RelativeDistance -= size / 8;
+
+		if (size == 16)
+		{
+			if ((RelativeDistance < -65535) || (RelativeDistance > 65535)) throw 0;
+			RelativeDistance &= 0xFFFF;
+		}
+
+		NaturalNumber (RelativeDistance).Write (Output, size / 8, 0);
 	}
 
 	return true;

@@ -40,7 +40,7 @@ class Syntax
 	bool Interchangeable;
 
 	public:
-	enum OperandSizeDependsOn {FIRST_ARGUMENT, SECOND_ARGUMENT, THIRD_ARGUMENT, NOTHING, MODE_16BITS, MODE_32BITS};
+	enum OperandSizeDependsOn {FIRST_ARGUMENT, SECOND_ARGUMENT, THIRD_ARGUMENT, NOTHING, MODE_16BITS, MODE_32BITS, FULL_POINTER};
 
 	protected:
 	OperandSizeDependsOn OperandSizePrefixUsage;
@@ -95,6 +95,16 @@ class AdditiveUnarySyntax : public UnarySyntax
 	AdditiveUnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg, BasicIdFunctor *arg2, Byte dwm = 0)
 		throw () : UnarySyntax (p, op, dep, arg, dwm) {ArgumentTypes.push_back (arg2);}
 	~AdditiveUnarySyntax () throw () {}
+
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ();
+};
+
+// Syntax used by control transfer instructions, like CALL, JMP, etc.
+class RelativeUnarySyntax : public UnarySyntax
+{
+	public:
+	RelativeUnarySyntax (unsigned int p, const Opcode &op, BasicIdFunctor *arg) throw () : UnarySyntax (p, op, FIRST_ARGUMENT, arg) {}
+	~RelativeUnarySyntax () throw () {}
 
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ();
 };
