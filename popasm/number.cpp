@@ -51,7 +51,7 @@ Dword NaturalNumber::SizeInBits() const throw (LeadingZero)
 	for (Dword i = 16; i != 0;)
 	{
 		i--;
-		if (msw & (1 << i) != 0) return (size() - 1) * 16 + i + 1;
+		if ((msw & (1 << i)) != 0) return (size() - 1) * 16 + i + 1;
 	}
 
 	throw LeadingZero();
@@ -975,7 +975,7 @@ Word NaturalNumber::IsRadix (char c) throw ()
 	return 0;
 }
 
-unsigned long int NaturalNumber::GetValue () const throw (Overflow)
+unsigned long int NaturalNumber::GetUnsignedLong () const throw (Overflow)
 {
 	unsigned long int value = 0;
 
@@ -993,6 +993,17 @@ unsigned long int NaturalNumber::GetValue () const throw (Overflow)
 	}
 
 	return value;
+}
+
+long int NaturalNumber::GetLong () const throw (Overflow)
+{
+	unsigned long int value = GetUnsignedLong();
+
+	// Tests for overflow
+	if (value >= 0x80000000)
+		throw Overflow ();
+
+	return static_cast<long int> (value);
 }
 
 //--- Integer Numbers
@@ -1460,32 +1471,6 @@ const IntegerNumber IntegerNumber::Divide (const IntegerNumber &n, IntegerNumber
 	return Quotient;
 }
 
-long int IntegerNumber::GetValue (bool CheckSign = true) const throw (Overflow)
-{
-	// Gets the value of the AbsoluteValue
-	long int t = static_cast<long int> (AbsoluteValue.GetValue());
-
-	if (CheckSign)
-	{
-		// Changes the sign if necessary and tests for overflow
-		if (Negative)
-		{
-			t = -t;
-			if (t > 0) throw Overflow();
-		}
-		else
-		{
-			if (t < 0) throw Overflow();
-		}
-	}
-	else
-	{
-		if (Negative) t = -t;
-	}
-
-	return t;
-}
-
 bool IntegerNumber::Test () throw ()
 {
 	try
@@ -1506,6 +1491,32 @@ bool IntegerNumber::Test () throw ()
 	}
 
 	return true;
+}
+
+// Returns the value of the number as an unsigned long int
+unsigned long int IntegerNumber::GetUnsignedLong () const throw (Overflow)
+{
+	unsigned long int value = AbsoluteValue.GetUnsignedLong();
+
+	// Throws overflow if number is negative
+	if (Negative && (value != 0))
+		throw Overflow();
+
+	return value;
+}
+
+// Returns the value of the number as a long int
+long int IntegerNumber::GetLong () const throw (Overflow)
+{
+	unsigned long int value = AbsoluteValue.GetUnsignedLong();
+
+	// Checks valid range
+	if (value > (Negative ? 0x80000000 : 0x7FFFFFFF)) throw Overflow();
+
+	if (Negative)
+		return -static_cast<long int> (value);
+	else
+		return static_cast<long int> (value);
 }
 
 //--- Real Numbers
@@ -1689,8 +1700,8 @@ void RealNumber::Write (vector<Byte> &Output, unsigned int n) const
 
 			case 8:
 				ImpliedOne = true;
-				MantissaSize = 52;
-				ExponentSize = 12;
+				MantissaSize = 53;
+				ExponentSize = 11;
 				break;
 
 			case 10:
@@ -1706,35 +1717,84 @@ void RealNumber::Write (vector<Byte> &Output, unsigned int n) const
 		NaturalNumber m(Mantissa.Abs());
 		NaturalNumber e(NaturalNumber(10).Power(Exponent.Abs()));
 		Dword count = 0;
+		Dword bias = (1 << (ExponentSize - 1)) - 1;
 
-		if (Mantissa.LesserThanZero())
+		if (Exponent.LesserThanZero())
 		{
-			
+			// Negative exponent
+			Dword x = MantissaSize + e.SizeInBits();
+			Dword y = m.SizeInBits();
+
+			// If mantissa too small, shifts it left to make it larger
+			if (x >= y)
+			{
+				x = x - y + 1;
+				m <<= x;
+				count = x;
+			}
+
+			// Evaluates m * 10^(-e)
+			m /= e;
+
+			// Shifts all needed bits, except the last one
+			x = m.SizeInBits() - MantissaSize;
+			m >>= x - 1;
+
+			// Rounds the result up if necessary
+			if (m.Odd()) m++;
+			m >>= 1;
+			count -= x;
+
+			// Checkks whether the rounding generated a carry
+			if (m.SizeInBits() > MantissaSize)
+			{
+				count--;
+				m >>= 1;
+			}
+
+			// Calculates biased exponent
+			count = bias + MantissaSize - count - 1;
 		}
 		else
 		{
-			// Performs mantissa * 10^exponent
+			// Positive exponent. Performs mantissa * 10^exponent
 			m *= e;
-			count = m.SizeInBits() - 1;
+			count = m.SizeInBits();
 
-			if (count >= MantissaSize)
+			if (count > MantissaSize)
 			{
 				// Shifts right the result to fit the mantissa size, rounding the result
-				m >>= count - MantissaSize;
+				m >>= count - MantissaSize - 1;
 				if (m.Odd()) m++;
 				m >>= 1;
 
-				// Calculates biased exponent
-				count = 1 << (ExponentSize - 1) - 1 - count;
+				// Checkks whether the rounding generated a carry
+				if (m.SizeInBits() > MantissaSize)
+				{
+					count++;
+					m >>= 1;
+				}
 			}
 			else
 			{
 				// Shifts left the mantissa to make it as large as needed
-				m <<= MantissaSize - (count + 1);
-
-				// Calculates biased exponent
-				count += 1 << (ExponentSize - 1) - 1;
+				m <<= MantissaSize - count;
 			}
+
+			// Calculates biased exponent
+			count += bias - 1;
+		}
+
+		// Checks for overflows and denormals
+		if ((count >= 2 * bias + 1) || (count == 0))
+		{
+			// Attempts to convert the number to denormal
+			count += MantissaSize - 1;
+			if (count >= 2 * bias + 1) throw Overflow();
+
+			// Shitfs the mantissa right so that the exponent can be zero
+			m >>= MantissaSize - count;
+			count = 0;
 		}
 
 		// Removes implicit 1 if any
@@ -1744,9 +1804,31 @@ void RealNumber::Write (vector<Byte> &Output, unsigned int n) const
 		m |= NaturalNumber (count) << MantissaSize;
 
 		// Sets sign bit
-		if (Mantissa.GetNegativeBit()) m.SetBit (n - 1);
+		if (Mantissa.GetNegativeBit()) m.SetBit (8 * n - 1);
 		m.Write (Output, n);
 	}
+}
+
+// Returns the value of the number as an unsigned long int
+unsigned long int RealNumber::GetUnsignedLong () const throw (Overflow, IntegerExpected)
+{
+	if (!Integer) throw IntegerExpected (*this);
+
+	if (Exponent.LesserThanZero())
+		return IntegerNumber (Mantissa / NaturalNumber (10).Power (Exponent.Abs())).GetUnsignedLong();
+	else
+		return IntegerNumber (Mantissa * NaturalNumber (10).Power (Exponent.Abs())).GetUnsignedLong();
+}
+
+// Returns the value of the number as a long int
+long int RealNumber::GetLong () const throw (Overflow, IntegerExpected)
+{
+	if (!Integer) throw IntegerExpected (*this);
+
+	if (Exponent.LesserThanZero())
+		return IntegerNumber (Mantissa / NaturalNumber (10).Power (Exponent.Abs())).GetLong();
+	else
+		return IntegerNumber (Mantissa * NaturalNumber (10).Power (Exponent.Abs())).GetLong();
 }
 
 void RealNumber::Adjust (RealNumber &n) throw ()

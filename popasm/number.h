@@ -37,6 +37,8 @@ class DivisionByZero;
 class LeadingZero;
 class PrecisionLoss;
 class NegativeShift;
+class InvalidFormat;
+class IntegerExpected;
 
 string SimplifyString (const string &s, Word &Base, bool *Negative = 0) throw (InvalidNumber);
 
@@ -149,9 +151,11 @@ class NaturalNumber : vector <Word>
 	// Detects if a number is zero
 	bool Zero() const throw (LeadingZero);
 	// Returns the value of the number as an unsigned long int
-	unsigned long int GetValue () const throw (Overflow);
+	unsigned long int GetUnsignedLong () const throw (Overflow);
+	// Returns the value of the number as a long int
+	long int GetLong () const throw (Overflow);
 
-	// Performs tests to check if the class is working without bugs
+	// Performs basic tests to check if the class is working without bugs
 	static bool Test () throw ();
 };
 
@@ -237,8 +241,11 @@ class IntegerNumber
 	bool Zero() const throw (LeadingZero);
 	// Gets the absolute value of the number
 	const NaturalNumber &Abs() const throw () {return AbsoluteValue;}
-	// Returns the value of the number as a signed long int
-	long int GetValue (bool CheckSign) const throw (Overflow);
+
+	// Returns the value of the number as an unsigned long int
+	unsigned long int GetUnsignedLong () const throw (Overflow);
+	// Returns the value of the number as a long int
+	long int GetLong () const throw (Overflow);
 
 	// Performs tests to check if the class is working without bugs
 	static bool Test () throw ();
@@ -313,6 +320,11 @@ class RealNumber
 	bool LesserThanZero () const throw () {return Mantissa.LesserThanZero();}
 
 	operator IntegerNumber () const throw (PrecisionLoss);
+
+	// Returns the value of the number as an unsigned long int
+	unsigned long int GetUnsignedLong () const throw (Overflow, IntegerExpected);
+	// Returns the value of the number as a long int
+	long int GetLong () const throw (Overflow, IntegerExpected);
 
 	// Performs tests to check if the class is working without bugs
 	static bool Test () throw ();
@@ -434,6 +446,17 @@ class InvalidFormat : public NumberException
 	InvalidFormat (unsigned int f) throw () :
 		NumberException ("Unsuported floating point format: "), Format (f) {WhatString += Print (f) + " bits.";}
 	~InvalidFormat () {}
+};
+
+// Thrown when a non-integer real number is converted to integer
+class IntegerExpected : public NumberException
+{
+	RealNumber n;
+
+	public:
+	IntegerExpected (const RealNumber &nn) throw ()
+		: NumberException ("Integer number expected, got "), n(nn) {WhatString += nn.Print();}
+	~IntegerExpected () throw () {}
 };
 
 #endif
