@@ -163,6 +163,13 @@ class ShortDisplacement : public MemoryException
 	~ShortDisplacement () {}
 };
 
+class UndefinedMemorySize : public MemoryException
+{
+	public:
+	UndefinedMemorySize () : MemoryException ("Memory reference size undefined.") {}
+	~UndefinedMemorySize () {}
+};
+
 class Memory : public BasicArgument
 {
 	Byte SegmentPrefix;			// Segment overide prefix (zero if none)
@@ -203,7 +210,12 @@ class Memory : public BasicArgument
 		{
 			const Memory *mem = dynamic_cast<const Memory *> (arg);
 			if (mem == 0) return false;
-			return MatchSize (size, mem->GetSize()) && Match (dist, mem->GetDistanceType()) && Match (type, mem->GetType());
+			if (MatchSize (size, mem->GetSize()))
+				return Match (dist, mem->GetDistanceType()) && Match (type, mem->GetType());
+			else
+				if (size == UNDEFINED) throw UndefinedMemorySize();
+
+			return false;
 		}
 	};
 
