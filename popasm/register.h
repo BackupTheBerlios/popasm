@@ -39,15 +39,15 @@ class Register : public BasicSymbol, public BasicArgument
 	static Register *Read (const string &str, InputFile &inp) throw ();
 	unsigned int GetCode () const throw () {return Code;}
 
-	template <class T, Byte code, int size = ANY>
+	template <class T, Byte code, int size>
 	class IdFunctor : public BasicArgument::IdFunctor
 	{
 		public:
-		IdFunctor (const SizeRestriction &sr) throw () : Size(sr) {}
 		bool operator() (const BasicArgument *arg)
 		{
-			if (dynamic_cast<const T *> (arg) == 0) return false;
-			return ((Code == code) && (MatchSize (size, GetSize())));
+			const T *reg = dynamic_cast<const T *> (arg);
+			if (reg == 0) return false;
+			return (reg->GetCode() == code) && MatchSize (size, arg->GetSize());
 		}
 	};
 
