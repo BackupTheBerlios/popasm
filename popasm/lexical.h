@@ -37,9 +37,10 @@ class Token
 	// Translates the token into a string
 	virtual string Print () const throw () = 0;
 
+	enum Context {COMMAND_EXPECTED, ARGUMENT_EXPECTED};
+
 	// Reads a token from the given file
-	static Token *GetToken (InputFile &inp);
-	static void ReadLine (vector<Token *> &Tokens, InputFile &Input) throw ();
+	static Token *GetToken (InputFile &inp, Context c);
 };
 /*
 // Thrown when the string got is neither a number, nor an operator, nor a symbol
