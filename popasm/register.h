@@ -32,7 +32,7 @@ class Register : public BasicSymbol, public BasicArgument
 	unsigned int Code;	// Register code
 
 	public:
-	Register (const string &n, unsigned int s, unsigned int c) throw () : BasicSymbol (n), BasicArgument (s), Code (c) {}
+	Register (const string &n, unsigned int s, unsigned int c) throw () : BasicSymbol (n), BasicArgument (s, NONE), Code (c) {}
 	~Register () throw () {}
 
 	// Attempts to read a register from the given string. Gets more from inp if necessary. Returns 0 if failed.
