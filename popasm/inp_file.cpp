@@ -6,6 +6,10 @@
     email                : helcio@users.sourceforge.net
  ***************************************************************************/
 
+//-------------------------------------------------------------------------------
+// This file contains classes regarding source files and processing lines of code
+//-------------------------------------------------------------------------------
+
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -17,16 +21,21 @@
 
 #include "inp_file.h"
 
-string *InputFile::GetString ()
+string UngetOverflow::WhatString = "Carriage return ungot from line 1.";
+
+string *InputFile::GetString () throw ()
 {
 	string *s;
 
 	// Returns last string ungot since last call (if any)
 	if (!UngotStrings.empty())
 	{
-		s = UngotStrings.top().first;
-		NextChar = UngotStrings.top().second;
+		UngotString us = UngotStrings.top();
 		UngotStrings.pop();
+		s = us.first;
+		NextChar = us.second;
+
+		if (*s == "\n") CurrentLine++;
 		return s;
 	}
 
@@ -76,15 +85,55 @@ string *InputFile::GetString ()
 	}
 
 	NextChar = (RestOfLine == "") ? 0 : RestOfLine[0];
+	if (*s == "\n") CurrentLine++;
 	return s;
 }
 
-void InputFile::UngetString (string *s, char c)
+void InputFile::UngetString (string *s, char c) throw (UngetOverflow)
 {
+	if (*s == "\n")
+	{
+		CurrentLine--;
+		if (CurrentLine == 0) throw UngetOverflow();
+	}
+
 	UngotStrings.push (pair<string *, char> (s, c));
 }
 
-bool InputFile::AlphaNumeric (char c)
+void InputFile::SkipLine() throw ()
+{
+	while (!UngotStrings.empty())
+	{
+		// Gets rid of the next string
+		UngotString us = UngotStrings.top();
+		UngotStrings.pop();
+
+		// End of line reached?
+		if (*us.first == "\n")
+		{
+			delete us.first;
+			CurrentLine++;
+			return;
+		}
+
+		// Deletes the next string and keeps scaning
+		delete us.first;
+	}
+
+	// All ungot strings scanned but no end of line found. So let's scan the RestOfLine
+	if (RestOfLine == "")
+	{
+		// Gets a new line if the previous one has been totally read.
+		::getline (*this, RestOfLine);
+	}
+
+	// Get rid of the rest of line
+	RestOfLine = "";
+	NextChar = 0;
+	CurrentLine++;
+}
+
+bool InputFile::AlphaNumeric (char c) throw ()
 {
 	return (((c >= '0') && (c <= '9')) ||
 			  ((c >= 'A') && (c <= 'Z')) ||
@@ -92,12 +141,12 @@ bool InputFile::AlphaNumeric (char c)
 			  (c == '_') || (c == '@') || (c == '$'));
 }
 
-bool InputFile::Space (char c)
+bool InputFile::Space (char c) throw ()
 {
 	return ((c == ' ') || (c == '\t') || (c == '\r'));
 }
 
-bool InputFile::Digit (char c)
+bool InputFile::Digit (char c) throw ()
 {
 	return ((c >= '0') && (c <= '9'));
 }
