@@ -16,6 +16,8 @@
  ***************************************************************************/
 
 #include "type_exp.h"
+#include "symbol.h"
+#include <algorithm>
 
 void Expression::SetSize (unsigned int s, Number::NumberType = Number::SIGNED) throw (InvalidSize, CastFailed)
 {
@@ -48,11 +50,26 @@ Expression::Expression (Number *n, Symbol *s) throw () : BasicExpression<Number,
 {
 	t = Type::SCALAR;
 	Size = 0;
+	SegmentPrefix = 0;
+}
+
+Expression::operator Symbol *() const
+{
+	if (Terms.size() != 1) throw SymbolExpected (*this);
+	if (Terms.back()->first != 0) throw SymbolExpected (*this);
+	if (Terms.back()->second == 0) throw SymbolExpected (*this);
+	return Terms.back()->second;
 }
 
 Expression &Expression::operator=  (const Expression &e) throw ()
 {
 	BasicExpression<Number, Symbol>::operator= (e);
+
+	delete SegmentPrefix;
+	if (e.SegmentPrefix == 0)
+		SegmentPrefix = 0;
+	else
+		SegmentPrefix = new Expression(*e.SegmentPrefix);
 
 	t = e.t;
 	Size = e.Size;
@@ -61,8 +78,13 @@ Expression &Expression::operator=  (const Expression &e) throw ()
 
 Expression &Expression::operator+= (const Expression &e)
 {
-	BasicExpression<Number, Symbol>::operator+= (e);
+	if (e.SegmentPrefix != 0)
+	{
+		if (SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);
+		SegmentPrefix = new Expression (*e.SegmentPrefix);
+	}
 
+	BasicExpression<Number, Symbol>::operator+= (e);
 	t += e.t;
 	Size = 0;
 	return *this;
@@ -70,6 +92,8 @@ Expression &Expression::operator+= (const Expression &e)
 
 Expression &Expression::operator-= (const Expression &e)
 {
+	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);
+
 	BasicExpression<Number, Symbol>::operator-= (e);
 
 	t -= e.t;
@@ -79,6 +103,8 @@ Expression &Expression::operator-= (const Expression &e)
 
 Expression &Expression::operator*= (const Expression &e)
 {
+	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);
+
 	BasicExpression<Number, Symbol>::operator*= (e);
 
 	t *= e.t;
@@ -88,6 +114,8 @@ Expression &Expression::operator*= (const Expression &e)
 
 Expression &Expression::operator/= (const Expression &e)
 {
+	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);
+
 	BasicExpression<Number, Symbol>::operator/= (e);
 
 	t /= e.t;
@@ -97,6 +125,8 @@ Expression &Expression::operator/= (const Expression &e)
 
 Expression &Expression::operator%= (const Expression &e)
 {
+	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);
+
 	BasicExpression<Number, Symbol>::operator%= (e);
 
 	t %= e.t;
@@ -124,6 +154,8 @@ Expression &Expression::operator~ ()
 
 Expression &Expression::operator&= (const Expression &e)
 {
+	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);
+
 	BasicExpression<Number, Symbol>::operator&= (e);
 
 	t &= e.t;
@@ -133,6 +165,8 @@ Expression &Expression::operator&= (const Expression &e)
 
 Expression &Expression::operator|= (const Expression &e)
 {
+	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);
+
 	BasicExpression<Number, Symbol>::operator|= (e);
 
 	t |= e.t;
@@ -142,6 +176,8 @@ Expression &Expression::operator|= (const Expression &e)
 
 Expression &Expression::operator^= (const Expression &e)
 {
+	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);
+
 	BasicExpression<Number, Symbol>::operator^= (e);
 
 	t ^= e.t;
@@ -151,6 +187,8 @@ Expression &Expression::operator^= (const Expression &e)
 
 Expression &Expression::operator<<= (const Expression &e)
 {
+	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);
+
 	BasicExpression<Number, Symbol>::operator<<= (e);
 
 	t <<= e.t;
@@ -160,9 +198,50 @@ Expression &Expression::operator<<= (const Expression &e)
 
 Expression &Expression::operator>>= (const Expression &e)
 {
+	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);
+
 	BasicExpression<Number, Symbol>::operator>>= (e);
 
 	t >>= e.t;
 	Size = 0;
 	return *this;
+}
+
+Expression &Expression::MemberSelect (const Expression &e)
+{
+	if (e.SegmentPrefix != 0) throw UnexpectedSegmentPrefix (e);
+
+	// Gets a pointer to the aggregate instance
+	Symbol *s1 = static_cast<Symbol *> (*this);
+	const AggregateInstance *ai = dynamic_cast<const AggregateInstance *> (s1->GetData());
+	if (ai == 0) throw AggregateExpected (*s1->GetData());
+
+	// Gets a pointer to the requested member
+	Symbol *s2 = static_cast<Symbol *> (e);
+	const Variable *v = dynamic_cast<const Variable *> (s2->GetData());
+
+	// Adds the base offset and the member displacement within the structure
+	Variable *v2 = new Variable (ai->GetName() + "." + v->GetName(), ai->GetOffset() + v->GetOffset(), v->GetSize(), v->GetLength());
+
+	// Replaces the contents of this expression with a weak memory variable
+	s1->SetData (v2, true);
+	t.SetCurrentType (Type::WEAK_MEMORY);
+
+	return *this;
+}
+
+Expression &Expression::Compose (const Expression &e)
+{
+	if ((SegmentPrefix != 0) || (e.SegmentPrefix != 0)) throw UnexpectedSegmentPrefix (e);
+
+	Expression *seg = new Expression (*this);
+	(*this) = e;
+	SegmentPrefix = seg;
+	return *this;
+}
+
+const pair<Number *, Symbol *> *Expression::TermAt (unsigned int n) const throw ()
+{
+	if (n >= Terms.size()) return 0;
+	return Terms[n];
 }
