@@ -27,7 +27,7 @@ class Procedure : public UserDefined
 
 	public:
 	Procedure (const string &n, int dist = NEAR) throw ()
-		: UserDefined(n, Type (0, WEAK_MEMORY, dist)), Open(true) {}
+		: UserDefined(n, Type (0, SCALAR, dist)), Open(true) {}
 	~Procedure () throw () {}
 
 	void Close () {if (!Open) throw 0; Open = false;}
