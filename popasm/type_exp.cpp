@@ -69,7 +69,7 @@ Expression &Expression::operator=  (const Expression &e) throw ()
 	if (e.SegmentPrefix == 0)
 		SegmentPrefix = 0;
 	else
-		SegmentPrefix = new Expression(*e.SegmentPrefix);
+		SegmentPrefix = e.SegmentPrefix->Clone();
 
 	t = e.t;
 	Size = e.Size;
@@ -218,7 +218,10 @@ Expression &Expression::MemberSelect (const Expression &e)
 
 	// Gets a pointer to the requested member
 	Symbol *s2 = static_cast<Symbol *> (e);
-	const Variable *v = dynamic_cast<const Variable *> (s2->GetData());
+	const Variable *v = ai->GetFather()->FindMember (s2->GetName());
+
+	// Checks if the member exists
+	if (v == 0) throw NotAMember (ai->GetName(), s2->GetName());
 
 	// Adds the base offset and the member displacement within the structure
 	Variable *v2 = new Variable (ai->GetName() + "." + v->GetName(), ai->GetOffset() + v->GetOffset(), v->GetSize(), v->GetLength());
@@ -226,7 +229,6 @@ Expression &Expression::MemberSelect (const Expression &e)
 	// Replaces the contents of this expression with a weak memory variable
 	s1->SetData (v2, true);
 	t.SetCurrentType (Type::WEAK_MEMORY);
-
 	return *this;
 }
 
@@ -234,7 +236,7 @@ Expression &Expression::Compose (const Expression &e)
 {
 	if ((SegmentPrefix != 0) || (e.SegmentPrefix != 0)) throw UnexpectedSegmentPrefix (e);
 
-	Expression *seg = new Expression (*this);
+	Expression *seg = Clone();
 	(*this) = e;
 	SegmentPrefix = seg;
 	return *this;

@@ -45,10 +45,11 @@ class Expression : BasicExpression<Number, Symbol>
 	{
 		t = e.t;
 		Size = e.Size;
-		SegmentPrefix = (e.SegmentPrefix == 0) ? 0 : new Expression (*e.SegmentPrefix);
+		SegmentPrefix = (e.SegmentPrefix == 0) ? 0 : e.SegmentPrefix->Clone();
 	}
 
 	~Expression () throw () {delete SegmentPrefix;}
+	virtual Expression *Clone() const {return new Expression(*this);}
 
 	unsigned int GetSize () const throw () {return Size;}
 	void SetSize (unsigned int s, Number::NumberType = Number::SIGNED) throw (InvalidSize, CastFailed);
@@ -118,6 +119,13 @@ class InvalidArgument : public ExpressionException
 	public:
 	InvalidArgument (const Expression &e) : ExpressionException ("Invalid argument: ") {WhatString += e.Print();}
 	~InvalidArgument () {}
+};
+
+class NotAMember : public ExpressionException
+{
+	public:
+	NotAMember (const string &s1, const string &s2) : ExpressionException (s2 + " is not a member of " + s1) {}
+	~NotAMember () {}
 };
 
 #endif
