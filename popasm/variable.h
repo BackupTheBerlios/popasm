@@ -58,7 +58,7 @@ class Variable : public UserDefined
 class Label : public UserDefined
 {
 	public:
-	Label (const string &n, int dist = UNDEFINED) throw () : UserDefined(n, Type (0, WEAK_MEMORY, dist)) {}
+	Label (const string &n, int dist = UNDEFINED) throw () : UserDefined(n, Type (0, SCALAR, dist)) {}
 	~Label () throw () {}
 };
 
