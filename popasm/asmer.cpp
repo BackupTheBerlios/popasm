@@ -101,7 +101,7 @@ bool Assembler::PerformPass (InputFile &File) throw ()
 			if (LineEncoding.size() != 0)
 			{
 				CurrentOffset += LineEncoding.size();
-				Segments.back()->AddContents (LineEncoding);
+				AddContents (LineEncoding);
 			}
 
 			PrintVector (LineEncoding);
@@ -169,6 +169,17 @@ void Assembler::CloseProcedure (const string &s)
 
 	CurrentProcedure->Close();
 	CurrentProcedure = 0;
+}
+
+const Procedure *Assembler::GetCurrentProcedure() const throw ()
+{
+	if (CurrentProcedure != 0)
+	{
+		if (!CurrentProcedure->IsOpen())
+			return 0;
+	}
+
+	return CurrentProcedure;
 }
 
 Token *Assembler::Read (const string &str, InputFile &inp) throw ()

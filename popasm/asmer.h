@@ -59,6 +59,7 @@ class Assembler
 	void SetCurrentMode (unsigned int n);
 	unsigned long int GetCurrentOffset () const throw () {return CurrentOffset;}
 	unsigned long int GetCurrentLine () const throw ();
+	const Procedure *GetCurrentProcedure() const throw ();
 
 	void AddSegment (Segment *seg);
 	void CloseSegment (const string &s);
