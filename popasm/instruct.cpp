@@ -52,12 +52,11 @@ BasicSymbol *Instruction::Read (const string &str, InputFile &inp)
 	return (i == 0) ? 0 : *i;
 }
 
-void Instruction::Assemble (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j,
-	vector<Byte> &Encoding) const
+void Instruction::Assemble (const Symbol *sym, Parser &p, vector<Byte> &Encoding) const
 {
 	// Converts the tokens into arguments.
 	vector<Argument *> Arguments;
-	Parser::ParseArguments (i, j, Arguments);
+	p.ParseArguments (Arguments);
 
 	// Include in the symbol table the creation of the new label
 	if (sym != 0)

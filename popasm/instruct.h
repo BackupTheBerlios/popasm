@@ -26,7 +26,7 @@
 #include "argument.h"
 #include "command.h"
 #include "hashtab.h"
-#include "inp_file.h"
+#include "parser.h"
 #include "memory.h"
 #include "opcode.h"
 #include "register.h"
@@ -52,8 +52,7 @@ class Instruction : public Command
 	static void SetupInstructionTable () throw ();
 	static BasicSymbol *Read (const string &str, InputFile &inp);
 
-	void Assemble (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j,
-		vector<Byte> &Encoding) const;
+	void Assemble (const Symbol *sym, Parser &p, vector<Byte> &Encoding) const;
 };
 
 class InvalidSyntax : public exception
