@@ -20,6 +20,8 @@
  ***************************************************************************/
 
 #include "asmer.h"
+#include "instruct.h"
+#include "directiv.h"
 
 const OperatorData<Expression> *PopAsm::OperatorTable[] =
 {
@@ -30,6 +32,7 @@ const OperatorData<Expression> *PopAsm::OperatorTable[] =
 	new ModEqual<Expression> ("MOD", 0, 500),
 	new Colon<Expression> (":", 0, 900),
 	new Period<Expression> (".", 0, 1000),
+	new OperatorData<Expression> (",", 0, 0),
 	new And<Expression> ("AND", 0, 200),
 	new Or<Expression> ("OR", 0, 100),
 	new Xor<Expression> ("XOR", 0, 100),
@@ -60,6 +63,8 @@ PopAsm::PopAsm () throw ()
 {
 	SetupOperatorTable ();
 	SetupEncloserTable ();
+	Instruction::SetupInstructionTable ();
+	Directive::SetupDirectiveTable ();
 }
 
 PopAsm::~PopAsm () throw ()
@@ -69,6 +74,8 @@ PopAsm::~PopAsm () throw ()
 
 	for (unsigned int i = 0; EncloserTable[i] != 0; i++)
 		delete EncloserTable[i];
+
+	// Still pending: destroy instruction and directive tables.
 }
 
 void PopAsm::SetupOperatorTable () throw ()
