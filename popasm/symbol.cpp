@@ -17,7 +17,7 @@
 
 #include "symbol.h"
 
-unsigned int HashFunctor::operator() (BasicSymbol * const &sd)
+unsigned int HashFunctor::operator() (const BasicSymbol * const &sd)
 {
 	unsigned int x = 0;
 

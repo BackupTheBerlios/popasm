@@ -165,7 +165,7 @@ class Macro : public BasicSymbol
 class HashFunctor
 {
 	public:
-	unsigned int operator() (BasicSymbol * const &sd);
+	unsigned int operator() (const BasicSymbol * const &sd);
 };
 
 #endif
