@@ -23,6 +23,8 @@
 
 #include <string>
 #include <exception>
+#include <vector>
+
 #include "inp_file.h"
 
 // Tokens base class
@@ -37,6 +39,7 @@ class Token
 
 	// Reads a token from the given file
 	static Token *GetToken (InputFile &inp);
+	static void ReadLine (vector<Token *> &Tokens, InputFile &Input) throw ();
 };
 /*
 // Thrown when the string got is neither a number, nor an operator, nor a symbol

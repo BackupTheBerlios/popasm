@@ -60,3 +60,40 @@ Token *Token::GetToken (InputFile &inp)
 	// If all of the above fails... who knows which token is this??
 	return new Symbol (new BasicSymbol (*s), true);
 }
+
+void Token::ReadLine (vector<Token *> &Tokens, InputFile &Input) throw ()
+{
+	Token *t;
+	Symbol *s;
+
+	// Reads all tokens and place them in a vector
+	while (true)
+	{
+		// Get the next token
+		t = GetToken(Input);
+
+		// Checks for end-of-file
+		if (t == 0) break;
+
+		s = dynamic_cast<Symbol *> (t);
+		if (s != 0)
+		{
+			// Checks for end-of-line
+			if (s->GetName() == "\n")
+			{
+				delete t;
+				break;
+			}
+
+			// Checks for comment
+			if (s->GetName() == ";")
+			{
+				delete t;
+				Input.SkipLine ();
+				break;
+			}
+		}
+
+		Tokens.push_back (t);
+	}
+}
