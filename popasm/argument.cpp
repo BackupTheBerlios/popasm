@@ -27,76 +27,75 @@
 #include "lexnum.h"
 #include "immed.h"
 
-bool Argument::TypeCheck (Argument &arg, CheckType ct) const throw (UndefinedSize, OneUndefinedSize)
+void Argument::TypeCheck (const vector<Argument *> &args, CheckType ct) throw (TypeMismatch)
 {
-	if (ct == NONE) return true;
-
-	unsigned int s1 = Data->GetSize();
-	unsigned int s2 = arg.Data->GetSize();
+	unsigned int Sizes[3];
+	for (unsigned int i = 0; i != args.size(); i++)
+		if (args[i] != 0)
+			Sizes[i] = args[i]->GetSize();
 
 	// Performs the check according to the desired way
 	switch (ct)
 	{
 		case EQUAL:
-			// If both arguments have no defined size, throw exception
-			if ((s1 == 0) && (s2 == 0)) throw UndefinedSize();
-
 			// If either argument has no defined size, match them
-			if (s1 == 0)
+			if (Sizes[0] == 0)
 			{
-				SetSize (s2);
-				return true;
+				args[0]->SetSize (Sizes[1]);
+				break;
 			}
 
-			if (s2 == 0)
+			if (Sizes[1] == 0)
 			{
-				arg.SetSize (s1);
-				return true;
+				args[1]->SetSize (Sizes[0]);
+				break;
 			}
 
-			return s1 == s2;
+			if (Sizes[0] != Sizes[1]) throw TypeMismatch (args);
+			break;
 
 		case GREATER:
 			// Both sizes MUST be known
-			if ((s1 == 0) || (s2 == 0)) throw OneUndefinedSize();
-			return s1 > s2;
+			if ((Sizes[0] == 0) || (Sizes[1] == 0)) throw OneUndefinedSize();
+			if  (Sizes[0] <= Sizes[1]) throw TypeMismatch (args);
+			break;
 
 		case HALF:
 			// If either argument has no defined size, match them so the first is half of the second in size
-			if (s1 == 0)
+			if (Sizes[0] == 0)
 			{
-				SetSize (s2 / 2);
-				return true;
+				args[1]->SetSize (Sizes[1] / 2);
+				break;
 			}
 
-			if (s2 == 0)
+			if (Sizes[1] == 0)
 			{
-				arg.SetSize (s1 * 2);
-				return true;
+				args[1]->SetSize (Sizes[0] * 2);
+				break;
 			}
 
-			return s1 == (s2 / 2);
+			if (Sizes[0] != (Sizes[1] / 2)) throw TypeMismatch (args);
+			break;
 
 		case MINUS_16BITS:
-			if (s1 == 0)
+			if (Sizes[0] == 0)
 			{
-				SetSize (s2 - 16);
-				return true;
+				args[0]->SetSize (Sizes[1] - 16);
+				break;
 			}
 
-			if (s2 == 0)
+			if (Sizes[1] == 0)
 			{
-				arg.SetSize (s1 + 2);
-				return true;
+				args[1]->SetSize (Sizes[0] + 16);
+				break;
 			}
 
-			return (s1 == s2 - 16);
+			if (Sizes[0] != Sizes[1] - 16) throw TypeMismatch (args);
+			break;
 
 		case NONE:
 			break;
 	}
-
-	return true;
 }
 
 Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, exception)

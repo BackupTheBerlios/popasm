@@ -32,6 +32,8 @@
 #include "functors.h"
 
 class BasicArgument;
+class Argument;
+
 typedef UnaryFunction<const BasicArgument *, bool> BasicIdFunctor;
 
 class BasicArgument : public Type
@@ -74,6 +76,18 @@ class OneUndefinedSize : public exception
 	const char *what() const throw() {return WhatString;}
 };
 
+class TypeMismatch : public exception
+{
+	string WhatString;
+
+	public:
+	TypeMismatch (const vector<Argument *> v) throw ()
+		: WhatString ("Type mismatch between ") {}
+	~TypeMismatch () throw () {}
+
+	const char *what() const throw () {return WhatString.c_str();}
+};
+
 class Argument
 {
 	const BasicArgument *Data;
@@ -91,7 +105,8 @@ class Argument
 	bool Match (BasicIdFunctor *arg) const {return (*arg)(Data);}
 
 	enum CheckType {NONE, EQUAL, GREATER, HALF, MINUS_16BITS};
-	bool TypeCheck (Argument &arg, CheckType ct) const throw (UndefinedSize, OneUndefinedSize);
+	static void TypeCheck (const vector<Argument *> &args, CheckType ct) throw (TypeMismatch);
+
 	unsigned int GetSize () const throw () {return Data->GetSize();}
 	void SetSize (unsigned int sz) const {Data->SetSize(sz);}
 
