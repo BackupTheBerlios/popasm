@@ -31,10 +31,12 @@ class NumberException;
 class InvalidBase;
 class InvalidDigit;
 class InvalidNumber;
+class Overflow;
 class Underflow;
 class DivisionByZero;
 class LeadingZero;
 class PrecisionLoss;
+class NegativeShift;
 
 string SimplifyString (const string &s, Word &Base, bool *Negative = 0) throw (InvalidNumber);
 
@@ -52,8 +54,8 @@ class NaturalNumber : vector <Word>
 
 	protected:
 	// Shift each element in the array n times
-	void WordShiftLeft (Dword n) throw ();
-	void WordShiftRight (Dword n) throw ();
+	void WordShiftLeft (NaturalNumber n) throw ();
+	void WordShiftRight (NaturalNumber n) throw ();
 
 	public:
 	// Builds a NaturalNumber from either a Dword or a numeric string
@@ -63,6 +65,8 @@ class NaturalNumber : vector <Word>
 
 	// Returns the size of the underlying vector
 	Dword Size() const throw () {return size();}
+
+	void MatchSize (const NaturalNumber &n, Word w) throw ();
 
 	// Converts a character to its value. Case is ignored. Eg.: 'F' = 'f' = 15
 	static Word DecodeDigit (char c, Word Base) throw (InvalidDigit);
@@ -99,16 +103,22 @@ class NaturalNumber : vector <Word>
 	const NaturalNumber operator*  (const NaturalNumber &n) const throw ();
 	const NaturalNumber operator/  (const NaturalNumber &n) const throw (DivisionByZero);
 	const NaturalNumber operator%  (const NaturalNumber &n) const throw (DivisionByZero);
-	const NaturalNumber operator<< (Dword n) const throw ();
-	const NaturalNumber operator>> (Dword n) const throw ();
+	const NaturalNumber operator<< (const NaturalNumber &n) const throw ();
+	const NaturalNumber operator>> (const NaturalNumber &n) const throw ();
+	const NaturalNumber operator&  (const NaturalNumber &n) const throw ();
+	const NaturalNumber operator|  (const NaturalNumber &n) const throw ();
+	const NaturalNumber operator^  (const NaturalNumber &n) const throw ();
 
 	NaturalNumber &operator+=  (const NaturalNumber &n) throw ();
 	NaturalNumber &operator-=  (const NaturalNumber &n) throw (Underflow);
 	NaturalNumber &operator*=  (const NaturalNumber &n) throw ();
 	NaturalNumber &operator/=  (const NaturalNumber &n) throw (DivisionByZero);
 	NaturalNumber &operator%=  (const NaturalNumber &n) throw (DivisionByZero);
-	NaturalNumber &operator<<= (Dword n) throw ();
-	NaturalNumber &operator>>= (Dword n) throw ();
+	NaturalNumber &operator<<= (const NaturalNumber &n) throw ();
+	NaturalNumber &operator>>= (const NaturalNumber &n) throw ();
+	NaturalNumber &operator&=  (const NaturalNumber &n) throw ();
+	NaturalNumber &operator|=  (const NaturalNumber &n) throw ();
+	NaturalNumber &operator^=  (const NaturalNumber &n) throw ();
 
 	// Unary operators
 	NaturalNumber &operator++ () throw ();
@@ -122,6 +132,10 @@ class NaturalNumber : vector <Word>
 	bool operator<= (const NaturalNumber &n) const throw ();
 	bool operator== (const NaturalNumber &n) const throw ();
 	bool operator!= (const NaturalNumber &n) const throw ();
+
+	NaturalNumber &OnesComplement () throw ();
+	NaturalNumber &TwosComplement () throw ();
+	NaturalNumber &operator~ () throw ();
 
 	// Prints the number in any base. Default is 10.
 	string Print (Word Base = 10) const throw ();
@@ -158,20 +172,26 @@ class IntegerNumber
 	const IntegerNumber operator*  (const IntegerNumber &n) const throw ();
 	const IntegerNumber operator/  (const IntegerNumber &n) const throw (DivisionByZero);
 	const IntegerNumber operator%  (const IntegerNumber &n) const throw (DivisionByZero);
-	const IntegerNumber operator<< (Dword n) const throw ();
-	const IntegerNumber operator>> (Dword n) const throw ();
+	const IntegerNumber operator<< (const IntegerNumber &n) const throw (Overflow, NegativeShift);
+	const IntegerNumber operator>> (const IntegerNumber &n) const throw (NegativeShift);
+	const IntegerNumber operator&  (const IntegerNumber &n) const throw ();
+	const IntegerNumber operator|  (const IntegerNumber &n) const throw ();
+	const IntegerNumber operator^  (const IntegerNumber &n) const throw ();
 
 	IntegerNumber &operator+=  (const IntegerNumber &n) throw ();
 	IntegerNumber &operator-=  (const IntegerNumber &n) throw ();
 	IntegerNumber &operator*=  (const IntegerNumber &n) throw ();
 	IntegerNumber &operator/=  (const IntegerNumber &n) throw (DivisionByZero);
 	IntegerNumber &operator%=  (const IntegerNumber &n) throw (DivisionByZero);
-	IntegerNumber &operator<<= (Dword n) throw ();
-	IntegerNumber &operator>>= (Dword n) throw ();
+	IntegerNumber &operator<<= (const IntegerNumber &n) throw (Overflow, NegativeShift);
+	IntegerNumber &operator>>= (const IntegerNumber &n) throw (NegativeShift);
+	IntegerNumber &operator&=  (IntegerNumber n) throw ();
+	IntegerNumber &operator|=  (IntegerNumber n) throw ();
+	IntegerNumber &operator^=  (IntegerNumber n) throw ();
 
 	// Unary operators
-	void ChangeSign () throw () {Negative = !Negative;}
 	const IntegerNumber operator- () const throw ();
+	const IntegerNumber operator~ () const throw ();
 	IntegerNumber &operator++ () throw ();
 	const IntegerNumber operator++ (int) throw ();
 	IntegerNumber &operator-- () throw ();
@@ -180,6 +200,12 @@ class IntegerNumber
 	// Speeds up comparisson with zero
 	bool GreaterThanZero () const throw () {return !Negative && !Zero();}
 	bool LesserThanZero () const throw () {return Negative && !Zero();}
+
+	// Sign extends *this and n to be the same size
+	void SignExtend (IntegerNumber &n) throw ();
+
+	void ChangeSign () throw () {Negative = !Negative;}
+	IntegerNumber &OnesComplement () throw ();
 
 	// Returns 1 if *this > n, 0 if equal or -1 otherwise
 	int Compare (const IntegerNumber &n) const throw ();
@@ -326,6 +352,14 @@ class InvalidNumber : public NumberException
 	~InvalidNumber () {}
 };
 
+// Overflow. Possible cause: operator<< with argument greater than 65535
+class Overflow : public NumberException
+{
+	public:
+	Overflow () : NumberException ("Overflow.") {}
+	~Overflow () {}
+};
+
 // The caller tried to decrement a null number
 class Underflow : public NumberException
 {
@@ -360,8 +394,18 @@ class PrecisionLoss : public NumberException
 
 	public:
 	PrecisionLoss (const RealNumber &q, const RealNumber &r) :
-	NumberException ("Precision loss detected."), Quotient (q), Remainer (r) {}
+		NumberException ("Precision loss detected."), Quotient (q), Remainer (r) {}
 	~PrecisionLoss () {}
+};
+
+class NegativeShift : public NumberException
+{
+	IntegerNumber a, b;
+
+	public:
+	NegativeShift (const IntegerNumber &aa, const IntegerNumber &bb) :
+		NumberException ("Shift attempted by negative amount."), a (aa), b (bb) {}
+	~NegativeShift () {}
 };
 
 #endif
