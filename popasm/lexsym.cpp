@@ -17,16 +17,7 @@
 
 #include "lexsym.h"
 #include "register.h"
-
-unsigned int HashFunctor::operator() (BasicSymbol * const &sd)
-{
-	unsigned int x = 0;
-
-	for (string::const_iterator i = (sd->GetName()).begin(); i != (sd->GetName()).end(); i++)
-		x += *i;
-
-	return x;
-}
+#include "command.h"
 
 // Symbol table starts empty
 HashTable<BasicSymbol *, HashFunctor, PointerComparator<BasicSymbol> > Symbol::SymbolTable;
@@ -41,6 +32,9 @@ Token *Symbol::Read (const string &str, InputFile &inp) throw ()
 	BasicSymbol bs (str);
 	BasicSymbol * const *sd = SymbolTable.Find (&bs);
 	if (sd != 0) return new Symbol (*sd, false);
+
+	t = Command::Read (str, inp);
+	if (t != 0) return new Symbol (t, false);
 
 	// Returns zero if not found
 	return 0;

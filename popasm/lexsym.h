@@ -23,19 +23,6 @@
 #include "hashtab.h"
 #include "inp_file.h"
 
-template <class T>
-class PointerComparator
-{
-	public:
-	bool operator() (const T *a, const T *b) const {return *a < *b;}
-};
-
-class HashFunctor
-{
-	public:
-	unsigned int operator() (BasicSymbol * const &sd);
-};
-
 class Symbol : public Token
 {
 	protected:
