@@ -43,36 +43,18 @@ class Instruction : public Command
 
 	public:
 	Instruction (const string &n) throw () : Command (n) {}
+	Instruction (const string &n, const Syntax *s) throw () : Command (n) {AddSyntax(s);}
+	Instruction (const string &n, const Syntax *s, const Syntax *s2) throw () : Command (n) {AddSyntax(s); AddSyntax(s2);}
+	Instruction (const string &n, const Syntax *s, const Syntax *s2, const Syntax *s3) throw () : Command (n)
+		{AddSyntax(s); AddSyntax(s2); AddSyntax(s3);}
+	Instruction (const string &n, const Syntax *s, const Syntax *s2, const Syntax *s3, const Syntax *s4) throw () : Command (n)
+		{AddSyntax(s); AddSyntax(s2); AddSyntax(s3); AddSyntax(s4);}
 	~Instruction () throw ();
 
 	static void SetupInstructionTable () throw ();
 	static BasicSymbol *Read (const string &str, InputFile &inp);
 
 	void Assemble (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding, unsigned int CurrentMode) const;
-};
-
-// Instructions that take no arguments
-class ZeraryInstruction : public Instruction
-{
-	public:
-	ZeraryInstruction (const string &nm, const Opcode &op) throw ();
-	~ZeraryInstruction () throw () {}
-};
-
-// Instructions that take one argument, but have a default form with no arguments
-class ZeraryUnaryInstruction : public Instruction
-{
-	public:
-	ZeraryUnaryInstruction (const string &nm, const Opcode &op0, const Opcode &op1, const BasicArgument * const t0) throw ();
-	~ZeraryUnaryInstruction () throw () {}
-};
-
-// ARPL-like instruction
-class ARPLInstruction : public Instruction
-{
-	public:
-	ARPLInstruction (const string &nm, const Opcode &op) throw ();
-	~ARPLInstruction () throw () {}
 };
 
 // Instructions that take two arguments. Any combination of register, memory and immediate are allowed.
@@ -82,7 +64,7 @@ class OptimizedBinaryInstruction : public Instruction
 {
 	public:
 	OptimizedBinaryInstruction (const string &nm, const Opcode &Accum, const Opcode &Immed,
-		const Opcode &Immed8, const Opcode &RegMem, Byte ConstReg) throw ();
+		const Opcode &Immed8, const Opcode &RegMem) throw ();
 	~OptimizedBinaryInstruction () throw () {}
 };
 
