@@ -1,3 +1,4 @@
+call short 53h
 call 1234h
 call dword 50h
 call ax

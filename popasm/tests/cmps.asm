@@ -1,3 +1,4 @@
+cmps [si],[di]
 bits 16
 cmps byte ds:[si],es:[di]
 cmps word ds:[esi],es:[edi]
