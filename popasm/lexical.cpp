@@ -1,10 +1,30 @@
+/***************************************************************************
+                          lexical.cpp  -  description
+                             -------------------
+    copyright            : (C) 2001 by Helcio Mello
+    email                : helcio@users.sourceforge.net
+ ***************************************************************************/
+
+//--------------------------------------------------------------------------
+// Lexical analyser. Returns tokens from the input file.
+//--------------------------------------------------------------------------
+
+/***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+
 #include "lexical.h"
 
-Token::~Token ()
+Token::~Token () throw ()
 {
 }
 
-Token *GetToken (InputFile &inp)
+Token *GetToken (InputFile &inp) throw ()
 {
 	// Gets the next string from file. Returns zero if EOF is reached
 	string *s = inp.GetString();
@@ -36,11 +56,21 @@ Token *GetToken (InputFile &inp)
 		return NextToken;
 	}
 
+	// Tests for enclosers. If successful, s will no longer be necessary
+	NextToken = Encloser::Read (*s, inp);
+	if (NextToken != 0)
+	{
+		delete s;
+		return NextToken;
+	}
+
 	// None of the above...
 	NextToken = new UnknownToken (*s);
 	delete s;
 	return NextToken;
 }
+
+const char IntegerExpected::WhatString[] = "This operation can only be performed on integers.";
 
 Number *Number::Read (const string &str, InputFile &inp)
 {
@@ -177,7 +207,7 @@ Number &Number::operator%= (const Number &x)
 		CheckSemantics();
 	}
 	else
-		throw 0;
+		throw IntegerExpected();
 
 	return *this;
 }
@@ -192,7 +222,7 @@ Number &Number::operator&= (const Number &x)
 		CheckSemantics();
 	}
 	else
-		throw 0;
+		throw IntegerExpected();
 
 	return *this;
 }
@@ -207,7 +237,7 @@ Number &Number::operator|= (const Number &x)
 		CheckSemantics();
 	}
 	else
-		throw 0;
+		throw IntegerExpected();
 
 	return *this;
 }
@@ -222,7 +252,7 @@ Number &Number::operator^= (const Number &x)
 		CheckSemantics();
 	}
 	else
-		throw 0;
+		throw IntegerExpected();
 
 	return *this;
 }
@@ -237,7 +267,7 @@ Number &Number::operator<<= (const Number &x)
 		CheckSemantics();
 	}
 	else
-		throw 0;
+		throw IntegerExpected();
 
 	return *this;
 }
@@ -252,7 +282,7 @@ Number &Number::operator>>= (const Number &x)
 		CheckSemantics();
 	}
 	else
-		throw 0;
+		throw IntegerExpected();
 
 	return *this;
 }
@@ -267,32 +297,14 @@ Number &Number::operator~ ()
 		CheckSemantics();
 	}
 	else
-		throw 0;
+		throw IntegerExpected();
 
 	return *this;
 }
 
-OperatorData<Expression> Operator::OperatorTable[] =
-{
-	PlusEqual<Expression> (),
-	MinusEqual<Expression> (),
-	TimesEqual<Expression> (),
-	DividesEqual<Expression> (),
-	ModEqual<Expression> (),
-	Period<Expression> (),
-	OpenBracket<Expression> (),
-	CloseBracket<Expression> (),
-	OpenParenthesis<Expression> (),
-	CloseParenthesis<Expression> (),
-	And<Expression> (),
-	Or<Expression> (),
-	Xor<Expression> (),
-	Not<Expression> (),
-	ShiftLeft<Expression> (),
-	ShiftRight<Expression> ()
-};
+const OperatorData<Expression> **Operator::OperatorTable = 0;
 
-Operator *Operator::Read (const string &str, InputFile &inp)
+Operator *Operator::Read (const string &str, InputFile &inp) throw ()
 {
 	string UppercaseName(str);
 
@@ -300,13 +312,36 @@ Operator *Operator::Read (const string &str, InputFile &inp)
 	for (string::iterator i = UppercaseName.begin(); i < UppercaseName.end(); i++)
 		if ((*i <= 'z') && (*i >= 'a')) *i -= 32;
 
-	for (unsigned int i = 0; i < sizeof (OperatorTable) / sizeof (OperatorData<Expression>); i++)
-		if (OperatorTable[i].GetName() == UppercaseName) return new Operator (OperatorTable + i);
+	// Scans the list of operators
+	for (unsigned int i = 0; OperatorTable[i] != 0; i++)
+	{
+		if (OperatorTable[i]->GetName() == UppercaseName)
+		{
+			return new Operator (OperatorTable[i]);
+		}
+	}
 
 	return 0;
 }
 
-Register::~Register ()
+const EncloserData<Expression> **Encloser::EncloserTable = 0;
+
+Encloser *Encloser::Read (const string &str, InputFile &inp) throw ()
+{
+	string UppercaseName(str);
+
+	// Gets a copy of the original string in uppercase
+	for (string::iterator i = UppercaseName.begin(); i < UppercaseName.end(); i++)
+		if ((*i <= 'z') && (*i >= 'a')) *i -= 32;
+
+	for (unsigned int i = 0; EncloserTable[i] != 0; i++)
+		if (EncloserTable[i]->GetName() == UppercaseName)
+			return new Encloser (EncloserTable[i]);
+
+	return 0;
+}
+
+Register::~Register () throw ()
 {
 }
 
@@ -320,7 +355,7 @@ RegisterData SegmentRegister:: RegisterTable[] =
 	RegisterData ("GS", 16, 5)
 };
 
-SegmentRegister *SegmentRegister::Read (const string &s, InputFile &inp)
+SegmentRegister *SegmentRegister::Read (const string &s, InputFile &inp) throw ()
 {
 	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (RegisterData); i++)
 		if (RegisterTable[i].GetName() == s) return new SegmentRegister (RegisterTable + i);
@@ -358,7 +393,7 @@ RegisterData GPRegister:: RegisterTable[] =
 	RegisterData ("BH", 8, 7)
 };
 
-GPRegister *GPRegister::Read (const string &s, InputFile &inp)
+GPRegister *GPRegister::Read (const string &s, InputFile &inp) throw ()
 {
 	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (RegisterData); i++)
 		if (RegisterTable[i].GetName() == s) return new GPRegister (RegisterTable + i);
@@ -378,7 +413,7 @@ RegisterData ControlRegister:: RegisterTable[] =
 	RegisterData ("CR7", 32, 7),
 };
 
-ControlRegister *ControlRegister::Read (const string &s, InputFile &inp)
+ControlRegister *ControlRegister::Read (const string &s, InputFile &inp) throw ()
 {
 	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (RegisterData); i++)
 		if (RegisterTable[i].GetName() == s) return new ControlRegister (RegisterTable + i);
@@ -398,7 +433,7 @@ RegisterData TestRegister:: RegisterTable[] =
 	RegisterData ("TR7", 32, 7),
 };
 
-TestRegister *TestRegister::Read (const string &s, InputFile &inp)
+TestRegister *TestRegister::Read (const string &s, InputFile &inp) throw ()
 {
 	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (RegisterData); i++)
 		if (RegisterTable[i].GetName() == s) return new TestRegister (RegisterTable + i);
@@ -418,7 +453,7 @@ RegisterData DebugRegister:: RegisterTable[] =
 	RegisterData ("DR7", 32, 7),
 };
 
-DebugRegister *DebugRegister::Read (const string &s, InputFile &inp)
+DebugRegister *DebugRegister::Read (const string &s, InputFile &inp) throw ()
 {
 	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (RegisterData); i++)
 		if (RegisterTable[i].GetName() == s) return new DebugRegister (RegisterTable + i);
@@ -439,7 +474,7 @@ RegisterData MMXRegister:: RegisterTable[] =
 	RegisterData ("MM7", 64, 7),
 };
 
-MMXRegister *MMXRegister::Read (const string &s, InputFile &inp)
+MMXRegister *MMXRegister::Read (const string &s, InputFile &inp) throw ()
 {
 	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (RegisterData); i++)
 		if (RegisterTable[i].GetName() == s) return new MMXRegister (RegisterTable + i);
@@ -460,7 +495,7 @@ RegisterData XMMRegister:: RegisterTable[] =
 	RegisterData ("XMM7", 128, 7),
 };
 
-XMMRegister *XMMRegister::Read (const string &s, InputFile &inp)
+XMMRegister *XMMRegister::Read (const string &s, InputFile &inp) throw ()
 {
 	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (RegisterData); i++)
 		if (RegisterTable[i].GetName() == s) return new XMMRegister (RegisterTable + i);
@@ -480,7 +515,7 @@ RegisterData FPURegister:: RegisterTable[] =
 	RegisterData ("ST7", 80, 7),
 };
 
-FPURegister *FPURegister::Read (const string &s, InputFile &inp)
+FPURegister *FPURegister::Read (const string &s, InputFile &inp) throw ()
 {
 	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (RegisterData); i++)
 		if (RegisterTable[i].GetName() == s) return new FPURegister (RegisterTable + i);
@@ -524,7 +559,7 @@ FPURegister *FPURegister::Read (const string &s, InputFile &inp)
 	return 0;
 }
 
-Register *Register::Read (const string &str, InputFile &inp)
+Register *Register::Read (const string &str, InputFile &inp) throw ()
 {
 	Register *answer;
 	string UppercaseName(str);
@@ -559,76 +594,3 @@ Register *Register::Read (const string &str, InputFile &inp)
 
 	return 0;
 }
-
-Expression &Expression::operator- ()
-{
-	BasicExpression <Register, Number>::operator- ();
-	return *this;
-}
-
-Expression &Expression::operator~ ()
-{
-	BasicExpression <Register, Number>::operator~ ();
-	return *this;
-}
-
-Expression &Expression::operator+= (const Expression &e)
-{
-	BasicExpression <Register, Number>::operator+= (e);
-	return *this;
-}
-
-Expression &Expression::operator-= (const Expression &e)
-{
-	BasicExpression <Register, Number>::operator-= (e);
-	return *this;
-}
-
-Expression &Expression::operator*= (const Expression &e)
-{
-	BasicExpression <Register, Number>::operator*= (e);
-	return *this;
-}
-
-Expression &Expression::operator/= (const Expression &e)
-{
-	BasicExpression <Register, Number>::operator/= (e);
-	return *this;
-}
-
-Expression &Expression::operator&= (const Expression &e)
-{
-	BasicExpression <Register, Number>::operator&= (e);
-	return *this;
-}
-
-Expression &Expression::operator|= (const Expression &e)
-{
-	BasicExpression <Register, Number>::operator|= (e);
-	return *this;
-}
-
-Expression &Expression::operator^= (const Expression &e)
-{
-	BasicExpression <Register, Number>::operator^= (e);
-	return *this;
-}
-
-Expression &Expression::operator<<= (const Expression &e)
-{
-	BasicExpression <Register, Number>::operator<<= (e);
-	return *this;
-}
-
-Expression &Expression::operator>>= (const Expression &e)
-{
-	BasicExpression <Register, Number>::operator>>= (e);
-	return *this;
-}
-
-Expression &Expression::operator%= (const Expression &e)
-{
-	BasicExpression <Register, Number>::operator%= (e);
-	return *this;
-}
-
