@@ -25,7 +25,7 @@ CastFailed::CastFailed (const RealNumber &n, unsigned int s) throw () : WhatStri
 	WhatString += " bits wide.";
 }
 
-void Number::SetSize (unsigned int s, NumberType t = SIGNED) throw (InvalidSize, CastFailed)
+void Number::SetSize (unsigned int s, NumberType t = ANY) throw (InvalidSize, CastFailed)
 {
 	// New size MUST be multiple of 8
 	if ((s & 7) != 0) throw InvalidSize(s);

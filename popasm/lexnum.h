@@ -19,6 +19,7 @@
 #define LEXNUM_H
 
 #include <string>
+#include <vector>
 
 #include "number.h"
 #include "lexical.h"
@@ -74,7 +75,7 @@ class Number : public Token
 
 	enum NumberType {SIGNED = 0, UNSIGNED = 1, ANY = 2, RAW = 3};
 	unsigned int GetSize () const throw () {return Size;}
-	void SetSize (unsigned int s, NumberType t = SIGNED) throw (InvalidSize, CastFailed);
+	void SetSize (unsigned int s, NumberType t = ANY) throw (InvalidSize, CastFailed);
 
 	const RealNumber &GetValue () const throw() {return n;}
 	bool IsInteger () const throw () {return n.GetInteger();}
@@ -121,6 +122,7 @@ class Number : public Token
 
 	// Attempts to build a Number from the given string. Gets more from inp if necessary. Returns 0 if failed.
 	static Number *Read (const string &str, InputFile &inp);
+	void Write (vector<Byte> &Output) const {n.Write(Output, Size / 8);}
 };
 
 #endif
