@@ -37,11 +37,10 @@ class Instruction : public Command
 {
 	static HashTable<Instruction *, HashFunctor, PointerComparator<Instruction> > InstructionTable;
 
-	typedef multiset <const Syntax *, PointerComparator<Syntax> > ContainerType;
-	ContainerType Syntaxes;
+	vector<const Syntax *> Syntaxes;
 
 	protected:
-	void AddSyntax (const Syntax *s) throw () {Syntaxes.insert (s);}
+	void AddSyntax (const Syntax *s) throw () {Syntaxes.push_back (s);}
 
 	public:
 	Instruction (const string &n,
