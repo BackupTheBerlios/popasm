@@ -54,15 +54,4 @@ class Instruction : public Command
 	void Assemble (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding) const;
 };
 
-// Instructions that take two arguments. Any combination of register, memory and immediate are allowed.
-// Byte immediate values can be signed extended and accumulators have special optimized opcode.
-// Classical examples are ADC, ADD, AND, etc.
-class OptimizedBinaryInstruction : public Instruction
-{
-	public:
-	OptimizedBinaryInstruction (const string &nm, const Opcode &Accum, const Opcode &Immed,
-		const Opcode &Immed8, const Opcode &RegMem) throw ();
-	~OptimizedBinaryInstruction () throw () {}
-};
-
 #endif

@@ -19,6 +19,7 @@
 #include "instruct.h"
 #include "immed.h"
 #include "memory.h"
+#include "full_ptr.h"
 #include "defs.h"
 
 Instruction::Instruction (const string &n,
@@ -73,6 +74,9 @@ HashTable <Instruction *, HashFunctor, PointerComparator<BasicSymbol> > Instruct
 
 typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           GPRegister::IdFunctor>       MemGPReg;
 typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           MMXRegister::IdFunctor>      MemMMXReg;
+typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           MMXRegister::IdFunctor>      MemXMMReg;
+typedef BinaryCompose <logical_or<bool>,  Mem<32, Memory::FLOAT>,      MMXRegister::IdFunctor>      Mem32XMMReg;
+typedef BinaryCompose <logical_or<bool>,  Mem<64, Memory::FLOAT>,      MMXRegister::IdFunctor>      Mem64XMMReg;
 typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           GPRegister16Bits::IdFunctor> MemReg16;
 typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           GPRegister32Bits::IdFunctor> MemReg32;
 typedef BinaryCompose <logical_or<bool>,  GPRegister16Bits::IdFunctor, GPRegister32Bits::IdFunctor> WordReg;
@@ -95,6 +99,60 @@ typedef BinaryCompose <logical_and<bool>, SegmentRegister::IdFunctor,  Register:
 typedef BinaryCompose <logical_and<bool>, SegmentRegister::IdFunctor,  Register::CompareCodeFunctor<4> > FS;
 typedef BinaryCompose <logical_and<bool>, SegmentRegister::IdFunctor,  Register::CompareCodeFunctor<5> > GS;
 
+// Instructions that take two arguments. Any combination of register, memory and immediate are allowed.
+// Byte immediate values can be signed extended and accumulators have special optimized opcode.
+// Classical examples are ADC, ADD, AND, etc.
+class OptimizedBinaryInstruction : public Instruction
+{
+	public:
+	OptimizedBinaryInstruction (const string &nm, const Opcode &Accum, const Opcode &Immed,
+		const Opcode &Immed8, const Opcode &RegMem) throw ();
+	~OptimizedBinaryInstruction () throw () {}
+};
+
+OptimizedBinaryInstruction::OptimizedBinaryInstruction (const string &nm, const Opcode &Accum,
+	const Opcode &RawImmed, const Opcode &Immed8, const Opcode &RegMem) throw () : Instruction (nm)
+{
+	// GPRegister/Memory, GPRegister/Memory 			(except Memory to Memory)
+	AddSyntax (new BinarySyntax (110,   RegMem, Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,
+		3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),  new MemGPReg()));
+
+	//	GPRegister/Memory, Immed
+	AddSyntax (new BinarySyntax (120, RawImmed,  Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,
+		1, BinarySyntax::PARTIAL, new GPRegister::IdFunctor(),  new Immediate::IdFunctor()));
+
+	//	Accum, Immed
+	AddSyntax (new BinarySyntax (200,   Accum,  Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,
+		1, BinarySyntax::ABSENT,  new Accumulator(),            new Immediate::IdFunctor()));
+
+	// GPRegister/Memory, SignExtend (Byte Immed)
+	AddSyntax (new BinarySyntax (10300, Immed8, Syntax::FIRST_ARGUMENT, false, Argument::GREATER,
+		1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED>()));
+}
+
+// AMD 3DNow! Instructions
+class TDNowSyntax : public BinarySyntax
+{
+	Byte Suffix;
+
+	public:
+	TDNowSyntax (unsigned int p, Byte suf) throw ();
+	~TDNowSyntax () throw () {}
+
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
+};
+
+TDNowSyntax::TDNowSyntax (unsigned int p, Byte suf) throw () :
+	BinarySyntax (p, Opcode (0x0F, 0x0F), NOTHING, false, Argument::EQUAL, 0, PRESENT,
+	new MMXRegister::IdFunctor(), new MemMMXReg ()), Suffix(suf) {}
+
+bool TDNowSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
+{
+	BinarySyntax::Assemble (Arguments, Output);
+	Output.push_back (Suffix);
+	return true;
+}
+
 void Instruction::SetupInstructionTable () throw ()
 {
 	static Instruction *Instructions[] =
@@ -115,7 +173,32 @@ void Instruction::SetupInstructionTable () throw ()
 
 		new OptimizedBinaryInstruction ("ADC", Opcode (0x14), Opcode(0x80, 0x02), Opcode(0x83, 0x02), Opcode (0x10)),
 		new OptimizedBinaryInstruction ("ADD", Opcode (0x04), Opcode(0x80, 0x00), Opcode(0x83, 0x00), Opcode (0x00)),
+
+		new Instruction ("ADDPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg())),
+
+		new Instruction ("ADDPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x58),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg())),
+
+		new Instruction ("ADDSD",
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new Mem64XMMReg())),
+
+		new Instruction ("ADDSS",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new Mem32XMMReg())),
+
 		new OptimizedBinaryInstruction ("AND", Opcode (0x24), Opcode(0x80, 0x04), Opcode(0x83, 0x04), Opcode (0x20)),
+
+		new Instruction ("ANDPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x54), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg())),
+
+		new Instruction ("ANDPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x54),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg())),
+
+		new Instruction ("ANDNPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x55), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg())),
+
+		new Instruction ("ANDNPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x55),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg())),
 
 		new Instruction ("ARPL",
 			new BinarySyntax        (100, Opcode (0x63),             Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MemReg16(),   new GPRegister16Bits::IdFunctor())),
@@ -150,7 +233,9 @@ void Instruction::SetupInstructionTable () throw ()
 
 		new Instruction ("CALL",
 			new UnarySyntax         (100, Opcode (0xFF, 0x02),       Syntax::FIRST_ARGUMENT,                                                          new WordRegNearMem()),
-			new UnarySyntax         (110, Opcode (0xFF, 0x03),       Syntax::FULL_POINTER,                                                            new Mem<0, Memory::INTEGER, Type::FAR>())),
+			new UnarySyntax         (110, Opcode (0xFF, 0x03),       Syntax::FULL_POINTER,                                                            new Mem<0, Memory::INTEGER, Type::FAR>()),
+			new RelativeUnarySyntax (120, Opcode (0xE8),             Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR)),
+			new UnarySyntax         (130, Opcode (0x9A),             Syntax::FIRST_ARGUMENT,                                                          new FullPointer::IdFunctor())),
 
 		new Instruction ("CBW",
 			new ZerarySyntax        (100, Opcode (0x98),             Syntax::MODE_16BITS)),
@@ -163,6 +248,9 @@ void Instruction::SetupInstructionTable () throw ()
 
 		new Instruction ("CLD",
 			new ZerarySyntax        (100, Opcode (0xFC),             Syntax::NOTHING)),
+
+		new Instruction ("CLFLUSH",
+			new UnarySyntax         (100, Opcode (0x0F, 0xAE, 0x07), Syntax::NOTHING,                                                                 new Memory::IdFunctor())),
 
 		new Instruction ("CLI",
 			new ZerarySyntax        (100, Opcode (0xFA),             Syntax::NOTHING)),
@@ -265,6 +353,12 @@ void Instruction::SetupInstructionTable () throw ()
 
 		new OptimizedBinaryInstruction ("CMP", Opcode (0x3C), Opcode(0x80, 0x07), Opcode(0x83, 0x07), Opcode (0x38)),
 
+		new Instruction ("CMPPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg(), new Immed<8, Number::UNSIGNED>())),
+
+		new Instruction ("CMPPS",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg(), new Immed<8, Number::UNSIGNED>())),
+
 		new Instruction ("CMPS",
 			new StringSyntax        (100, Opcode (0xA6),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<8>(),     new Mem<8>()),
 			new StringSyntax        (110, Opcode (0xA7),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<16>(),    new Mem<16>()),
@@ -277,13 +371,23 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax        (100, Opcode (0xA7),             Syntax::MODE_16BITS)),
 
 		new Instruction ("CMPSD",
-			new ZerarySyntax        (100, Opcode (0xA7),             Syntax::MODE_32BITS)),
+			new ZerarySyntax        (100, Opcode (0xA7),             Syntax::MODE_32BITS),
+			new BinarySyntax        (110, Opcode (0xF2, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new Mem64XMMReg(), new Immed<8, Number::UNSIGNED>())),
+
+		new Instruction ("CMPSS",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new Mem32XMMReg(), new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("CMPXCHG",
 			new BinarySyntax        (100, Opcode (0x0F, 0xB0),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::PRESENT, new MemGPReg(),   new GPRegister::IdFunctor())),
 
 		new Instruction ("CMPXCHG8B",
 			new UnarySyntax         (100, Opcode (0x0F, 0xC7, 0x01), Syntax::NOTHING,                                                          new Mem<64>())),
+
+		new Instruction ("COMISD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x2F), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new Mem64XMMReg())),
+
+		new Instruction ("COMISS",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new Mem64XMMReg())),
 
 		new Instruction ("CPUID",
 			new ZerarySyntax        (100, Opcode (0x0F, 0xA2),       Syntax::NOTHING)),
@@ -432,6 +536,9 @@ void Instruction::SetupInstructionTable () throw ()
 		new Instruction ("FIDIVR",
 			new UnarySyntax         (100, Opcode (0xDA, 0x07),       Syntax::NOTHING,                                                          new Mem<32, Memory::INTEGER>()),
 			new UnarySyntax         (110, Opcode (0xDE, 0x07),       Syntax::NOTHING,                                                          new Mem<16, Memory::INTEGER>())),
+
+		new Instruction ("FEMMS",
+			new ZerarySyntax        (100, Opcode (0x0F, 0x0E),       Syntax::NOTHING)),
 
 		new Instruction ("FFREE",
 			new AdditiveUnarySyntax (100, Opcode (0xDD, 0xC0),       Syntax::NOTHING,                                                          new FPURegister::IdFunctor())),
@@ -705,6 +812,139 @@ void Instruction::SetupInstructionTable () throw ()
 		new Instruction ("IRETD",
 			new ZerarySyntax        (100, Opcode (0xCF),             Syntax::MODE_32BITS)),
 
+		new Instruction ("JA",
+			new RelativeUnarySyntax (10100, Opcode (0x77),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x87),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JAE",
+			new RelativeUnarySyntax (10100, Opcode (0x73),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x83),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JB",
+			new RelativeUnarySyntax (10100, Opcode (0x72),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x82),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JBE",
+			new RelativeUnarySyntax (10100, Opcode (0x76),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x86),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JC",
+			new RelativeUnarySyntax (10100, Opcode (0x72),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x82),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+  		new Instruction ("JCXZ",
+  			new RelativeUnarySyntax (100, Opcode (0xE3),             Syntax::MODE_16BITS,                                                             new RelativeArgument (Type::SHORT))),
+
+  		new Instruction ("JECXZ",
+  			new RelativeUnarySyntax (100, Opcode (0xE3),             Syntax::MODE_32BITS,                                                             new RelativeArgument (Type::SHORT))),
+
+		new Instruction ("JE",
+			new RelativeUnarySyntax (10100, Opcode (0x74),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x84),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JG",
+			new RelativeUnarySyntax (10100, Opcode (0x7F),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x8F),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JGE",
+			new RelativeUnarySyntax (10100, Opcode (0x7D),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x8D),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JL",
+			new RelativeUnarySyntax (10100, Opcode (0x7C),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x8C),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JLE",
+			new RelativeUnarySyntax (10100, Opcode (0x7E),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x8E),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JNA",
+			new RelativeUnarySyntax (10100, Opcode (0x76),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x86),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JNAE",
+			new RelativeUnarySyntax (10100, Opcode (0x72),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x82),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JNB",
+			new RelativeUnarySyntax (10100, Opcode (0x73),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x83),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JNBE",
+			new RelativeUnarySyntax (10100, Opcode (0x77),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x87),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JNC",
+			new RelativeUnarySyntax (10100, Opcode (0x73),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x83),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JNE",
+			new RelativeUnarySyntax (10100, Opcode (0x75),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x85),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JNG",
+			new RelativeUnarySyntax (10100, Opcode (0x7E),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x8E),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JNGE",
+			new RelativeUnarySyntax (10100, Opcode (0x7C),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x8C),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JNL",
+			new RelativeUnarySyntax (10100, Opcode (0x7D),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x8D),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JNLE",
+			new RelativeUnarySyntax (10100, Opcode (0x7F),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x8F),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JNO",
+			new RelativeUnarySyntax (10100, Opcode (0x71),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x81),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JNP",
+			new RelativeUnarySyntax (10100, Opcode (0x7B),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x8B),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JNS",
+			new RelativeUnarySyntax (10100, Opcode (0x79),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x89),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JNZ",
+			new RelativeUnarySyntax (10100, Opcode (0x75),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x85),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JO",
+			new RelativeUnarySyntax (10100, Opcode (0x70),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x80),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JP",
+			new RelativeUnarySyntax (10100, Opcode (0x7A),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x8A),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JPE",
+			new RelativeUnarySyntax (10100, Opcode (0x7A),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x8A),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JPO",
+			new RelativeUnarySyntax (10100, Opcode (0x7B),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x8B),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JS",
+			new RelativeUnarySyntax (10100, Opcode (0x78),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x88),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JZ",
+			new RelativeUnarySyntax (10100, Opcode (0x74),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (110,   Opcode (0x0F, 0x84),       Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR))),
+
+		new Instruction ("JMP",
+			new UnarySyntax         (100,   Opcode (0xFF, 0x04),       Syntax::FIRST_ARGUMENT,                                                          new WordRegNearMem()),
+			new UnarySyntax         (110,   Opcode (0xFF, 0x05),       Syntax::FULL_POINTER,                                                            new Mem<0, Memory::INTEGER, Type::FAR>()),
+			new RelativeUnarySyntax (10125, Opcode (0xE8),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT)),
+			new RelativeUnarySyntax (120,   Opcode (0xE9),             Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR)),
+			new UnarySyntax         (130,   Opcode (0xEA),             Syntax::FIRST_ARGUMENT,                                                          new FullPointer::IdFunctor())),
+
 		new Instruction ("LAHF",
 			new ZerarySyntax        (100, Opcode (0x9F),             Syntax::NOTHING)),
 
@@ -761,11 +1001,29 @@ void Instruction::SetupInstructionTable () throw ()
 		new Instruction ("LODSD",
 			new ZerarySyntax        (100, Opcode (0xAD),             Syntax::MODE_32BITS)),
 
+		new Instruction ("LOOP",
+			new RelativeUnarySyntax (100, Opcode (0xE2),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT))),
+
+		new Instruction ("LOOPE",
+			new RelativeUnarySyntax (100, Opcode (0xE1),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT))),
+
+		new Instruction ("LOOPZ",
+			new RelativeUnarySyntax (100, Opcode (0xE1),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT))),
+
+		new Instruction ("LOOPNE",
+			new RelativeUnarySyntax (100, Opcode (0xE0),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT))),
+
+		new Instruction ("LOOPNZ",
+			new RelativeUnarySyntax (100, Opcode (0xE0),             Syntax::NOTHING,                                                                 new RelativeArgument (Type::SHORT))),
+
 		new Instruction ("LSL",
 			new BinarySyntax        (100, Opcode (0x0F, 0x03),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
 
 		new Instruction ("LTR",
 			new UnarySyntax         (100, Opcode (0x0F, 0x00, 0x03), Syntax::NOTHING,                                                                 new MemReg16())),
+
+		new Instruction ("MASKMOVQ",
+			new BinarySyntax        (100, Opcode (0x0F, 0xF7),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MMXRegister::IdFunctor())),
 
 		new Instruction ("MOV",
 			new BinarySyntax        (100, Opcode (0x88),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,	       3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),      new MemGPReg()),
@@ -783,6 +1041,9 @@ void Instruction::SetupInstructionTable () throw ()
 		new Instruction ("MOVD",
 			new BinarySyntax        (100, Opcode (0x0F, 0x6E),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemReg32()),
 			new BinarySyntax        (110, Opcode (0x0F, 0x7E),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MemReg32(),               new MMXRegister::IdFunctor())),
+
+		new Instruction ("MOVNTQ",
+			new BinarySyntax        (100, Opcode (0x0F, 0xE7),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new Memory::IdFunctor(),      new MMXRegister::IdFunctor())),
 
 		new Instruction ("MOVQ",
 			new BinarySyntax        (100, Opcode (0x0F, 0x6F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
@@ -880,6 +1141,15 @@ void Instruction::SetupInstructionTable () throw ()
 		new Instruction ("PANDN",
 			new BinarySyntax        (100, Opcode (0x0F, 0xDF),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
 
+		new Instruction ("PAVGB",
+			new BinarySyntax        (100, Opcode (0x0F, 0xE0),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+
+		new Instruction ("PAVGB",
+			new BinarySyntax        (100, Opcode (0x0F, 0xE3),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+
+		new Instruction ("PAVGUSB",
+			new TDNowSyntax         (100, 0xBF)),
+
 		new Instruction ("PCMPEQB",
 			new BinarySyntax        (100, Opcode (0x0F, 0x74),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
 
@@ -898,8 +1168,96 @@ void Instruction::SetupInstructionTable () throw ()
 		new Instruction ("PCMPGTD",
 			new BinarySyntax        (100, Opcode (0x0F, 0x66),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
 
+		new Instruction ("PEXTRW",
+			new BinarySyntax        (100, Opcode (0x0F, 0xC5),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
+
+		new Instruction ("PF2ID",
+			new TDNowSyntax         (100, 0x1D)),
+
+		new Instruction ("PF2IW",
+			new TDNowSyntax         (100, 0x1C)),
+
+		new Instruction ("PFACC",
+			new TDNowSyntax         (100, 0xAE)),
+
+		new Instruction ("PFADD",
+			new TDNowSyntax         (100, 0x9E)),
+
+		new Instruction ("PFCMPEQ",
+			new TDNowSyntax         (100, 0xB0)),
+
+		new Instruction ("PFCMPGE",
+			new TDNowSyntax         (100, 0x90)),
+
+		new Instruction ("PFCMPGT",
+			new TDNowSyntax         (100, 0xA0)),
+
+		new Instruction ("PFMAX",
+			new TDNowSyntax         (100, 0xA4)),
+
+		new Instruction ("PFMIN",
+			new TDNowSyntax         (100, 0x94)),
+
+		new Instruction ("PFMUL",
+			new TDNowSyntax         (100, 0xB4)),
+
+		new Instruction ("PFNACC",
+			new TDNowSyntax         (100, 0x8A)),
+
+		new Instruction ("PFPNACC",
+			new TDNowSyntax         (100, 0x8E)),
+
+		new Instruction ("PFRCP",
+			new TDNowSyntax         (100, 0x96)),
+
+		new Instruction ("PFRCPIT1",
+			new TDNowSyntax         (100, 0xA6)),
+
+		new Instruction ("PFRCPIT2",
+			new TDNowSyntax         (100, 0xB6)),
+
+		new Instruction ("PFRSQIT1",
+			new TDNowSyntax         (100, 0xA7)),
+
+		new Instruction ("PFSUB",
+			new TDNowSyntax         (100, 0x9A)),
+
+		new Instruction ("PFSUBR",
+			new TDNowSyntax         (100, 0xAA)),
+
+		new Instruction ("PI2FD",
+			new TDNowSyntax         (100, 0x0D)),
+
+		new Instruction ("PI2FW",
+			new TDNowSyntax         (100, 0x0C)),
+
+		new Instruction ("PINSRW",
+			new BinarySyntax        (100, Opcode (0x0F, 0xC4),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new GPRegister32Bits::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (110, Opcode (0x0F, 0xC4),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new Mem<16, Memory::INTEGER>(),    new Immed<8, Number::UNSIGNED>())),
+
 		new Instruction ("PMADDWD",
 			new BinarySyntax        (100, Opcode (0x0F, 0xF5),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+
+		new Instruction ("PMAXSW",
+			new BinarySyntax        (100, Opcode (0x0F, 0xEE),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+
+		new Instruction ("PMAXUB",
+			new BinarySyntax        (100, Opcode (0x0F, 0xDE),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+
+		new Instruction ("PMINSW",
+			new BinarySyntax        (100, Opcode (0x0F, 0xEA),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+
+		new Instruction ("PMINUB",
+			new BinarySyntax        (100, Opcode (0x0F, 0xDA),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+
+		new Instruction ("PMOVMSKB",
+			new BinarySyntax        (100, Opcode (0x0F, 0xD7),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new MMXRegister::IdFunctor())),
+
+		new Instruction ("PMULHRW",
+			new TDNowSyntax         (100, 0xB7)),
+
+		new Instruction ("PMULHUW",
+			new BinarySyntax        (100, Opcode (0x0F, 0xE4),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
 
 		new Instruction ("PMULHW",
 			new BinarySyntax        (100, Opcode (0x0F, 0xE5),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
@@ -937,6 +1295,30 @@ void Instruction::SetupInstructionTable () throw ()
 
 		new Instruction ("POR",
 			new BinarySyntax        (100, Opcode (0x0F, 0xEB),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+
+		new Instruction ("PREFETCH",
+			new UnarySyntax         (100, Opcode (0x0F, 0x0D, 0x00), Syntax::NOTHING,                                                                 new Memory::IdFunctor())),
+
+		new Instruction ("PREFETCH0",
+			new UnarySyntax         (100, Opcode (0x0F, 0x18, 0x01), Syntax::NOTHING,                                                                 new Memory::IdFunctor())),
+
+		new Instruction ("PREFETCH1",
+			new UnarySyntax         (100, Opcode (0x0F, 0x18, 0x02), Syntax::NOTHING,                                                                 new Memory::IdFunctor())),
+
+		new Instruction ("PREFETCH2",
+			new UnarySyntax         (100, Opcode (0x0F, 0x18, 0x03), Syntax::NOTHING,                                                                 new Memory::IdFunctor())),
+
+		new Instruction ("PREFETCHNTA",
+			new UnarySyntax         (100, Opcode (0x0F, 0x18, 0x00), Syntax::NOTHING,                                                                 new Memory::IdFunctor())),
+
+		new Instruction ("PREFETCHW",
+			new UnarySyntax         (100, Opcode (0x0F, 0x0D, 0x01), Syntax::NOTHING,                                                                 new Memory::IdFunctor())),
+
+		new Instruction ("PSADBW",
+			new BinarySyntax        (100, Opcode (0x0F, 0xF6),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+
+		new Instruction ("PSHUFW",
+			new BinarySyntax        (100, Opcode (0x0F, 0x70),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg(), new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("PSLLW",
 			new BinarySyntax        (100, Opcode (0x0F, 0xF1),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
@@ -990,6 +1372,9 @@ void Instruction::SetupInstructionTable () throw ()
 
 		new Instruction ("PSUBUSW",
 			new BinarySyntax        (100, Opcode (0x0F, 0xD9),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+
+		new Instruction ("PSWAPD",
+			new TDNowSyntax         (100, 0xBB)),
 
 		new Instruction ("PUNPCKHBW",
 			new BinarySyntax        (100, Opcode (0x0F, 0x68),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
@@ -1220,6 +1605,9 @@ void Instruction::SetupInstructionTable () throw ()
 		new Instruction ("SETZ",
 			new UnarySyntax         (120, Opcode (0x0F, 0x94, 0x00), Syntax::NOTHING,                                                                 new Mem8Reg8())),
 
+		new Instruction ("SFENCE",
+			new ZerarySyntax        (100, Opcode (0x0F, 0xAE, 0xF8), Syntax::NOTHING)),
+
 		new Instruction ("SGDT",
 			new UnarySyntax         (100, Opcode (0x0F, 0x01, 0x00), Syntax::FIRST_ARGUMENT,                                                          new Mem<48>())),
 
@@ -1277,7 +1665,7 @@ void Instruction::SetupInstructionTable () throw ()
 
 		new Instruction ("TEST",
 			new BinarySyntax        (100, Opcode (0xF6, 0x00),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,	       1, BinarySyntax::PARTIAL, new MemGPReg(),    new Immediate::IdFunctor()),
-         new BinarySyntax        (110, Opcode (0x84),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,        1, BinarySyntax::PRESENT, new MemGPReg(),    new GPRegister::IdFunctor()),
+			new BinarySyntax        (110, Opcode (0x84),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,        1, BinarySyntax::PRESENT, new MemGPReg(),    new GPRegister::IdFunctor()),
 			new BinarySyntax        (120, Opcode (0xA8),             Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::ABSENT,  new Accumulator(), new Immediate::IdFunctor())),
 
 		new Instruction ("UD2",
@@ -1332,24 +1720,4 @@ Instruction::~Instruction () throw ()
 {
 	for (ContainerType::const_iterator i = Syntaxes.begin(); i != Syntaxes.end(); i++)
 		delete *i;
-}
-
-OptimizedBinaryInstruction::OptimizedBinaryInstruction (const string &nm, const Opcode &Accum,
-	const Opcode &RawImmed, const Opcode &Immed8, const Opcode &RegMem) throw () : Instruction (nm)
-{
-	// GPRegister/Memory, GPRegister/Memory 			(except Memory to Memory)
-	AddSyntax (new BinarySyntax (110,   RegMem, Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,
-		3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),  new MemGPReg()));
-
-	//	GPRegister/Memory, Immed
-	AddSyntax (new BinarySyntax (120, RawImmed,  Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,
-		1, BinarySyntax::PARTIAL, new GPRegister::IdFunctor(),  new Immediate::IdFunctor()));
-
-	//	Accum, Immed
-	AddSyntax (new BinarySyntax (200,   Accum,  Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,
-		1, BinarySyntax::ABSENT,  new Accumulator(),            new Immediate::IdFunctor()));
-
-	// GPRegister/Memory, SignExtend (Byte Immed)
-	AddSyntax (new BinarySyntax (10300, Immed8, Syntax::FIRST_ARGUMENT, false, Argument::GREATER,
-		1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED>()));
 }
