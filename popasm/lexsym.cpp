@@ -46,3 +46,18 @@ void Symbol::SetData (BasicSymbol *bs, bool own) throw ()
 	s = bs;
 	Owner = own;
 }
+
+void Symbol::DefineSymbol (BasicSymbol *s)
+{
+	BasicSymbol * const * sym = SymbolTable.Find (s);
+
+	if (sym == 0)
+	{
+		SymbolTable.Insert (new Label (s->GetName()));
+	}
+	else
+	{
+		// Symbol defined two or more times
+		throw 0;
+	}
+}

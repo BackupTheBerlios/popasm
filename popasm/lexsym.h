@@ -40,6 +40,7 @@ class Symbol : public Token
 	// Returns 0 if there's currently no symbol with that name in the SymbolTable.
 	// The returned token might be a Number, if the symbol found has a value or offset
 	static Token *Read (const string &str, InputFile &inp) throw ();
+	static void DefineSymbol (BasicSymbol *s);
 
 	string Print() const throw () {return s->Print();}
 
