@@ -15,23 +15,10 @@
  *                                                                         *
  ***************************************************************************/
 
+#include "asmer.h"
 #include "lexsym.h"
 #include "register.h"
 #include "command.h"
-
-// Symbol table starts empty
-HashTable<BasicSymbol *, HashFunctor, PointerComparator<BasicSymbol> > Symbol::SymbolTable;
-
-BasicSymbol *Symbol::Find (const string &name)
-{
-	BasicSymbol bs (name);
-	BasicSymbol * const *sd = SymbolTable.Find (&bs);
-
-	if (sd != 0)
-		return *sd;
-
-	return 0;
-}
 
 Token *Symbol::Read (const string &str, InputFile &inp) throw ()
 {
@@ -39,12 +26,13 @@ Token *Symbol::Read (const string &str, InputFile &inp) throw ()
 	BasicSymbol *t = Register::Read (str, inp);
 	if (t != 0) return new Symbol (t, false);
 
-	// Tests for symbols defined in the symbol table
-	BasicSymbol *bs = Find (str);
-	if (bs != 0) return new Symbol (bs, false);
-
+	// Tests for commands
 	t = Command::Read (str, inp);
 	if (t != 0) return new Symbol (t, false);
+
+	// Tests for symbols defined in the symbol table
+	BasicSymbol *bs = CurrentAssembler->Find (str);
+	if (bs != 0) return new Symbol (bs, false);
 
 	// Returns zero if not found
 	return 0;
@@ -55,19 +43,4 @@ void Symbol::SetData (BasicSymbol *bs, bool own) throw ()
 	if (Owner) delete s;
 	s = bs;
 	Owner = own;
-}
-
-void Symbol::DefineSymbol (BasicSymbol *s) throw (MultidefinedSymbol)
-{
-	BasicSymbol * const * sym = SymbolTable.Find (s);
-
-	if (sym == 0)
-	{
-		SymbolTable.Insert (s);
-	}
-	else
-	{
-		// Symbol defined two or more times
-		throw MultidefinedSymbol (s->GetName());
-	}
 }

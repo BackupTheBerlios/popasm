@@ -26,23 +26,8 @@
 #include "inp_file.h"
 #include "functors.h"
 
-class MultidefinedSymbol : public exception
-{
-	string WhatString;
-
-	public:
-	MultidefinedSymbol (const string &name) throw ()
-		: WhatString (string ("Symbol already defined elsewhere: ") + name) {}
-	~MultidefinedSymbol () throw () {}
-
-	const char *what() const throw () {return WhatString.c_str();}
-};
-
 class Symbol : public Token
 {
-	protected:
-	static HashTable<BasicSymbol *, HashFunctor, PointerComparator<BasicSymbol> > SymbolTable;
-
 	BasicSymbol *s;
 	bool Owner;
 
@@ -52,10 +37,7 @@ class Symbol : public Token
 
 	// Attempts to read a symbol from the given string.
 	// Returns 0 if there's currently no symbol with that name in the SymbolTable.
-	// The returned token might be a Number, if the symbol found has a value or offset
 	static Token *Read (const string &str, InputFile &inp) throw ();
-	static void DefineSymbol (BasicSymbol *s) throw (MultidefinedSymbol);
-	static BasicSymbol *Find (const string &name);
 
 	string Print() const throw () {return s->Print();}
 
