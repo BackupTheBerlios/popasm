@@ -17,6 +17,7 @@
 
 #include "directiv.h"
 #include "immed.h"
+#include "parser.h"
 
 BasicSymbol *Directive::Read (const string &str, InputFile &inp)
 {
@@ -28,28 +29,55 @@ BasicSymbol *Directive::Read (const string &str, InputFile &inp)
 HashTable <Directive *, HashFunctor, PointerComparator<BasicSymbol> > Directive::DirectiveTable =
 	HashTable <Directive *, HashFunctor, PointerComparator<BasicSymbol> > ();
 
-void Directive::Assemble (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j,
-	vector<Byte> &Encoding) const
-{
-}
-
 void DefinitionDirective::Assemble (const BasicSymbol *sym, vector<Token *>::iterator i,
 	vector<Token *>::iterator j, vector<Byte> &Encoding) const
 {
+	// Converts the tokens into arguments.
+	vector<Argument *> Arguments;
+	Parser::ParseArguments (i, j, Arguments);
+	unsigned int length = 0;
+
+	for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
+	{
+		const Immediate *immed;
+
+		immed = dynamic_cast<const Immediate *> ((*x)->GetData());
+		if (immed == 0)
+		{
+//			for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
+//				delete *x;
+
+			cout << "Expected constant expression." << endl;
+		}
+
+		if ((!immed->IsInteger()) && (!AcceptFloat))
+		{
+//			for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
+//				delete *x;
+
+			throw IntegerExpected (immed->GetValue());
+		}
+
+		immed->SetSize (Size);
+		immed->Write (Encoding);
+		length++;
+	}
+
 	if (sym != 0)
 	{
-		cout << "Label definition not implemented yet." << endl;
-		return;
+		Symbol::DefineSymbol (new Variable (sym->GetName(), Size, length));
 	}
 
-	while (i != j)
-	{
-		i++;
-	}
+	for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
+		delete *x;
 }
 
-void FunctionBITS (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding)
+void FunctionBITS (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
 {
+	// Converts the tokens into arguments.
+	vector<Argument *> Arguments;
+	Parser::ParseArguments (i, j, Arguments);
+
 	if (sym != 0)
 	{
 		cout << "Label definition not implemented yet." << endl;
@@ -62,14 +90,14 @@ void FunctionBITS (const BasicSymbol *sym, vector<Argument *> &Arguments, vector
 		return;
 	}
 
-	const Immediate *i = dynamic_cast<const Immediate *> (Arguments[0]->GetData());
-   if (i == 0)
+	const Immediate *immed = dynamic_cast<const Immediate *> (Arguments[0]->GetData());
+   if (immed == 0)
 	{
 		cout << "Must be a constant expression." << endl;
 		return;
 	}
 
-	CurrentAssembler->SetCurrentMode (i->GetUnsignedLong());
+	CurrentAssembler->SetCurrentMode (immed->GetUnsignedLong());
 }
 
 void Directive::SetupDirectiveTable () throw ()
