@@ -86,12 +86,18 @@ typedef Memory::IdFunctor<UNDEFINED | BYTE | WORD | DWORD, UNDEFINED,        (UN
 typedef Memory::IdFunctor<BYTE | WORD | DWORD, UNDEFINED,                    (UNDEFINED | INTEGER)> SGPMem;
 typedef Memory::IdFunctor<UNDEFINED | BYTE,                UNDEFINED,        (UNDEFINED | INTEGER)> Mem8;
 typedef Memory::IdFunctor<UNDEFINED | WORD,                UNDEFINED,        (UNDEFINED | INTEGER)> Mem16;
+typedef Memory::IdFunctor<WORD,                            UNDEFINED,        (UNDEFINED | INTEGER)> SMem16;
 typedef Memory::IdFunctor<UNDEFINED | DWORD,               UNDEFINED,        (UNDEFINED | INTEGER)> Mem32;
 typedef Memory::IdFunctor<UNDEFINED | DWORD,               UNDEFINED,        (UNDEFINED | FLOAT)>   Mem32f;
+typedef Memory::IdFunctor<DWORD,                           UNDEFINED,        (UNDEFINED | INTEGER)> SMem32;
+typedef Memory::IdFunctor<DWORD,                           UNDEFINED,        (UNDEFINED | FLOAT)>   SMem32f;
 typedef Memory::IdFunctor<PWORD,                           UNDEFINED,        INTEGER>               SMem48;
 typedef Memory::IdFunctor<UNDEFINED | QWORD,               UNDEFINED,        (UNDEFINED | INTEGER)> Mem64;
+typedef Memory::IdFunctor<QWORD,                           UNDEFINED,        (UNDEFINED | INTEGER)> SMem64;
 typedef Memory::IdFunctor<UNDEFINED | QWORD,               UNDEFINED,        (UNDEFINED | FLOAT)>   Mem64f;
+typedef Memory::IdFunctor<QWORD,                           UNDEFINED,        (UNDEFINED | FLOAT)>   SMem64f;
 typedef Memory::IdFunctor<UNDEFINED | TBYTE,               UNDEFINED,        (UNDEFINED | BCD)>     Mem80BCD;
+typedef Memory::IdFunctor<TBYTE,                           UNDEFINED,        (UNDEFINED | FLOAT)>   SMem80f;
 typedef Memory::IdFunctor<UNDEFINED | TBYTE,               UNDEFINED,        (UNDEFINED | FLOAT)>   Mem80f;
 typedef Memory::IdFunctor<UNDEFINED | OWORD,               UNDEFINED,        (UNDEFINED | INTEGER)> Mem128;
 typedef Memory::IdFunctor<UNDEFINED | QWORD,               UNDEFINED,        (UNDEFINED | INTEGER)> MMXMem;
@@ -246,7 +252,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0xFC),                   Syntax::NOTHING)),
 
 		Instruction ("CLFLUSH",
-			new UnarySyntax           (Opcode (0x0F, 0xAE, 0x07),       Syntax::NOTHING,                                                                         new AnyMem())),
+			new UnarySyntax           (Opcode (0x0F, 0xAE, 0x07),       Syntax::NOTHING,                                                                         new Mem8())),
 
 		Instruction ("CLI",
 			new ZerarySyntax          (Opcode (0xFA),                   Syntax::NOTHING)),
@@ -489,70 +495,70 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0x0F, 0xA2),             Syntax::NOTHING)),
 
 		Instruction ("CVTDQ2PD",
-			new BinarySyntax          (Opcode (0xF3, 0x0F, 0xE6),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<XMMReg, Mem64>())),
+			new BinarySyntax          (Opcode (0xF3, 0x0F, 0xE6),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<XMMReg, Mem64>())),
 
 		Instruction ("CVTDQ2PS",
-			new BinarySyntax          (Opcode (0x0F, 0x5B),             Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<XMMReg, Mem128>())),
+			new BinarySyntax          (Opcode (0x0F, 0x5B),             Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<XMMReg, Mem128>())),
 
 		Instruction ("CVTPD2DQ",
-			new BinarySyntax          (Opcode (0xF2, 0x0F, 0xE6),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<XMMReg, XMMMem>())),
+			new BinarySyntax          (Opcode (0xF2, 0x0F, 0xE6),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<XMMReg, XMMMem>())),
 
 		Instruction ("CVTPD2PI",
-			new BinarySyntax          (Opcode (0x66, 0x0F, 0x2D),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<XMMReg, Mem128>())),
+			new BinarySyntax          (Opcode (0x66, 0x0F, 0x2D),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<XMMReg, Mem128>())),
 
 		Instruction ("CVTPD2PS",
-			new BinarySyntax          (Opcode (0x66, 0x0F, 0x5A),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<XMMReg, XMMMem>())),
+			new BinarySyntax          (Opcode (0x66, 0x0F, 0x5A),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<XMMReg, XMMMem>())),
 
 		Instruction ("CVTPI2PD",
-			new BinarySyntax          (Opcode (0x66, 0x0F, 0x2A),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<MMXReg, MMXMem>())),
+			new BinarySyntax          (Opcode (0x66, 0x0F, 0x2A),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<MMXReg, MMXMem>())),
 
 		Instruction ("CVTPI2PS",
-			new BinarySyntax          (Opcode (0x0F, 0x2A),             Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<MMXReg, MMXMem>())),
+			new BinarySyntax          (Opcode (0x0F, 0x2A),             Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<MMXReg, MMXMem>())),
 
 		Instruction ("CVTPS2DQ",
-			new BinarySyntax          (Opcode (0x66, 0x0F, 0x5B),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<XMMReg, XMMMem>())),
+			new BinarySyntax          (Opcode (0x66, 0x0F, 0x5B),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<XMMReg, XMMMem>())),
 
 		Instruction ("CVTPS2PD",
-			new BinarySyntax          (Opcode (0x0F, 0x5A),             Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<XMMReg, Mem64f>())),
+			new BinarySyntax          (Opcode (0x0F, 0x5A),             Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<XMMReg, Mem64f>())),
 
 		Instruction ("CVTPS2PI",
-			new BinarySyntax          (Opcode (0x0F, 0x2D),             Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new MMXReg(), new OR<XMMReg, Mem64f>())),
+			new BinarySyntax          (Opcode (0x0F, 0x2D),             Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new OR<XMMReg, Mem64f>())),
 
 		Instruction ("CVTSD2SI",
-			new BinarySyntax          (Opcode (0xF2, 0x0F, 0x2D),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new GPReg32(), new OR<XMMReg, Mem64f>())),
+			new BinarySyntax          (Opcode (0xF2, 0x0F, 0x2D),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new GPReg32(), new OR<XMMReg, Mem64f>())),
 
 		Instruction ("CVTSD2SS",
-			new BinarySyntax          (Opcode (0xF2, 0x0F, 0x5A),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<XMMReg, Mem64f>())),
+			new BinarySyntax          (Opcode (0xF2, 0x0F, 0x5A),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<XMMReg, Mem64f>())),
 
 		Instruction ("CVTSI2SD",
-			new BinarySyntax          (Opcode (0xF2, 0x0F, 0x2A),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<GPReg32, Mem32> ())),
+			new BinarySyntax          (Opcode (0xF2, 0x0F, 0x2A),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<GPReg32, Mem32> ())),
 
 		Instruction ("CVTSI2SS",
-			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x2A),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<GPReg32, Mem32> ())),
+			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x2A),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<GPReg32, Mem32> ())),
 
 		Instruction ("CVTSS2SD",
-			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x5A),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<XMMReg, Memory::IdFunctor<UNDEFINED | DWORD, UNDEFINED, (UNDEFINED | FLOAT)> >())),
+			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x5A),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<XMMReg, Memory::IdFunctor<UNDEFINED | DWORD, UNDEFINED, (UNDEFINED | FLOAT)> >())),
 
 		Instruction ("CVTSS2SI",
-			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x2D),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new GPReg32(), new OR<XMMReg, Memory::IdFunctor<UNDEFINED | DWORD, UNDEFINED, (UNDEFINED | FLOAT)> >())),
+			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x2D),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new GPReg32(), new OR<XMMReg, Memory::IdFunctor<UNDEFINED | DWORD, UNDEFINED, (UNDEFINED | FLOAT)> >())),
 
 		Instruction ("CVTTPD2PI",
-			new BinarySyntax          (Opcode (0x66, 0x0F, 0x2C),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new MMXReg(), new OR<XMMReg, XMMMem>())),
+			new BinarySyntax          (Opcode (0x66, 0x0F, 0x2C),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new OR<XMMReg, XMMMem>())),
 
 		Instruction ("CVTTPD2DQ",
-			new BinarySyntax          (Opcode (0x66, 0x0F, 0xE6),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<XMMReg, XMMMem>())),
+			new BinarySyntax          (Opcode (0x66, 0x0F, 0xE6),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<XMMReg, XMMMem>())),
 
 		Instruction ("CVTTPS2DQ",
-			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x5B),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new XMMReg(), new OR<XMMReg, XMMMem>())),
+			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x5B),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(), new OR<XMMReg, XMMMem>())),
 
 		Instruction ("CVTTPS2PI",
-			new BinarySyntax          (Opcode (0x0F, 0x2C),             Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new MMXReg(), new OR<XMMReg, Mem64f>())),
+			new BinarySyntax          (Opcode (0x0F, 0x2C),             Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new MMXReg(), new OR<XMMReg, Mem64f>())),
 
 		Instruction ("CVTTSD2SI",
-			new BinarySyntax          (Opcode (0xF2, 0x0F, 0x2C),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new GPReg32(), new OR<XMMReg, Mem64f>())),
+			new BinarySyntax          (Opcode (0xF2, 0x0F, 0x2C),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new GPReg32(), new OR<XMMReg, Mem64f>())),
 
 		Instruction ("CVTTSS2SI",
-			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x2C),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::PRESENT,        new GPReg32(), new OR<XMMReg, Memory::IdFunctor<UNDEFINED | DWORD, UNDEFINED, (UNDEFINED | FLOAT)> >())),
+			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x2C),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new GPReg32(), new OR<XMMReg, Memory::IdFunctor<UNDEFINED | DWORD, UNDEFINED, (UNDEFINED | FLOAT)> >())),
 
 		Instruction ("CWD",
 			new ZerarySyntax          (Opcode (0x99),                   Syntax::MODE_16BITS)),
@@ -589,7 +595,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0x0F, 0x77),             Syntax::NOTHING)),
 
 		Instruction ("ENTER",
-			new BinarySyntax          (Opcode (0xC8),                   Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::ABSENT,         new Immed<16, Number::UNSIGNED>(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax          (Opcode (0xC8),                   Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::ABSENT,         new Immed<16, Number::UNSIGNED>(), new ImmedRange<8, 0, 31>())),
 
 		Instruction ("F2XM1",
 			new ZerarySyntax          (Opcode (0xD9, 0xF0),             Syntax::NOTHING)),
@@ -598,18 +604,18 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0xD9, 0xE1),             Syntax::NOTHING)),
 
 		Instruction ("FADD",
-			new UnarySyntax           (Opcode (0xD8, 0x00),             Syntax::NOTHING,                                                                         new Mem32f()),
-			new UnarySyntax           (Opcode (0xDC, 0x00),             Syntax::NOTHING,                                                                         new Mem64f()),
+			new UnarySyntax           (Opcode (0xD8, 0x00),             Syntax::NOTHING,                                                                         new SMem32f()),
+			new UnarySyntax           (Opcode (0xDC, 0x00),             Syntax::NOTHING,                                                                         new SMem64f()),
 			new FPUBinarySyntax       (Opcode (0xD8, 0xC0),                                                                                                      new ST(),                     new FPUReg()),
 			new FPUBinarySyntax       (Opcode (0xDC, 0xC0),                                                                                                      new FPUReg(), new ST())),
 
 		Instruction ("FADDP",
-			new FPUBinarySyntax       (Opcode (0xDE, 0xC0),                                                                                                      new ST(),                     new FPUReg()),
+			new FPUBinarySyntax       (Opcode (0xDE, 0xC0),                                                                                                      new FPUReg(), new ST()),
 			new ZerarySyntax          (Opcode (0xDE, 0xC1),             Syntax::NOTHING)),
 
 		Instruction ("FIADD",
-			new UnarySyntax           (Opcode (0xD8, 0x00),             Syntax::NOTHING,                                                                         new Mem32()),
-			new UnarySyntax           (Opcode (0xD8, 0x00),             Syntax::NOTHING,                                                                         new Mem16())),
+			new UnarySyntax           (Opcode (0xD8, 0x00),             Syntax::NOTHING,                                                                         new SMem32()),
+			new UnarySyntax           (Opcode (0xD8, 0x00),             Syntax::NOTHING,                                                                         new SMem16())),
 
 		Instruction ("FBLD",
 			new UnarySyntax           (Opcode (0xDF, 0x04),             Syntax::NOTHING,                                                                         new Mem80BCD())),
@@ -651,14 +657,14 @@ void Instruction::SetupInstructionTable () throw ()
 			new FPUBinarySyntax       (Opcode (0xDB, 0xD8),                                                                                                      new ST(),                     new FPUReg())),
 
 		Instruction ("FCOM",
-			new UnarySyntax           (Opcode (0xD8, 0x02),             Syntax::NOTHING,                                                                         new Mem32f()),
-			new UnarySyntax           (Opcode (0xDC, 0x02),             Syntax::NOTHING,                                                                         new Mem64f()),
+			new UnarySyntax           (Opcode (0xD8, 0x02),             Syntax::NOTHING,                                                                         new SMem32f()),
+			new UnarySyntax           (Opcode (0xDC, 0x02),             Syntax::NOTHING,                                                                         new SMem64f()),
 			new AdditiveUnarySyntax   (Opcode (0xD8, 0xD0),             Syntax::NOTHING,                                                                         new FPUReg()),
 			new ZerarySyntax          (Opcode (0xD8, 0xD1),             Syntax::NOTHING)),
 
 		Instruction ("FCOMP",
-			new UnarySyntax           (Opcode (0xD8, 0x03),             Syntax::NOTHING,                                                                         new Mem32f()),
-			new UnarySyntax           (Opcode (0xDC, 0x03),             Syntax::NOTHING,                                                                         new Mem64f()),
+			new UnarySyntax           (Opcode (0xD8, 0x03),             Syntax::NOTHING,                                                                         new SMem32f()),
+			new UnarySyntax           (Opcode (0xDC, 0x03),             Syntax::NOTHING,                                                                         new SMem64f()),
 			new AdditiveUnarySyntax   (Opcode (0xD8, 0xD8),             Syntax::NOTHING,                                                                         new FPUReg()),
 			new ZerarySyntax          (Opcode (0xD8, 0xD9),             Syntax::NOTHING)),
 
@@ -684,32 +690,32 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0xD9, 0xF6),             Syntax::NOTHING)),
 
 		Instruction ("FDIV",
-			new UnarySyntax           (Opcode (0xD8, 0x06),             Syntax::NOTHING,                                                                         new Mem32f()),
-			new UnarySyntax           (Opcode (0xDC, 0x06),             Syntax::NOTHING,                                                                         new Mem64f()),
+			new UnarySyntax           (Opcode (0xD8, 0x06),             Syntax::NOTHING,                                                                         new SMem32f()),
+			new UnarySyntax           (Opcode (0xDC, 0x06),             Syntax::NOTHING,                                                                         new SMem64f()),
 			new FPUBinarySyntax       (Opcode (0xD8, 0xF0),                                                                                                      new ST(),                     new FPUReg()),
-			new FPUBinarySyntax       (Opcode (0xDC, 0xF8),                                                                                                      new FPUReg(),               new ST())),
+			new FPUBinarySyntax       (Opcode (0xDC, 0xF8),                                                                                                      new FPUReg(),                 new ST())),
 
 		Instruction ("FDIVP",
-			new FPUBinarySyntax       (Opcode (0xDE, 0xF8),                                                                                                      new ST(),                     new FPUReg()),
+			new FPUBinarySyntax       (Opcode (0xDE, 0xF8),                                                                                                      new FPUReg(),                 new ST()),
 			new ZerarySyntax          (Opcode (0xDE, 0xF9),             Syntax::NOTHING)),
 
 		Instruction ("FIDIV",
-			new UnarySyntax           (Opcode (0xDA, 0x06),             Syntax::NOTHING,                                                                         new Mem32()),
-			new UnarySyntax           (Opcode (0xDE, 0x06),             Syntax::NOTHING,                                                                         new Mem16())),
+			new UnarySyntax           (Opcode (0xDA, 0x06),             Syntax::NOTHING,                                                                         new SMem32()),
+			new UnarySyntax           (Opcode (0xDE, 0x06),             Syntax::NOTHING,                                                                         new SMem16())),
 
 		Instruction ("FDIVR",
-			new UnarySyntax           (Opcode (0xD8, 0x07),             Syntax::NOTHING,                                                                         new Mem32f()),
-			new UnarySyntax           (Opcode (0xDC, 0x07),             Syntax::NOTHING,                                                                         new Mem64f()),
+			new UnarySyntax           (Opcode (0xD8, 0x07),             Syntax::NOTHING,                                                                         new SMem32f()),
+			new UnarySyntax           (Opcode (0xDC, 0x07),             Syntax::NOTHING,                                                                         new SMem64f()),
 			new FPUBinarySyntax       (Opcode (0xD8, 0xF8),                                                                                                      new ST(),                     new FPUReg()),
 			new FPUBinarySyntax       (Opcode (0xDC, 0xF0),                                                                                                      new FPUReg(), new ST())),
 
 		Instruction ("FDIVRP",
-			new FPUBinarySyntax       (Opcode (0xDE, 0xF0),                                                                                                      new ST(),                     new FPUReg()),
+			new FPUBinarySyntax       (Opcode (0xDE, 0xF0),                                                                                                      new FPUReg(), new ST()),
 			new ZerarySyntax          (Opcode (0xDE, 0xF1),             Syntax::NOTHING)),
 
 		Instruction ("FIDIVR",
-			new UnarySyntax           (Opcode (0xDA, 0x07),             Syntax::NOTHING,                                                                         new Mem32()),
-			new UnarySyntax           (Opcode (0xDE, 0x07),             Syntax::NOTHING,                                                                         new Mem16())),
+			new UnarySyntax           (Opcode (0xDA, 0x07),             Syntax::NOTHING,                                                                         new SMem32()),
+			new UnarySyntax           (Opcode (0xDE, 0x07),             Syntax::NOTHING,                                                                         new SMem16())),
 
 		Instruction ("FEMMS",
 			new ZerarySyntax          (Opcode (0x0F, 0x0E),             Syntax::NOTHING)),
@@ -718,17 +724,17 @@ void Instruction::SetupInstructionTable () throw ()
 			new AdditiveUnarySyntax   (Opcode (0xDD, 0xC0),             Syntax::NOTHING,                                                                         new FPUReg())),
 
 		Instruction ("FICOM",
-			new UnarySyntax           (Opcode (0xDE, 0x02),             Syntax::NOTHING,                                                                         new Mem16()),
-			new UnarySyntax           (Opcode (0xDA, 0x02),             Syntax::NOTHING,                                                                         new Mem32())),
+			new UnarySyntax           (Opcode (0xDE, 0x02),             Syntax::NOTHING,                                                                         new SMem16()),
+			new UnarySyntax           (Opcode (0xDA, 0x02),             Syntax::NOTHING,                                                                         new SMem32())),
 
 		Instruction ("FICOMP",
-			new UnarySyntax           (Opcode (0xDE, 0x03),             Syntax::NOTHING,                                                                         new Mem16()),
-			new UnarySyntax           (Opcode (0xDA, 0x03),             Syntax::NOTHING,                                                                         new Mem32())),
+			new UnarySyntax           (Opcode (0xDE, 0x03),             Syntax::NOTHING,                                                                         new SMem16()),
+			new UnarySyntax           (Opcode (0xDA, 0x03),             Syntax::NOTHING,                                                                         new SMem32())),
 
 		Instruction ("FILD",
-			new UnarySyntax           (Opcode (0xDF, 0x00),             Syntax::NOTHING,                                                                         new Mem16()),
-			new UnarySyntax           (Opcode (0xDB, 0x00),             Syntax::NOTHING,                                                                         new Mem32()),
-			new UnarySyntax           (Opcode (0xDF, 0x05),             Syntax::NOTHING,                                                                         new Mem64())),
+			new UnarySyntax           (Opcode (0xDF, 0x00),             Syntax::NOTHING,                                                                         new SMem16()),
+			new UnarySyntax           (Opcode (0xDB, 0x00),             Syntax::NOTHING,                                                                         new SMem32()),
+			new UnarySyntax           (Opcode (0xDF, 0x05),             Syntax::NOTHING,                                                                         new SMem64())),
 
 		Instruction ("FINCSTP",
 			new ZerarySyntax          (Opcode (0xD9, 0xF7),             Syntax::NOTHING)),
@@ -740,18 +746,18 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0xDB, 0xE3),             Syntax::NOTHING)),
 
 		Instruction ("FIST",
-			new UnarySyntax           (Opcode (0xDF, 0x02),             Syntax::NOTHING,                                                                         new Mem16()),
-			new UnarySyntax           (Opcode (0xDB, 0x02),             Syntax::NOTHING,                                                                         new Mem32())),
+			new UnarySyntax           (Opcode (0xDF, 0x02),             Syntax::NOTHING,                                                                         new SMem16()),
+			new UnarySyntax           (Opcode (0xDB, 0x02),             Syntax::NOTHING,                                                                         new SMem32())),
 
 		Instruction ("FISTP",
-			new UnarySyntax           (Opcode (0xDF, 0x03),             Syntax::NOTHING,                                                                         new Mem16()),
-			new UnarySyntax           (Opcode (0xDF, 0x03),             Syntax::NOTHING,                                                                         new Mem32()),
-			new UnarySyntax           (Opcode (0xDF, 0x07),             Syntax::NOTHING,                                                                         new Mem64())),
+			new UnarySyntax           (Opcode (0xDF, 0x03),             Syntax::NOTHING,                                                                         new SMem16()),
+			new UnarySyntax           (Opcode (0xDB, 0x03),             Syntax::NOTHING,                                                                         new SMem32()),
+			new UnarySyntax           (Opcode (0xDF, 0x07),             Syntax::NOTHING,                                                                         new SMem64())),
 
 		Instruction ("FLD",
-			new UnarySyntax           (Opcode (0xD9, 0x00),             Syntax::NOTHING,                                                                         new Mem32f()),
-			new UnarySyntax           (Opcode (0xDD, 0x00),             Syntax::NOTHING,                                                                         new Mem64f()),
-			new UnarySyntax           (Opcode (0xDB, 0x05),             Syntax::NOTHING,                                                                         new Mem80f()),
+			new UnarySyntax           (Opcode (0xD9, 0x00),             Syntax::NOTHING,                                                                         new SMem32f()),
+			new UnarySyntax           (Opcode (0xDD, 0x00),             Syntax::NOTHING,                                                                         new SMem64f()),
+			new UnarySyntax           (Opcode (0xDB, 0x05),             Syntax::NOTHING,                                                                         new SMem80f()),
 			new AdditiveUnarySyntax   (Opcode (0xD9, 0xC0),             Syntax::NOTHING,                                                                         new FPUReg())),
 
 		Instruction ("FLD1",
@@ -782,23 +788,23 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax           (Opcode (0xD9, 0x04),             Syntax::NOTHING,                                                                         new AnyMemInt())),
 
 		Instruction ("FMUL",
-			new UnarySyntax           (Opcode (0xD8, 0x01),             Syntax::NOTHING,                                                                         new Mem32f()),
-			new UnarySyntax           (Opcode (0xDC, 0x01),             Syntax::NOTHING,                                                                         new Mem64f()),
+			new UnarySyntax           (Opcode (0xD8, 0x01),             Syntax::NOTHING,                                                                         new SMem32f()),
+			new UnarySyntax           (Opcode (0xDC, 0x01),             Syntax::NOTHING,                                                                         new SMem64f()),
 			new FPUBinarySyntax       (Opcode (0xD8, 0xC8),                                                                                                      new ST(),                     new FPUReg()),
 			new FPUBinarySyntax       (Opcode (0xDC, 0xC8),                                                                                                      new FPUReg(), new ST())),
 
 		Instruction ("FMULP",
-			new FPUBinarySyntax       (Opcode (0xDE, 0xC8),                                                                                                      new ST(),                     new FPUReg()),
+			new FPUBinarySyntax       (Opcode (0xDE, 0xC8),                                                                                                      new FPUReg(), new ST()),
 			new ZerarySyntax          (Opcode (0xDE, 0xC9),             Syntax::NOTHING)),
 
 		Instruction ("FIMUL",
-			new UnarySyntax           (Opcode (0xDA, 0x01),             Syntax::NOTHING,                                                                         new Mem32()),
-			new UnarySyntax           (Opcode (0xDE, 0x01),             Syntax::NOTHING,                                                                         new Mem16())),
+			new UnarySyntax           (Opcode (0xDA, 0x01),             Syntax::NOTHING,                                                                         new SMem32()),
+			new UnarySyntax           (Opcode (0xDE, 0x01),             Syntax::NOTHING,                                                                         new SMem16())),
 
 		Instruction ("FNOP",
 			new ZerarySyntax          (Opcode (0xD9, 0xD0),             Syntax::NOTHING)),
 
-		Instruction ("FATAN",
+		Instruction ("FPATAN",
 			new ZerarySyntax          (Opcode (0xD9, 0xF3),             Syntax::NOTHING)),
 
 		Instruction ("FPREM",
@@ -807,10 +813,10 @@ void Instruction::SetupInstructionTable () throw ()
 		Instruction ("FPREM1",
 			new ZerarySyntax          (Opcode (0xD9, 0xF5),             Syntax::NOTHING)),
 
-		Instruction ("FTAN",
+		Instruction ("FPTAN",
 			new ZerarySyntax          (Opcode (0xD9, 0xF2),             Syntax::NOTHING)),
 
-		Instruction ("FRDINT",
+		Instruction ("FRNDINT",
 			new ZerarySyntax          (Opcode (0xD9, 0xFC),             Syntax::NOTHING)),
 
 		Instruction ("FRSTOR",
@@ -835,14 +841,14 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0xD9, 0xFA),             Syntax::NOTHING)),
 
 		Instruction ("FST",
-			new UnarySyntax           (Opcode (0xD9, 0x02),             Syntax::NOTHING,                                                                         new Mem32f()),
-			new UnarySyntax           (Opcode (0xDD, 0x02),             Syntax::NOTHING,                                                                         new Mem64f()),
+			new UnarySyntax           (Opcode (0xD9, 0x02),             Syntax::NOTHING,                                                                         new SMem32f()),
+			new UnarySyntax           (Opcode (0xDD, 0x02),             Syntax::NOTHING,                                                                         new SMem64f()),
 			new AdditiveUnarySyntax   (Opcode (0xDD, 0xD0),             Syntax::NOTHING,                                                                         new FPUReg())),
 
 		Instruction ("FSTP",
-			new UnarySyntax           (Opcode (0xD9, 0x03),             Syntax::NOTHING,                                                                         new Mem32f()),
-			new UnarySyntax           (Opcode (0xDD, 0x03),             Syntax::NOTHING,                                                                         new Mem64f()),
-			new UnarySyntax           (Opcode (0xDB, 0x07),             Syntax::NOTHING,                                                                         new Mem80f()),
+			new UnarySyntax           (Opcode (0xD9, 0x03),             Syntax::NOTHING,                                                                         new SMem32f()),
+			new UnarySyntax           (Opcode (0xDD, 0x03),             Syntax::NOTHING,                                                                         new SMem64f()),
+			new UnarySyntax           (Opcode (0xDB, 0x07),             Syntax::NOTHING,                                                                         new SMem80f()),
 			new AdditiveUnarySyntax   (Opcode (0xDD, 0xD8),             Syntax::NOTHING,                                                                         new FPUReg())),
 
 		Instruction ("FSTCW",
@@ -859,39 +865,39 @@ void Instruction::SetupInstructionTable () throw ()
 
 		Instruction ("FSTSW",
 			new UnarySyntax           (Opcode (0x9B, 0xDD, 0x07),       Syntax::NOTHING,                                                                         new Mem16()),
-			new ZerarySyntax          (Opcode (0x9B, 0xDF, 0XE0),       Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x9B, 0xDF, 0XE0),       Syntax::NOTHING,                                                                         new AX())),
 
 		Instruction ("FNSTSW",
 			new UnarySyntax           (Opcode (0xDD, 0x07),             Syntax::NOTHING,                                                                         new Mem16()),
 			new ZerarySyntax          (Opcode (0xDF, 0XE0),             Syntax::NOTHING)),
 
 		Instruction ("FSUB",
-			new UnarySyntax           (Opcode (0xD8, 0x04),             Syntax::NOTHING,                                                                         new Mem32f()),
-			new UnarySyntax           (Opcode (0xDC, 0x04),             Syntax::NOTHING,                                                                         new Mem64f()),
+			new UnarySyntax           (Opcode (0xD8, 0x04),             Syntax::NOTHING,                                                                         new SMem32f()),
+			new UnarySyntax           (Opcode (0xDC, 0x04),             Syntax::NOTHING,                                                                         new SMem64f()),
 			new FPUBinarySyntax       (Opcode (0xD8, 0xE0),                                                                                                      new ST(),                     new FPUReg()),
 			new FPUBinarySyntax       (Opcode (0xDC, 0xE8),                                                                                                      new FPUReg(), new ST())),
 
 		Instruction ("FSUBP",
-			new FPUBinarySyntax       (Opcode (0xDE, 0xE8),                                                                                                      new ST(),                     new FPUReg()),
+			new FPUBinarySyntax       (Opcode (0xDE, 0xE8),                                                                                                      new FPUReg(), new ST()),
 			new ZerarySyntax          (Opcode (0xDE, 0xE9),             Syntax::NOTHING)),
 
 		Instruction ("FISUB",
-			new UnarySyntax           (Opcode (0xDA, 0x04),             Syntax::NOTHING,                                                                         new Mem32()),
-			new UnarySyntax           (Opcode (0xDE, 0x04),             Syntax::NOTHING,                                                                         new Mem16())),
+			new UnarySyntax           (Opcode (0xDA, 0x04),             Syntax::NOTHING,                                                                         new SMem32()),
+			new UnarySyntax           (Opcode (0xDE, 0x04),             Syntax::NOTHING,                                                                         new SMem16())),
 
 		Instruction ("FSUBR",
-			new UnarySyntax           (Opcode (0xD8, 0x05),             Syntax::NOTHING,                                                                         new Mem32f()),
-			new UnarySyntax           (Opcode (0xDC, 0x05),             Syntax::NOTHING,                                                                         new Mem64f()),
+			new UnarySyntax           (Opcode (0xD8, 0x05),             Syntax::NOTHING,                                                                         new SMem32f()),
+			new UnarySyntax           (Opcode (0xDC, 0x05),             Syntax::NOTHING,                                                                         new SMem64f()),
 			new FPUBinarySyntax       (Opcode (0xD8, 0xE8),                                                                                                      new ST(),                     new FPUReg()),
 			new FPUBinarySyntax       (Opcode (0xDC, 0xE0),                                                                                                      new FPUReg(), new ST())),
 
 		Instruction ("FSUBRP",
-			new FPUBinarySyntax       (Opcode (0xDE, 0xE0),                                                                                                      new ST(),                     new FPUReg()),
+			new FPUBinarySyntax       (Opcode (0xDE, 0xE0),                                                                                                      new FPUReg(), new ST()),
 			new ZerarySyntax          (Opcode (0xDE, 0xE1),             Syntax::NOTHING)),
 
 		Instruction ("FISUBR",
-			new UnarySyntax           (Opcode (0xDA, 0x05),             Syntax::NOTHING,                                                                         new Mem32()),
-			new UnarySyntax           (Opcode (0xDE, 0x05),             Syntax::NOTHING,                                                                         new Mem16())),
+			new UnarySyntax           (Opcode (0xDA, 0x05),             Syntax::NOTHING,                                                                         new SMem32()),
+			new UnarySyntax           (Opcode (0xDE, 0x05),             Syntax::NOTHING,                                                                         new SMem16())),
 
 		Instruction ("FTST",
 			new ZerarySyntax          (Opcode (0xD9, 0xE4),             Syntax::NOTHING)),
