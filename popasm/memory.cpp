@@ -197,7 +197,7 @@ unsigned int GetMinimumSize (Number &n, bool set)
 	return 32;
 }
 
-Argument *Argument::MakeMemory (const Expression &e, unsigned int CurrentAddressSize)
+Argument *Argument::MakeMemory (const Expression &e)
 {
 	Memory *mem = new Memory (e.GetSize());
 
@@ -322,8 +322,8 @@ Argument *Argument::MakeMemory (const Expression &e, unsigned int CurrentAddress
 		{
 			case 0:
 				// Direct memory operands defaults to be of the same size as the CurrentAddressSize
-				mem->GetDisplacement().SetSize (CurrentAddressSize, Number::UNSIGNED);
-				mem->SetAddressSize(CurrentAddressSize);
+				mem->GetDisplacement().SetSize (CurrentAssembler->GetCurrentMode(), Number::UNSIGNED);
+				mem->SetAddressSize(CurrentAssembler->GetCurrentMode());
 				break;
 
 			case 16:

@@ -74,6 +74,27 @@ class Memory : public BasicArgument
 		bool operator() (const BasicArgument *arg) {return dynamic_cast<const Memory *> (arg) != 0;}
 	};
 
+	class DirectMemory : public BasicArgument::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg)
+		{
+			const Memory *mem = dynamic_cast<const Memory *> (arg);
+			if (mem == 0) return false;
+
+			switch (mem->GetAddressSize())
+			{
+				case 16:
+					return mem->GetCode() == 6;
+
+				case 32:
+					return mem->GetCode() == 5;
+			}
+
+			return false;
+		}
+	};
+
 	string Print () const throw ()
 	{
 		string s ("AddressSize = ");
