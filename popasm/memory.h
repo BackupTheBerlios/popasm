@@ -207,7 +207,7 @@ class Memory : public BasicArgument
 		{
 			const Memory *mem = dynamic_cast<const Memory *> (arg);
 			if (mem == 0) return false;
-			if (mem->GetDistanceType() != NONE) throw MisusedDistanceQualifier();
+//			if (mem->GetDistanceType() != NONE) throw MisusedDistanceQualifier();
 			return true;
 		}
 	};
