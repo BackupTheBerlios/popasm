@@ -122,6 +122,7 @@ Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, e
 					{
 						// Registers cannot be preceeded by prefixes like ES:
 						if (Prefix != 0) throw InvalidFullPointer();
+						if (e.GetDistanceType() != UNDEFINED) throw MisusedDistanceQualifier();
 						return new Argument (reg, false);
 					}
 
