@@ -26,9 +26,12 @@
 #include <vector>
 
 #include "defs.h"
-#include "number.h"
 #include "lexnum.h"
 #include "type_exp.h"
+#include "functors.h"
+
+class BasicArgument;
+typedef UnaryFunction<const BasicArgument *, bool> BasicIdFunctor;
 
 class BasicArgument
 {
@@ -38,58 +41,15 @@ class BasicArgument
 	BasicArgument (unsigned int sz = 0) throw () : Size(sz) {}
 	virtual ~BasicArgument () throw () {}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	virtual bool Identify (const BasicArgument * const ptr) const throw () = 0;
-
-	bool Match (const BasicArgument *arg) const {return arg->Identify(this);}
+	class IdFunctor : public BasicIdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) = 0;
+	};
 
 	virtual void SetSize (unsigned int sz) const {Size = sz;}
 	unsigned int GetSize () const throw () {return Size;}
 	virtual string Print () const throw () = 0;
-};
-
-class Immediate : public BasicArgument
-{
-	RealNumber Value;
-
-	public:
-	Immediate () {}
-	Immediate (const Number &n) throw () : BasicArgument(n.GetSize()), Value(n.GetValue()) {}
-	~Immediate () throw () {}
-
-	const RealNumber &GetValue() const throw () {return Value;}
-	void SetSize (unsigned int sz);
-
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const Immediate * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const Immediate * const> (ptr) != 0;}
-
-	// Cannot write a number if its size is unknown (zero)
-	void Write (vector<Byte> &Output) const {if (GetSize() == 0) throw 0; Value.Write(Output, GetSize() / 8);}
-	string Print() const throw() {return Value.Print();}
-};
-
-class UnsignedByte : public Immediate
-{
-	public:
-	UnsignedByte () {}
-	~UnsignedByte () throw () {}
-
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const UnsignedByte * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const;
-};
-
-class SignedByte : public Immediate
-{
-	public:
-	SignedByte () {}
-	~SignedByte () throw () {}
-
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const SignedByte * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const;
 };
 
 class Argument
@@ -106,9 +66,9 @@ class Argument
 	const BasicArgument *GetData () const throw () {return Data;}
 	static Argument *MakeArgument (const Expression &e, unsigned int CurrentAddressSize);
 
-	bool Match (const BasicArgument *arg) const {return Data->Match(arg);}
+	bool Match (BasicIdFunctor *arg) const {return (*arg)(Data);}
 
-	enum CheckType {NONE, EQUAL, GREATER};
+	enum CheckType {NONE, EQUAL, GREATER, HALF};
 	bool TypeCheck (Argument &arg, CheckType ct);
 	unsigned int GetSize () const throw () {return Data->GetSize();}
 	void SetSize (unsigned int sz) const {Data->SetSize(sz);}

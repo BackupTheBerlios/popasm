@@ -24,61 +24,7 @@
 #include "argument.h"
 #include "memory.h"
 #include "lexnum.h"
-
-const Immediate * const Immediate::ClassInstance = new Immediate ();
-
-void Immediate::SetSize(unsigned int sz)
-{
-	Number temp(Value);
-	temp.SetSize(sz);
-	BasicArgument::SetSize(sz);
-}
-
-const UnsignedByte * const UnsignedByte::ClassInstance = new UnsignedByte ();
-
-bool UnsignedByte::Identify (const BasicArgument * const ptr) const
-{
-	const Immediate * const immed = dynamic_cast<const Immediate * const> (ptr);
-	if (immed == 0) return false;
-
-	if ((ptr->GetSize() != 0) && (ptr->GetSize() != 8)) return false;
-
-	// Unsigned bytes must be integers
-	const RealNumber &n = immed->GetValue();
-	if (!n.GetInteger()) return false;
-
-	long int x = static_cast<IntegerNumber> (n).GetValue(true);
-	if ((x >= 0) && (x <= 255))
-	{
-		ptr->BasicArgument::SetSize (8);
-		return true;
-	}
-
-	return false;
-}
-
-const SignedByte * const SignedByte::ClassInstance = new SignedByte ();
-
-bool SignedByte::Identify (const BasicArgument * const ptr) const
-{
-	const Immediate * const immed = dynamic_cast<const Immediate * const> (ptr);
-	if (immed == 0) return false;
-
-	if ((ptr->GetSize() != 0) && (ptr->GetSize() != 8)) return false;
-
-	// Unsigned bytes must be integers
-	const RealNumber &n = immed->GetValue();
-	if (!n.GetInteger()) return false;
-
-	long int x = static_cast<IntegerNumber> (n).GetValue(true);
-	if ((x >= -128) && (x <= 127))
-	{
-		ptr->BasicArgument::SetSize (8);
-		return true;
-	}
-
-	return false;
-}
+#include "immed.h"
 
 bool Argument::TypeCheck (Argument &arg, CheckType ct)
 {
@@ -87,29 +33,48 @@ bool Argument::TypeCheck (Argument &arg, CheckType ct)
 	unsigned int s1 = Data->GetSize();
 	unsigned int s2 = arg.Data->GetSize();
 
-	// Checks if either argument has a non-specified size
-	if ((s1 == 0) || (s2 == 0))
-	{
-		// Only the EQUAL check type can overide an unknown size, such as in "mov eax,[var]"
-		if (ct != EQUAL) return false;
-
-		// Make sizes equal
-		if (s1 == 0)
-			SetSize (s2);
-		else
-			arg.SetSize (s1);
-
-		return true;
-	}
+	// If both arguments have no defined size, throw exception
+	if ((s1 == 0) && (s2 == 0)) throw 0;
 
 	// Performs the check according to the desired way
 	switch (ct)
 	{
 		case EQUAL:
+			// If either argument has no defined size, match them
+			if (s1 == 0)
+			{
+				SetSize (s2);
+				return true;
+			}
+
+			if (s2 == 0)
+			{
+				arg.SetSize (s1);
+				return true;
+			}
+
 			return s1 == s2;
 
 		case GREATER:
+			// Both sizes MUST be known
+			if ((s1 == 0) || (s2 == 0)) return false;
 			return s1 > s2;
+
+		case HALF:
+			// If either argument has no defined size, match them so the first is half of the second in size
+			if (s1 == 0)
+			{
+				SetSize (s2 / 2);
+				return true;
+			}
+
+			if (s2 == 0)
+			{
+				arg.SetSize (s1 * 2);
+				return true;
+			}
+
+			return s1 == s2 / 2;
 
 		case NONE:
 			break;
