@@ -453,19 +453,44 @@ string Memory::Print() const throw ()
 			case 5: s += "DI"; break;
 
 			case 6:
-				s += "BP"; break;
+				if (Code != 6)
+					s += "BP";
+
+				break;
 
 			case 7: s += "BX"; break;
 		}
 
-		if ((SHR (Code, 6) != 0) && (!Displacement.Zero()))
+		if ((SHR (Code, 6) != 0) || (Code == 6))
 		{
-			s += "+";
+			if (Code != 6)
+				s += "+";
+
 			s += Displacement.Print();
 		}
 	}
 	else
 	{
+		switch (Code & 7)
+		{
+			case 0: s += "EAX"; break;
+			case 1: s += "ECX"; break;
+			case 2: s += "EDX"; break;
+			case 3: s += "EBX"; break;
+			case 4: s += "ESP"; break;
+			case 5: s += "EBP"; break;
+			case 6: s += "ESI"; break;
+			case 7: s += "EDI"; break;
+		}
+/*
+		if ((SHR (Code, 6) != 0) || (Code == 6))
+		{
+			if (Code != 6)
+				s += "+";
+
+			s += Displacement.Print();
+		}
+*/
 	}
 
 	s += "]";
