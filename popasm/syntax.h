@@ -32,7 +32,6 @@ class Syntax
 	// Precedence (priority) of this syntax. The ones above OptimizedPrecedence
 	// should not throw exceptions if they fail
 	const unsigned int Precedence;
-	enum {OptimizedPrecedence = 10000};
 
 	// Instruction basic encoding
 	const Opcode Encoding;
@@ -50,7 +49,7 @@ class Syntax
 	void WriteOperandSizePrefix (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ();
 	void WriteOperandSizePrefix (Argument *arg, vector<Byte> &Output) const throw ();
 
-	bool Match (vector<Argument *> &Arguments) const throw ();
+	bool Match (vector<Argument *> &Arguments) const;
 
 	public:
 	Syntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, bool i = false) throw ()
@@ -85,6 +84,29 @@ class JumpOutOfRange : public exception
 	const char *what() const throw () {return WhatString;}
 };
 
+class TypeMismatch : public exception
+{
+	string WhatString;
+
+	public:
+	TypeMismatch (const BasicArgument *a, const BasicArgument *b) throw ()
+		: WhatString (string("Type mismatch between ") + a->Print() + " and " + b->Print()) {}
+	~TypeMismatch () throw () {}
+
+	const char *what() const throw () {return WhatString.c_str();}
+};
+
+class InvalidSegmentOverride : public exception
+{
+	static const char WhatString[];
+
+	public:
+	InvalidSegmentOverride () throw () {}
+	~InvalidSegmentOverride () throw () {}
+
+	const char *what() const throw () {return WhatString;}
+};
+
 // Syntaxes of instructions that take no arguments
 class ZerarySyntax : public Syntax
 {
@@ -96,7 +118,7 @@ class ZerarySyntax : public Syntax
 		: Syntax (p, op, dep) {ArgumentTypes.push_back (arg); ArgumentTypes.push_back (arg2);}
 	~ZerarySyntax () throw () {}
 
-	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ();
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
 };
 
 // Syntaxes of instructions that take one argument
@@ -110,7 +132,7 @@ class UnarySyntax : public Syntax
 	UnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg1, BasicIdFunctor *arg2, Byte dwm = 0) throw ();
 	~UnarySyntax () throw () {}
 
-	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw (UnknownArgument);
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
 };
 
 // Syntaxes of instructions whose only argument is added to the basic encoding
@@ -123,7 +145,7 @@ class AdditiveUnarySyntax : public UnarySyntax
 		throw () : UnarySyntax (p, op, dep, arg, dwm) {ArgumentTypes.push_back (arg2);}
 	~AdditiveUnarySyntax () throw () {}
 
-	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ();
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
 };
 
 // Syntax used by control transfer instructions, like CALL, JMP, etc.
@@ -133,7 +155,7 @@ class RelativeUnarySyntax : public UnarySyntax
 	RelativeUnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg) throw () : UnarySyntax (p, op, dep, arg) {}
 	~RelativeUnarySyntax () throw () {}
 
-	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw (JumpOutOfRange);
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
 };
 
 // Syntaxes of instructions that take two argument
@@ -160,6 +182,27 @@ class BinarySyntax : public Syntax
 	~BinarySyntax () throw () {}
 
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;
+};
+
+class OptimizedBinarySyntax : public BinarySyntax
+{
+	public:
+	OptimizedBinarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, bool i,
+		Argument::CheckType chk, Byte dwm, ModRegRM_Usage usage,
+		BasicIdFunctor *arg1, BasicIdFunctor *arg2, BasicIdFunctor *arg3 = 0) throw ()
+		: BinarySyntax (p, op, dep, i, chk, dwm, usage, arg1, arg2, arg3) {}
+	~OptimizedBinarySyntax () throw () {}
+
+	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
+	{
+		try
+		{
+			return BinarySyntax::Assemble (Arguments, Output);
+		}
+		catch (...) {}
+
+		return false;
+	}
 };
 
 class FPUBinarySyntax : public Syntax

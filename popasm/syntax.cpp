@@ -76,7 +76,7 @@ void Syntax::WriteOperandSizePrefix (vector<Argument *> &Arguments, vector<Byte>
 	Output.push_back (0x66);
 }
 
-bool Syntax::Match (vector<Argument *> &Arguments) const throw ()
+bool Syntax::Match (vector<Argument *> &Arguments) const
 {
 	bool Result = true;
 
@@ -101,8 +101,9 @@ bool Syntax::Match (vector<Argument *> &Arguments) const throw ()
 }
 
 const char JumpOutOfRange::WhatString[] = "Transfer to an out of range destination attempted.";
+const char InvalidSegmentOverride::WhatString[] = "Cannot override default destination segment.";
 
-bool ZerarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ()
+bool ZerarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
 {
 	// Verifies the type of each argument
 	if (!Match (Arguments)) return false;
@@ -128,7 +129,7 @@ UnarySyntax::UnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn
 	ArgumentTypes.push_back (arg2);
 }
 
-bool UnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw (UnknownArgument)
+bool UnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
 {
 	Byte dw = 0, mod_reg_rm = 0, SegmentPrefix = 0;
 	vector <Byte> TrailerOpcode;
@@ -197,7 +198,7 @@ bool UnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output)
 	return true;
 }
 
-bool AdditiveUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ()
+bool AdditiveUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
 {
 	const Register *reg = 0;
 
@@ -222,7 +223,7 @@ bool AdditiveUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> 
 	return true;
 }
 
-bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw (JumpOutOfRange)
+bool RelativeUnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
 {
 	unsigned long int FinalOffset = Output.size();
 
@@ -286,17 +287,12 @@ bool BinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 	const Memory *mems[3] = {0, 0, 0};
 	const Immediate *immeds[3] = {0, 0, 0};
 
+	if (Arguments.size() >= 2)
+		if (!Arguments[0]->TypeCheck (*Arguments[1], Check))
+			throw TypeMismatch(Arguments[0]->GetData(), Arguments[1]->GetData());
+
 	// Verifies the type of each argument
 	if (!Match (Arguments)) return false;
-
-	if (!Arguments[0]->TypeCheck (*Arguments[1], Check))
-	{
-		// If type check fails, decides whether to throw an exception or return false.
-		// Optimized syntaxes like add eax,byte 5 should not throw exceptions, because
-		// they have alternate long forms.
-		if (Precedence >= OptimizedPrecedence) throw 0;
-			return false;
-	}
 
 	// Writes the operand size prefix if necessary
 	WriteOperandSizePrefix (Arguments, Output);
@@ -316,7 +312,9 @@ bool BinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 			// If the register is special (segment, control, test or debug) or the second one, write it in reg field
 			// If the register is the first argument, write it in the r/m field
 			if ((dynamic_cast <const GPRegister *>  (Arguments[i]->GetData()) == 0) &&
-			    (dynamic_cast <const FPURegister *> (Arguments[i]->GetData()) == 0))
+			    (dynamic_cast <const FPURegister *> (Arguments[i]->GetData()) == 0) &&
+			    (dynamic_cast <const MMXRegister *> (Arguments[i]->GetData()) == 0) &&
+			    (dynamic_cast <const XMMRegister *> (Arguments[i]->GetData()) == 0))
 			{
 				mod_reg_rm |= regs[i]->GetCode() << 3;
 				if (i == 0) mod_reg_rm |= 0xC0;
@@ -355,7 +353,7 @@ bool BinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 			continue;
 		}
 
-		throw 0;
+		throw UnknownArgument(Arguments[i]->GetData());
 	}
 
 	// Writes prefixes
@@ -438,14 +436,7 @@ bool StringSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 
 	if (Arguments.size() == 2)
 	{
-		if (!Arguments[0]->TypeCheck (*Arguments[1], Check))
-		{
-			// If type check fails, decides whether to throw an exception or return false.
-			// Optimized syntaxes like add eax,byte 5 should not throw exceptions, because
-			// they have alternate long forms.
-			if (Precedence >= OptimizedPrecedence) throw 0;
-				return false;
-		}
+		if (!Arguments[0]->TypeCheck (*Arguments[1], Check)) throw TypeMismatch(Arguments[0]->GetData(), Arguments[1]->GetData());
 	}
 
 	// Writes the operand size prefix if necessary
@@ -465,9 +456,6 @@ bool StringSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 			break;
 	}
 
-	// Checks if the argument is a memory reference
-	if (mem == 0) throw 0;
-
 	// Checks for the need of prefixes
 	AddressSizePrefix = (CurrentAssembler->GetCurrentMode() == 16) != (mem->GetAddressSize() == 16);
 	SegmentPrefix = mem->GetSegmentPrefix ();
@@ -476,7 +464,7 @@ bool StringSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 	if (AddressSizePrefix) Output.push_back (0x67);
 	if (SegmentPrefix != 0)
 	{
-		if (!Overrideable) throw 0;
+		if (!Overrideable) throw InvalidSegmentOverride();
 		Output.push_back (SegmentPrefix);
 	}
 
