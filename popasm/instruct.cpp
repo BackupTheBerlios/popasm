@@ -145,23 +145,39 @@ typedef Register::IdFunctor<SegmentRegister,   5, ANY> GS;
 template <class A, class B>
 class OR : public  BinaryCompose <logical_or<bool>, A, B> {};
 
+template <class A, class B>
+class AND : public  BinaryCompose <logical_and<bool>, A, B> {};
+
+class FarProc : public BasicArgument::IdFunctor
+{
+	public:
+	bool operator() (const BasicArgument *)
+	{
+		const Procedure *cp = CurrentAssembler->GetCurrentProcedure();
+		if (cp == 0)
+			return false;
+
+		return cp->GetDistanceType() == FAR;
+	}
+};
+
 void Instruction::SetupInstructionTable () throw ()
 {
 	static Instruction Instructions[] =
 	{
 		Instruction ("AAA",
-			new ZerarySyntax          (Opcode (0x37),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x37))),
 
 		Instruction ("AAD",
 			new UnarySyntax           (Opcode (0xD5),                   Syntax::NOTHING,                                                                         new Immed<8, Number::UNSIGNED>()),
-			new ZerarySyntax          (Opcode (0xD5, 0x0A),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD5, 0x0A))),
 
 		Instruction ("AAM",
 			new UnarySyntax           (Opcode (0xD4),                   Syntax::NOTHING,                                                                         new Immed<8, Number::UNSIGNED>()),
-			new ZerarySyntax          (Opcode (0xD4, 0x0A),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD4, 0x0A))),
 
 		Instruction ("AAS",
-			new ZerarySyntax          (Opcode (0x3F),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x3F))),
 
 		Instruction ("ADC",
 			new BinarySyntax          (Opcode (0x10),                   Syntax::FIRST_ARGUMENT,  true,  Argument::EQUAL,	     3, BinarySyntax::PRESENT,        new GPReg(),                       new OR <GPMem, GPReg>()),
@@ -249,22 +265,22 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0x99),                   Syntax::MODE_32BITS)),
 
 		Instruction ("CLC",
-			new ZerarySyntax          (Opcode (0xF8),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xF8))),
 
 		Instruction ("CLD",
-			new ZerarySyntax          (Opcode (0xFC),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xFC))),
 
 		Instruction ("CLFLUSH",
 			new UnarySyntax           (Opcode (0x0F, 0xAE, 0x07),       Syntax::NOTHING,                                                                         new Mem8())),
 
 		Instruction ("CLI",
-			new ZerarySyntax          (Opcode (0xFA),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xFA))),
 
 		Instruction ("CLTS",
-			new ZerarySyntax          (Opcode (0x0F, 0X06),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0X06))),
 
 		Instruction ("CMC",
-			new ZerarySyntax          (Opcode (0xF5),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xF5))),
 
 		Instruction ("CMOVA",
 			new BinarySyntax          (Opcode (0x0F, 0x47),             Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),                     new OR<WordMem, WordReg>())),
@@ -422,7 +438,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new StringSyntax          (Opcode (0xA7),                   Syntax::FIRST_ARGUMENT,         Argument::EQUAL,                                         new Mem32(),                       new Mem32(), 0)),
 
 		Instruction ("CMPSB",
-			new ZerarySyntax          (Opcode (0xA6),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xA6))),
 
 		Instruction ("CMPSW",
 			new ZerarySyntax          (Opcode (0xA7),                   Syntax::MODE_16BITS)),
@@ -495,7 +511,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax          (Opcode (0x0F, 0x2F),             Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(),                      new OR<XMMReg, Mem32f>())),
 
 		Instruction ("CPUID",
-			new ZerarySyntax          (Opcode (0x0F, 0xA2),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0xA2))),
 
 		Instruction ("CVTDQ2PD",
 			new BinarySyntax          (Opcode (0xF3, 0x0F, 0xE6),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(),                      new OR<XMMReg, Mem64>())),
@@ -570,10 +586,10 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0x98),                   Syntax::MODE_32BITS)),
 
 		Instruction ("DAA",
-			new ZerarySyntax          (Opcode (0x27),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x27))),
 
 		Instruction ("DAS",
-			new ZerarySyntax          (Opcode (0x2F),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x2F))),
 
 		Instruction ("DEC",
 			new UnarySyntax           (Opcode (0xFE, 0x01),             Syntax::FIRST_ARGUMENT,                                                                  new OR<GPReg, SGPMem>(), 1),
@@ -595,16 +611,16 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x5E),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(),                      new OR<XMMReg, Mem32f>())),
 
 		Instruction ("EMMS",
-			new ZerarySyntax          (Opcode (0x0F, 0x77),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0x77))),
 
 		Instruction ("ENTER",
 			new BinarySyntax          (Opcode (0xC8),                   Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::ABSENT,         new Immed<16, Number::UNSIGNED>(), new ImmedRange<8, 0, 31>())),
 
 		Instruction ("F2XM1",
-			new ZerarySyntax          (Opcode (0xD9, 0xF0),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xF0))),
 
 		Instruction ("FABS",
-			new ZerarySyntax          (Opcode (0xD9, 0xE1),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xE1))),
 
 		Instruction ("FADD",
 			new UnarySyntax           (Opcode (0xD8, 0x00),             Syntax::NOTHING,                                                                         new SMem32f()),
@@ -614,7 +630,7 @@ void Instruction::SetupInstructionTable () throw ()
 
 		Instruction ("FADDP",
 			new FPUBinarySyntax       (Opcode (0xDE, 0xC0),                                                                                                      new FPUReg(),                      new ST()),
-			new ZerarySyntax          (Opcode (0xDE, 0xC1),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xDE, 0xC1))),
 
 		Instruction ("FIADD",
 			new UnarySyntax           (Opcode (0xD8, 0x00),             Syntax::NOTHING,                                                                         new SMem32()),
@@ -627,13 +643,13 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax           (Opcode (0xDF, 0x06),             Syntax::NOTHING,                                                                         new Mem80BCD())),
 
 		Instruction ("FCHS",
-			new ZerarySyntax          (Opcode (0xD9, 0xE0),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xE0))),
 
 		Instruction ("FCLEX",
-			new ZerarySyntax          (Opcode (0x9B, 0xDB, 0xE2),       Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x9B, 0xDB, 0xE2))),
 
 		Instruction ("FNCLEX",
-			new ZerarySyntax          (Opcode (0xDB, 0xE2),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xDB, 0xE2))),
 
 		Instruction ("FCMOVB",
 			new FPUBinarySyntax       (Opcode (0xDA, 0xC0),                                                                                                      new ST(),                          new FPUReg())),
@@ -663,16 +679,16 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax           (Opcode (0xD8, 0x02),             Syntax::NOTHING,                                                                         new SMem32f()),
 			new UnarySyntax           (Opcode (0xDC, 0x02),             Syntax::NOTHING,                                                                         new SMem64f()),
 			new AdditiveUnarySyntax   (Opcode (0xD8, 0xD0),             Syntax::NOTHING,                                                                         new FPUReg()),
-			new ZerarySyntax          (Opcode (0xD8, 0xD1),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD8, 0xD1))),
 
 		Instruction ("FCOMP",
 			new UnarySyntax           (Opcode (0xD8, 0x03),             Syntax::NOTHING,                                                                         new SMem32f()),
 			new UnarySyntax           (Opcode (0xDC, 0x03),             Syntax::NOTHING,                                                                         new SMem64f()),
 			new AdditiveUnarySyntax   (Opcode (0xD8, 0xD8),             Syntax::NOTHING,                                                                         new FPUReg()),
-			new ZerarySyntax          (Opcode (0xD8, 0xD9),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD8, 0xD9))),
 
 		Instruction ("FCOMPP",
-			new ZerarySyntax          (Opcode (0xDE, 0xD9),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xDE, 0xD9))),
 
 		Instruction ("FCOMI",
 			new FPUBinarySyntax       (Opcode (0xDB, 0xF0),                                                                                                      new ST(),                          new FPUReg())),
@@ -687,10 +703,10 @@ void Instruction::SetupInstructionTable () throw ()
 			new FPUBinarySyntax       (Opcode (0xDF, 0xE8),                                                                                                      new ST(),                          new FPUReg())),
 
 		Instruction ("FCOS",
-			new ZerarySyntax          (Opcode (0xD9, 0xFF),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xFF))),
 
 		Instruction ("FDECSTP",
-			new ZerarySyntax          (Opcode (0xD9, 0xF6),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xF6))),
 
 		Instruction ("FDIV",
 			new UnarySyntax           (Opcode (0xD8, 0x06),             Syntax::NOTHING,                                                                         new SMem32f()),
@@ -700,7 +716,7 @@ void Instruction::SetupInstructionTable () throw ()
 
 		Instruction ("FDIVP",
 			new FPUBinarySyntax       (Opcode (0xDE, 0xF8),                                                                                                      new FPUReg(),                      new ST()),
-			new ZerarySyntax          (Opcode (0xDE, 0xF9),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xDE, 0xF9))),
 
 		Instruction ("FIDIV",
 			new UnarySyntax           (Opcode (0xDA, 0x06),             Syntax::NOTHING,                                                                         new SMem32()),
@@ -714,14 +730,14 @@ void Instruction::SetupInstructionTable () throw ()
 
 		Instruction ("FDIVRP",
 			new FPUBinarySyntax       (Opcode (0xDE, 0xF0),                                                                                                      new FPUReg(),                      new ST()),
-			new ZerarySyntax          (Opcode (0xDE, 0xF1),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xDE, 0xF1))),
 
 		Instruction ("FIDIVR",
 			new UnarySyntax           (Opcode (0xDA, 0x07),             Syntax::NOTHING,                                                                         new SMem32()),
 			new UnarySyntax           (Opcode (0xDE, 0x07),             Syntax::NOTHING,                                                                         new SMem16())),
 
 		Instruction ("FEMMS",
-			new ZerarySyntax          (Opcode (0x0F, 0x0E),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0x0E))),
 
 		Instruction ("FFREE",
 			new AdditiveUnarySyntax   (Opcode (0xDD, 0xC0),             Syntax::NOTHING,                                                                         new FPUReg())),
@@ -740,13 +756,13 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax           (Opcode (0xDF, 0x05),             Syntax::NOTHING,                                                                         new SMem64())),
 
 		Instruction ("FINCSTP",
-			new ZerarySyntax          (Opcode (0xD9, 0xF7),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xF7))),
 
 		Instruction ("FINIT",
-			new ZerarySyntax          (Opcode (0x9B, 0xDB, 0xE3),       Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x9B, 0xDB, 0xE3))),
 
 		Instruction ("FNINIT",
-			new ZerarySyntax          (Opcode (0xDB, 0xE3),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xDB, 0xE3))),
 
 		Instruction ("FIST",
 			new UnarySyntax           (Opcode (0xDF, 0x02),             Syntax::NOTHING,                                                                         new SMem16()),
@@ -764,25 +780,25 @@ void Instruction::SetupInstructionTable () throw ()
 			new AdditiveUnarySyntax   (Opcode (0xD9, 0xC0),             Syntax::NOTHING,                                                                         new FPUReg())),
 
 		Instruction ("FLD1",
-			new ZerarySyntax          (Opcode (0xD9, 0xE8),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xE8))),
 
 		Instruction ("FLDL2T",
-			new ZerarySyntax          (Opcode (0xD9, 0xE9),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xE9))),
 
 		Instruction ("FLDL2E",
-			new ZerarySyntax          (Opcode (0xD9, 0xEA),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xEA))),
 
 		Instruction ("FLDPI",
-			new ZerarySyntax          (Opcode (0xD9, 0xEB),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xEB))),
 
 		Instruction ("FLDLG2",
-			new ZerarySyntax          (Opcode (0xD9, 0xEC),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xEC))),
 
 		Instruction ("FLDLN2",
-			new ZerarySyntax          (Opcode (0xD9, 0xED),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xED))),
 
 		Instruction ("FLDZ",
-			new ZerarySyntax          (Opcode (0xD9, 0xEE),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xEE))),
 
 		Instruction ("FLDCW",
 			new UnarySyntax           (Opcode (0xD9, 0x05),             Syntax::NOTHING,                                                                         new Mem16())),
@@ -798,29 +814,29 @@ void Instruction::SetupInstructionTable () throw ()
 
 		Instruction ("FMULP",
 			new FPUBinarySyntax       (Opcode (0xDE, 0xC8),                                                                                                      new FPUReg(),                      new ST()),
-			new ZerarySyntax          (Opcode (0xDE, 0xC9),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xDE, 0xC9))),
 
 		Instruction ("FIMUL",
 			new UnarySyntax           (Opcode (0xDA, 0x01),             Syntax::NOTHING,                                                                         new SMem32()),
 			new UnarySyntax           (Opcode (0xDE, 0x01),             Syntax::NOTHING,                                                                         new SMem16())),
 
 		Instruction ("FNOP",
-			new ZerarySyntax          (Opcode (0xD9, 0xD0),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xD0))),
 
 		Instruction ("FPATAN",
-			new ZerarySyntax          (Opcode (0xD9, 0xF3),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xF3))),
 
 		Instruction ("FPREM",
-			new ZerarySyntax          (Opcode (0xD9, 0xF8),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xF8))),
 
 		Instruction ("FPREM1",
-			new ZerarySyntax          (Opcode (0xD9, 0xF5),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xF5))),
 
 		Instruction ("FPTAN",
-			new ZerarySyntax          (Opcode (0xD9, 0xF2),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xF2))),
 
 		Instruction ("FRNDINT",
-			new ZerarySyntax          (Opcode (0xD9, 0xFC),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xFC))),
 
 		Instruction ("FRSTOR",
 			new UnarySyntax           (Opcode (0xDD, 0x04),             Syntax::NOTHING,                                                                         new AnyMemInt())),
@@ -832,16 +848,16 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax           (Opcode (0xDD, 0x06),             Syntax::NOTHING,                                                                         new AnyMemInt())),
 
 		Instruction ("FSCALE",
-			new ZerarySyntax          (Opcode (0xD9, 0xFD),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xFD))),
 
 		Instruction ("FSIN",
-			new ZerarySyntax          (Opcode (0xD9, 0xFE),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xFE))),
 
 		Instruction ("FSINCOS",
-			new ZerarySyntax          (Opcode (0xD9, 0xFB),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xFB))),
 
 		Instruction ("FSQRT",
-			new ZerarySyntax          (Opcode (0xD9, 0xFA),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xFA))),
 
 		Instruction ("FST",
 			new UnarySyntax           (Opcode (0xD9, 0x02),             Syntax::NOTHING,                                                                         new SMem32f()),
@@ -872,7 +888,7 @@ void Instruction::SetupInstructionTable () throw ()
 
 		Instruction ("FNSTSW",
 			new UnarySyntax           (Opcode (0xDD, 0x07),             Syntax::NOTHING,                                                                         new Mem16()),
-			new ZerarySyntax          (Opcode (0xDF, 0XE0),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xDF, 0XE0),             Syntax::NOTHING,                                                                         new AX())),
 
 		Instruction ("FSUB",
 			new UnarySyntax           (Opcode (0xD8, 0x04),             Syntax::NOTHING,                                                                         new SMem32f()),
@@ -882,7 +898,7 @@ void Instruction::SetupInstructionTable () throw ()
 
 		Instruction ("FSUBP",
 			new FPUBinarySyntax       (Opcode (0xDE, 0xE8),                                                                                                      new FPUReg(),                      new ST()),
-			new ZerarySyntax          (Opcode (0xDE, 0xE9),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xDE, 0xE9))),
 
 		Instruction ("FISUB",
 			new UnarySyntax           (Opcode (0xDA, 0x04),             Syntax::NOTHING,                                                                         new SMem32()),
@@ -896,35 +912,35 @@ void Instruction::SetupInstructionTable () throw ()
 
 		Instruction ("FSUBRP",
 			new FPUBinarySyntax       (Opcode (0xDE, 0xE0),                                                                                                      new FPUReg(),                      new ST()),
-			new ZerarySyntax          (Opcode (0xDE, 0xE1),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xDE, 0xE1))),
 
 		Instruction ("FISUBR",
 			new UnarySyntax           (Opcode (0xDA, 0x05),             Syntax::NOTHING,                                                                         new SMem32()),
 			new UnarySyntax           (Opcode (0xDE, 0x05),             Syntax::NOTHING,                                                                         new SMem16())),
 
 		Instruction ("FTST",
-			new ZerarySyntax          (Opcode (0xD9, 0xE4),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xE4))),
 
 		Instruction ("FUCOM",
 			new AdditiveUnarySyntax   (Opcode (0xDD, 0xE0),             Syntax::NOTHING,                                                                         new FPUReg()),
-			new ZerarySyntax          (Opcode (0xDD, 0xE1),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xDD, 0xE1))),
 
 		Instruction ("FUCOMP",
 			new AdditiveUnarySyntax   (Opcode (0xDD, 0xE8),             Syntax::NOTHING,                                                                         new FPUReg()),
-			new ZerarySyntax          (Opcode (0xDD, 0xE9),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xDD, 0xE9))),
 
 		Instruction ("FUCOMPP",
-			new ZerarySyntax          (Opcode (0xDA, 0xE9),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xDA, 0xE9))),
 
 		Instruction ("FWAIT",
-			new ZerarySyntax          (Opcode (0x9B),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x9B))),
 
 		Instruction ("FXAM",
-			new ZerarySyntax          (Opcode (0xD9, 0xE5),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xE5))),
 
 		Instruction ("FXCH",
 			new AdditiveUnarySyntax   (Opcode (0xD9, 0xC8),             Syntax::NOTHING,                                                                         new FPUReg()),
-			new ZerarySyntax          (Opcode (0xD9, 0xc9),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xc9))),
 
 		Instruction ("FXRSTOR",
 			new UnarySyntax           (Opcode (0x0F, 0xAE, 0x01),       Syntax::NOTHING,                                                                         new AnyMemInt())),
@@ -933,16 +949,16 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax           (Opcode (0x0F, 0xAE, 0x00),       Syntax::NOTHING,                                                                         new AnyMemInt())),
 
 		Instruction ("FXTRACT",
-			new ZerarySyntax          (Opcode (0xD9, 0xF4),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xF4))),
 
 		Instruction ("FYL2X",
-			new ZerarySyntax          (Opcode (0xD9, 0xF1),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xF1))),
 
 		Instruction ("FYL2XP1",
-			new ZerarySyntax          (Opcode (0xD9, 0xF9),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD9, 0xF9))),
 
 		Instruction ("HLT",
-			new ZerarySyntax          (Opcode (0xF4),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xF4))),
 
 		Instruction ("IDIV",
 			new UnarySyntax           (Opcode (0xF6, 0x07),             Syntax::FIRST_ARGUMENT,                                                                  new OR<GPReg, SGPMem>(), 1)),
@@ -971,7 +987,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new StringSyntax          (Opcode (0x6D),                   Syntax::FIRST_ARGUMENT,         Argument::NONE,                                          new SMem32(),                      new DX(), 2)),
 
 		Instruction ("INSB",
-			new ZerarySyntax          (Opcode (0x6C),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x6C))),
 
 		Instruction ("INSW",
 			new ZerarySyntax          (Opcode (0x6D),                   Syntax::MODE_16BITS)),
@@ -984,16 +1000,16 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax           (Opcode (0xCD),                   Syntax::NOTHING,                                                                         new Immed<8, Number::UNSIGNED>())),
 
 		Instruction ("INTO",
-			new ZerarySyntax          (Opcode (0xCE),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xCE))),
 
 		Instruction ("INVD",
-			new ZerarySyntax          (Opcode (0x0F, 0x08),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0x08))),
 
 		Instruction ("INVLPG",
 			new UnarySyntax           (Opcode (0x0F, 0x01, 0x07),       Syntax::NOTHING,                                                                         new Memory::IdFunctor<ANY, ANY, ANY>())),
 
 		Instruction ("IRET",
-			new ZerarySyntax          (Opcode (0xCF),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xCF))),
 
 		Instruction ("IRETW",
 			new ZerarySyntax          (Opcode (0xCF),                   Syntax::MODE_16BITS)),
@@ -1135,7 +1151,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax           (Opcode (0xEA),                   Syntax::FIRST_ARGUMENT,                                                                  new FullPointer::IdFunctor())),
 
 		Instruction ("LAHF",
-			new ZerarySyntax          (Opcode (0x9F),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x9F))),
 
 		Instruction ("LAR",
 			new BinarySyntax          (Opcode (0x0F, 0x02),             Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),                     new OR<WordReg, WordMem>())),
@@ -1144,7 +1160,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax           (Opcode (0x0F, 0xAE, 0x02),       Syntax::NOTHING,                                                                         new GPReg32())),
 
 		Instruction ("LFENCE",
-			new ZerarySyntax          (Opcode (0x0F, 0xAE, 0xE8),       Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0xAE, 0xE8))),
 
 		Instruction ("LDS",
 			new BinarySyntax          (Opcode (0xC5),                   Syntax::FIRST_ARGUMENT,  false, Argument::MINUS_16BITS, 0, BinarySyntax::PRESENT,        new WordReg(),                     new Memory::IdFunctor<UNDEFINED | DWORD | PWORD, UNDEFINED, ANY>())),
@@ -1165,7 +1181,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax          (Opcode (0x8D),                   Syntax::FIRST_ARGUMENT,  false, Argument::NONE,         0, BinarySyntax::PRESENT,        new WordReg(),                     new AnyMem())),
 
 		Instruction ("LEAVE",
-			new ZerarySyntax          (Opcode (0xC9),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xC9))),
 
 		Instruction ("LGDT",
 			new UnarySyntax           (Opcode (0x0F, 0x01, 0x02),       Syntax::NOTHING,                                                                         new Mem48())),
@@ -1185,7 +1201,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new StringSyntax          (Opcode (0xAD),                   Syntax::FIRST_ARGUMENT,         Argument::NONE,                                          new SMem32(), 0, 0)),
 
 		Instruction ("LODSB",
-			new ZerarySyntax          (Opcode (0xAC),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xAC))),
 
 		Instruction ("LODSW",
 			new ZerarySyntax          (Opcode (0xAD),                   Syntax::MODE_16BITS)),
@@ -1233,7 +1249,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x5F),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(),                      new OR<XMMReg, Mem32f>())),
 
 		Instruction ("MFENCE",
-			new ZerarySyntax          (Opcode (0x0F, 0xAE, 0xF0),       Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0xAE, 0xF0))),
 
 		Instruction ("MINPD",
 			new BinarySyntax          (Opcode (0x66, 0x0F, 0x5D),       Syntax::NOTHING,         false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new XMMReg(),                      new OR<XMMReg, XMMMem>())),
@@ -1344,7 +1360,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new StringSyntax          (Opcode (0xA5),                   Syntax::FIRST_ARGUMENT,         Argument::EQUAL,                                         new Mem32(),                       new Mem32(), 1)),
 
 		Instruction ("MOVSB",
-			new ZerarySyntax          (Opcode (0xA4),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xA4))),
 
 		Instruction ("MOVSW",
 			new ZerarySyntax          (Opcode (0xA5),                   Syntax::MODE_16BITS)),
@@ -1396,7 +1412,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax           (Opcode (0xF6, 0x02),             Syntax::FIRST_ARGUMENT,                                                                  new OR<GPReg, SGPMem>(), 1)),
 
 		Instruction ("NOP",
-			new ZerarySyntax          (Opcode (0x90),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x90))),
 
 		Instruction ("OR",
 			new BinarySyntax          (Opcode (0x08),                   Syntax::FIRST_ARGUMENT,  true,  Argument::EQUAL,	     3, BinarySyntax::PRESENT,        new GPReg(),                       new OR<GPReg, GPMem>()),
@@ -1421,7 +1437,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new StringSyntax          (Opcode (0x6F),                   Syntax::SECOND_ARGUMENT,        Argument::NONE,                                          new DX(),                          new SMem32(), 1)),
 
 		Instruction ("OUTSB",
-			new ZerarySyntax          (Opcode (0x6E),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x6E))),
 
 		Instruction ("OUTSW",
 			new ZerarySyntax          (Opcode (0x6F),                   Syntax::MODE_16BITS)),
@@ -1482,7 +1498,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax          (Opcode (0x66, 0x0F, 0xDF),       Syntax::NOTHING,         false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new XMMReg(),                      new OR<XMMReg, XMMMem>())),
 
 		Instruction ("PAUSE",
-			new ZerarySyntax          (Opcode (0xF3, 0x90),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xF3, 0x90))),
 
 		Instruction ("PAVGB",
 			new BinarySyntax          (Opcode (0x0F, 0xE0),             Syntax::NOTHING,         false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new MMXReg(),                      new OR<MMXReg, MMXMem>()),
@@ -1646,7 +1662,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0x0F, 0xA9),             Syntax::NOTHING,                                                                         new GS())),
 
 		Instruction ("POPA",
-			new ZerarySyntax          (Opcode (0x61),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x61))),
 
 		Instruction ("POPAW",
 			new ZerarySyntax          (Opcode (0x61),                   Syntax::MODE_16BITS)),
@@ -1655,7 +1671,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0x61),                   Syntax::MODE_32BITS)),
 
 		Instruction ("POPF",
-			new ZerarySyntax          (Opcode (0x9D),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x9D))),
 
 		Instruction ("POPFW",
 			new ZerarySyntax          (Opcode (0x9D),                   Syntax::MODE_16BITS)),
@@ -1833,7 +1849,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0x0F, 0xA8),             Syntax::NOTHING,                                                                         new GS())),
 
 		Instruction ("PUSHA",
-			new ZerarySyntax          (Opcode (0x60),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x60))),
 
 		Instruction ("PUSHAW",
 			new ZerarySyntax          (Opcode (0x60),                   Syntax::MODE_16BITS)),
@@ -1842,7 +1858,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0x60),                   Syntax::MODE_32BITS)),
 
 		Instruction ("PUSHF",
-			new ZerarySyntax          (Opcode (0x9C),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x9C))),
 
 		Instruction ("PUSHFW",
 			new ZerarySyntax          (Opcode (0x9C),                   Syntax::MODE_16BITS)),
@@ -1881,16 +1897,16 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x53),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(),                      new OR<XMMReg, Memory::IdFunctor<UNDEFINED | DWORD, UNDEFINED, (UNDEFINED | FLOAT)> >())),
 
 		Instruction ("RDMSR",
-			new ZerarySyntax          (Opcode (0x0F, 0x32),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0x32))),
 
 		Instruction ("RDPMC",
-			new ZerarySyntax          (Opcode (0x0F, 0x33),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0x33))),
 
 		Instruction ("RDTSC",
-			new ZerarySyntax          (Opcode (0x0F, 0x31),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0x31))),
 
 		Instruction ("RSM",
-			new ZerarySyntax          (Opcode (0x0F, 0xAA),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0xAA))),
 
 		Instruction ("RSQRTPS",
 			new BinarySyntax          (Opcode (0x0F, 0x52),             Syntax::NOTHING,         false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new XMMReg(),                      new OR<XMMReg, XMMMem>())),
@@ -1899,19 +1915,21 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x52),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(),                      new OR<XMMReg, Mem32f>())),
 
 		Instruction ("RET",
-			new ZerarySyntax          (Opcode (0xC3),                   Syntax::NOTHING),
+			new UnarySyntax           (Opcode (0xCA),                   Syntax::NOTHING,                                                                         new AND <FarProc, Immed<16, Number::UNSIGNED> >()),
+			new RetSyntax             (Opcode (0xCB),                   Syntax::NOTHING,                                                                         new FarProc()),
+			new ZerarySyntax          (Opcode (0xC3)),
 			new UnarySyntax           (Opcode (0xC2),                   Syntax::NOTHING,                                                                         new Immed<16, Number::UNSIGNED>())),
 
 		Instruction ("RETN",
-			new ZerarySyntax          (Opcode (0xC3),                   Syntax::NOTHING),
+			new ZerarySyntax          (Opcode (0xC3)),
 			new UnarySyntax           (Opcode (0xC2),                   Syntax::NOTHING,                                                                         new Immed<16, Number::UNSIGNED>())),
 
 		Instruction ("RETF",
-			new ZerarySyntax          (Opcode (0xCB),                   Syntax::NOTHING),
+			new ZerarySyntax          (Opcode (0xCB)),
 			new UnarySyntax           (Opcode (0xCA),                   Syntax::NOTHING,                                                                         new Immed<16, Number::UNSIGNED>())),
 
 		Instruction ("SAHF",
-			new ZerarySyntax          (Opcode (0x9E),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x9E))),
 
 		Instruction ("SAL",
 			new UnarySyntax           (Opcode (0xD0, 0x04),             Syntax::FIRST_ARGUMENT,                                                                  new OR<GPReg, SGPMem>(),           new ImmedEqual<UNDEFINED, 1>(), 1),
@@ -1935,7 +1953,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new StringSyntax          (Opcode (0xAF),                   Syntax::FIRST_ARGUMENT,         Argument::NONE,                                          new SMem32(), 0, 2)),
 
 		Instruction ("SCASB",
-			new ZerarySyntax          (Opcode (0xAE),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xAE))),
 
 		Instruction ("SCASW",
 			new ZerarySyntax          (Opcode (0xAF),                   Syntax::MODE_16BITS)),
@@ -2034,7 +2052,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax           (Opcode (0x0F, 0x94, 0x00),       Syntax::NOTHING,                                                                         new OR <GPReg8, Mem8>())),
 
 		Instruction ("SFENCE",
-			new ZerarySyntax          (Opcode (0x0F, 0xAE, 0xF8),       Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0xAE, 0xF8))),
 
 		Instruction ("SGDT",
 			new UnarySyntax           (Opcode (0x0F, 0x01, 0x00),       Syntax::FIRST_ARGUMENT,                                                                  new Mem48())),
@@ -2085,13 +2103,13 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x51),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(),                      new OR<XMMReg, Mem32f>())),
 
 		Instruction ("STC",
-			new ZerarySyntax          (Opcode (0xF9),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xF9))),
 
 		Instruction ("STD",
-			new ZerarySyntax          (Opcode (0xFD),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xFD))),
 
 		Instruction ("STI",
-			new ZerarySyntax          (Opcode (0xFB),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xFB))),
 
 		Instruction ("STMXCSR",
 			new UnarySyntax           (Opcode (0x0F, 0xAE, 0x03),       Syntax::NOTHING,                                                                         new Mem32())),
@@ -2102,7 +2120,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new StringSyntax          (Opcode (0xAB),                   Syntax::FIRST_ARGUMENT,         Argument::NONE,                                          new SMem32(), 0, 2)),
 
 		Instruction ("STOSB",
-			new ZerarySyntax          (Opcode (0xAA),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xAA))),
 
 		Instruction ("STOSW",
 			new ZerarySyntax          (Opcode (0xAB),                   Syntax::MODE_16BITS)),
@@ -2132,10 +2150,10 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax          (Opcode (0xF3, 0x0F, 0x5C),       Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(),                      new OR<XMMReg, Mem32f>())),
 
 		Instruction ("SYSENTER",
-			new ZerarySyntax          (Opcode (0x0F, 0x34),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0x34))),
 
 		Instruction ("SYSEXIT",
-			new ZerarySyntax          (Opcode (0x0F, 0x35),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0x35))),
 
 		Instruction ("TEST",
 			new BinarySyntax          (Opcode (0xA8),                   Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        1, BinarySyntax::ABSENT,         new Accumulator(),                 new Immediate::IdFunctor()),
@@ -2149,7 +2167,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax          (Opcode (0x0F, 0x2E),             Syntax::NOTHING,         false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMReg(),                      new OR<XMMReg, Mem32f>())),
 
 		Instruction ("UD2",
-			new ZerarySyntax          (Opcode (0x0F, 0x0B),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0x0B))),
 
 		Instruction ("UNPCKHPD",
 			new BinarySyntax          (Opcode (0x66, 0x0F, 0x15),       Syntax::NOTHING,         false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new XMMReg(),                      new OR<XMMReg, XMMMem>())),
@@ -2170,13 +2188,13 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax           (Opcode (0x0F, 0x00, 0x05),       Syntax::NOTHING,                                                                         new OR<GPReg16, Mem16>())),
 
 		Instruction ("WAIT",
-			new ZerarySyntax          (Opcode (0x9B),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x9B))),
 
 		Instruction ("WBINVD",
-			new ZerarySyntax          (Opcode (0x0F, 0x09),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0x09))),
 
 		Instruction ("WRMSR",
-			new ZerarySyntax          (Opcode (0x0F, 0x30),             Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0x0F, 0x30))),
 
 		Instruction ("XADD",
 			new BinarySyntax          (Opcode (0x0F, 0xC0),             Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        1, BinarySyntax::PRESENT,        new OR<GPReg, GPMem>(),            new GPReg())),
@@ -2190,7 +2208,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new StringSyntax          (Opcode (0xD7),                   Syntax::NOTHING,                Argument::NONE,                                          new SMem8,  0, 0)),
 
 		Instruction ("XLATB",
-			new ZerarySyntax          (Opcode (0xD7),                   Syntax::NOTHING)),
+			new ZerarySyntax          (Opcode (0xD7))),
 
 		Instruction ("XOR",
 			new BinarySyntax          (Opcode (0x30),                   Syntax::FIRST_ARGUMENT,  true,  Argument::EQUAL,	     3, BinarySyntax::PRESENT,        new GPReg(),                       new OR<GPReg, GPMem>()),
