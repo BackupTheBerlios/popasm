@@ -1514,10 +1514,32 @@ bool IntegerNumber::Zero() const throw (LeadingZero)
 void IntegerNumber::Write (vector<Byte> &Output, unsigned int n) const
 {
 	NaturalNumber x (Abs());
-	if (LesserThanZero()) x.TwosComplement();
+	if (n != 10)
+	{
+		if (LesserThanZero()) x.TwosComplement();
 
-	// Writes the number in two's complement if negative
-	x.Write (Output, n, LesserThanZero() ? 0xFF : 0);
+		// Writes the number in two's complement if negative
+		x.Write (Output, n, LesserThanZero() ? 0xFF : 0);
+	}
+	else
+	{
+		vector<Byte> Temp;
+		Byte Next;
+
+		// Converts all but the most significant pair of digits into a packed BCD byte
+		for (unsigned int i = 0; i < 9; i++)
+		{
+			Next = static_cast<Byte> (x.BaseShiftRight (10));
+			Next |= static_cast<Byte> (x.BaseShiftRight (10) << 4);
+			Temp.push_back (Next);
+		}
+
+		// Writes the most significant byte (whose most significant bit is the size bit)
+		Temp.push_back (Negative ? 0x80 : 0);
+
+		if (!x.Zero()) throw Overflow();
+		Output.insert (Output.end(), Temp.begin(), Temp.end());
+	}
 }
 
 const IntegerNumber IntegerNumber::Divide (const IntegerNumber &n, IntegerNumber *Remainer = 0) const throw (DivisionByZero)
