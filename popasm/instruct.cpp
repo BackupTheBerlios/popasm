@@ -153,16 +153,16 @@ void Instruction::SetupInstructionTable () throw ()
 			new OptimizedBinarySyntax	(300, Opcode (0x83, 0x00),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
 
 		Instruction ("ADDPD",
-			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		Instruction ("ADDPS",
-			new BinarySyntax        (100, Opcode (0x0F, 0x58),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x58),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		Instruction ("ADDSD",
-			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
 
 		Instruction ("ADDSS",
-			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
 
 		Instruction ("AND",
 			new BinarySyntax        (110, Opcode (0x20),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,	       3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),  new MemGPReg()),
@@ -171,16 +171,16 @@ void Instruction::SetupInstructionTable () throw ()
 			new OptimizedBinarySyntax	(300, Opcode (0x83, 0x04),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
 
 		Instruction ("ANDPD",
-			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x54), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x54), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		Instruction ("ANDPS",
-			new BinarySyntax        (100, Opcode (0x0F, 0x54),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x54),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		Instruction ("ANDNPD",
-			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x55), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x55), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		Instruction ("ANDNPS",
-			new BinarySyntax        (100, Opcode (0x0F, 0x55),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x55),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		Instruction ("ARPL",
 			new BinarySyntax        (100, Opcode (0x63),             Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MemReg16(),   new GPRegister16Bits::IdFunctor())),
@@ -244,94 +244,94 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax        (100, Opcode (0xF5),             Syntax::NOTHING)),
 
 		Instruction ("CMOVA",
-			new BinarySyntax        (100, Opcode (0x0F, 0x47),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x47),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVAE",
-			new BinarySyntax        (100, Opcode (0x0F, 0x43),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x43),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVB",
-			new BinarySyntax        (100, Opcode (0x0F, 0x42),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x42),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVBE",
-			new BinarySyntax        (100, Opcode (0x0F, 0x46),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x46),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVC",
-			new BinarySyntax        (100, Opcode (0x0F, 0x42),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x42),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVE",
-			new BinarySyntax        (100, Opcode (0x0F, 0x44),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x44),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVG",
-			new BinarySyntax        (100, Opcode (0x0F, 0x4F),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x4F),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVGE",
-			new BinarySyntax        (100, Opcode (0x0F, 0x4D),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x4D),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVL",
-			new BinarySyntax        (100, Opcode (0x0F, 0x4C),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x4C),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVLE",
-			new BinarySyntax        (100, Opcode (0x0F, 0x4E),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x4E),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVNA",
-			new BinarySyntax        (100, Opcode (0x0F, 0x46),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x46),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVNAE",
-			new BinarySyntax        (100, Opcode (0x0F, 0x42),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x42),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVNB",
-			new BinarySyntax        (100, Opcode (0x0F, 0x43),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x43),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVNBE",
-			new BinarySyntax        (100, Opcode (0x0F, 0x47),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x47),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVNC",
-			new BinarySyntax        (100, Opcode (0x0F, 0x43),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x43),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVNE",
-			new BinarySyntax        (100, Opcode (0x0F, 0x45),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x45),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVNG",
-			new BinarySyntax        (100, Opcode (0x0F, 0x4E),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x4E),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVNGE",
-			new BinarySyntax        (100, Opcode (0x0F, 0x4C),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x4C),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVNL",
-			new BinarySyntax        (100, Opcode (0x0F, 0x4D),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x4D),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVNLE",
-			new BinarySyntax        (100, Opcode (0x0F, 0x4F),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x4F),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVNO",
-			new BinarySyntax        (100, Opcode (0x0F, 0x41),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x41),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVNP",
-			new BinarySyntax        (100, Opcode (0x0F, 0x4B),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x4B),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVNS",
-			new BinarySyntax        (100, Opcode (0x0F, 0x49),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x49),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVNZ",
-			new BinarySyntax        (100, Opcode (0x0F, 0x45),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x45),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVO",
-			new BinarySyntax        (100, Opcode (0x0F, 0x40),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x40),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVP",
-			new BinarySyntax        (100, Opcode (0x0F, 0x4A),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x4A),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVPE",
-			new BinarySyntax        (100, Opcode (0x0F, 0x4A),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x4A),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVPO",
-			new BinarySyntax        (100, Opcode (0x0F, 0x4B),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x4B),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVS",
-			new BinarySyntax        (100, Opcode (0x0F, 0x48),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x48),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMOVZ",
-			new BinarySyntax        (100, Opcode (0x0F, 0x44),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x44),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new MemWordReg())),
 
 		Instruction ("CMP",
 			new BinarySyntax        (110, Opcode (0x38),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,	       3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),  new MemGPReg()),
@@ -340,10 +340,58 @@ void Instruction::SetupInstructionTable () throw ()
 			new OptimizedBinarySyntax	(300, Opcode (0x83, 0x07),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
 
 		Instruction ("CMPPD",
-			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax         (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
+
+		Instruction ("CMPEQPD",
+			new SuffixedBinarySyntax (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 0)),
+
+		Instruction ("CMPLTPD",
+			new SuffixedBinarySyntax (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 1)),
+
+		Instruction ("CMPLEPD",
+			new SuffixedBinarySyntax (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 2)),
+
+		Instruction ("CMPUNORDPD",
+			new SuffixedBinarySyntax (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 3)),
+
+		Instruction ("CMPNEQPD",
+			new SuffixedBinarySyntax (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 4)),
+
+		Instruction ("CMPNLTPD",
+			new SuffixedBinarySyntax (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 5)),
+
+		Instruction ("CMPNLEPD",
+			new SuffixedBinarySyntax (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 6)),
+
+		Instruction ("CMPORDPD",
+			new SuffixedBinarySyntax (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 7)),
 
 		Instruction ("CMPPS",
-			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax         (100, Opcode (0x0F, 0xC2),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
+
+		Instruction ("CMPEQPS",
+			new SuffixedBinarySyntax (100, Opcode (0x0F, 0xC2),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 0)),
+
+		Instruction ("CMPLTPS",
+			new SuffixedBinarySyntax (100, Opcode (0x0F, 0xC2),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 1)),
+
+		Instruction ("CMPLEPS",
+			new SuffixedBinarySyntax (100, Opcode (0x0F, 0xC2),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 2)),
+
+		Instruction ("CMPUNORDPS",
+			new SuffixedBinarySyntax (100, Opcode (0x0F, 0xC2),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 3)),
+
+		Instruction ("CMPNEQPS",
+			new SuffixedBinarySyntax (100, Opcode (0x0F, 0xC2),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 4)),
+
+		Instruction ("CMPNLTPS",
+			new SuffixedBinarySyntax (100, Opcode (0x0F, 0xC2),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 5)),
+
+		Instruction ("CMPNLEPS",
+			new SuffixedBinarySyntax (100, Opcode (0x0F, 0xC2),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 6)),
+
+		Instruction ("CMPORDPS",
+			new SuffixedBinarySyntax (100, Opcode (0x0F, 0xC2),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 7)),
 
 		Instruction ("CMPS",
 			new StringSyntax        (100, Opcode (0xA6),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<8>(),     new Mem<8>()),
@@ -360,8 +408,56 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax        (100, Opcode (0xA7),             Syntax::MODE_32BITS),
 			new BinarySyntax        (110, Opcode (0xF2, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
 
+		Instruction ("CMPEQSD",
+			new SuffixedBinarySyntax (100, Opcode (0xF2, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>(), 0)),
+
+		Instruction ("CMPLTSD",
+			new SuffixedBinarySyntax (100, Opcode (0xF2, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>(), 1)),
+
+		Instruction ("CMPLESD",
+			new SuffixedBinarySyntax (100, Opcode (0xF2, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>(), 2)),
+
+		Instruction ("CMPUNORDSD",
+			new SuffixedBinarySyntax (100, Opcode (0xF2, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>(), 3)),
+
+		Instruction ("CMPNEQSD",
+			new SuffixedBinarySyntax (100, Opcode (0xF2, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>(), 4)),
+
+		Instruction ("CMPNLTSD",
+			new SuffixedBinarySyntax (100, Opcode (0xF2, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>(), 5)),
+
+		Instruction ("CMPNLESD",
+			new SuffixedBinarySyntax (100, Opcode (0xF2, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>(), 6)),
+
+		Instruction ("CMPORDSD",
+			new SuffixedBinarySyntax (100, Opcode (0xF2, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>(), 7)),
+
 		Instruction ("CMPSS",
-			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
+
+		Instruction ("CMPEQSS",
+			new SuffixedBinarySyntax (100, Opcode (0xF3, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>(), 0)),
+
+		Instruction ("CMPLTSS",
+			new SuffixedBinarySyntax (100, Opcode (0xF3, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>(), 1)),
+
+		Instruction ("CMPLESS",
+			new SuffixedBinarySyntax (100, Opcode (0xF3, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>(), 2)),
+
+		Instruction ("CMPUNORDSS",
+			new SuffixedBinarySyntax (100, Opcode (0xF3, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>(), 3)),
+
+		Instruction ("CMPNEQSS",
+			new SuffixedBinarySyntax (100, Opcode (0xF3, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>(), 4)),
+
+		Instruction ("CMPNLTSS",
+			new SuffixedBinarySyntax (100, Opcode (0xF3, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>(), 5)),
+
+		Instruction ("CMPNLESS",
+			new SuffixedBinarySyntax (100, Opcode (0xF3, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>(), 6)),
+
+		Instruction ("CMPORDSS",
+			new SuffixedBinarySyntax (100, Opcode (0xF3, 0x0F, 0xC2),Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>(), 7)),
 
 		Instruction ("CMPXCHG",
 			new BinarySyntax        (100, Opcode (0x0F, 0xB0),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::PRESENT, new MemGPReg(),   new GPRegister::IdFunctor())),
