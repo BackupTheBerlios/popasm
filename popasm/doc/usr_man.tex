@@ -1,124 +1,190 @@
 \documentclass[a4paper,12pt]{book}
+\def\thebibliographyname{References}
 \title{PopAsm --- The Popular Assembler\\User's Manual}
 \author{Helcio B. de Mello}
 \date{\today}
+
+
+\newcommand{\popasm}{\emph{PopAsm}}
+\newcommand{\nasm}{\emph{NASM}}
+\newcommand{\tasm}{\emph{TASM}}
 
 \begin{document}
 \maketitle
 
 \chapter*{About this document}
-This document is part of \emph{PopAsm, the Popular Assembler Project}. It has been totally written in \LaTeX\ by
-\emph{PopAsm} author himself.
+This document is part of \popasm, the Popular Assembler Project.
+It has been totally written in \LaTeX\ by
+\popasm\ author himself.
 
-At the time of this writing, \emph{PopAsm} had two manuals:
+At the time of this writing, \popasm\ had two manuals:
 
 \begin{itemize}
-	\item{User's Manual} --- this document. It is aimed to those who wish to use \emph{PopAsm}, regardless the way
-		it was developed and its internal implementation. This document also concerns about instalation procedures.
-	\item{Programmer's Guide} --- documents \emph{PopAsm} source code in detail. It is recommended to those who
-		want to read, understand, compile and/or modify \emph{PopAsm} sources.
+\item{User's Manual} --- this document. It is aimed to those who wish
+to use \popasm, regardless the way
+it was developed and its internal implementation. This document also
+concerns about instalation procedures.
+\item{Programmer's Guide} --- documents \popasm\ source code in
+detail. It is recommended to those who
+want to read, understand, compile and/or modify \popasm\ sources.
 \end{itemize}
 
 Please check which manual is the one intended for your needs.
 
 \chapter*{About the author}
-H\'elcio Mello was born in Brazil, in 1979. He has a degree in Computer Engineering from Federal University of
-Espirito Santo -- ES -- Brazil\cite{UFES}, and is curently taking Computer Science in Pontificial Catholic
-University in Rio de Janeiro -- RJ -- Brazil\cite{PUC}. It is expected that he will be a Master of Science in 2004.
+H\'elcio Mello was born in Brazil, in 1979. He has a degree in Computer
+Engineering from Federal University of
+Espirito Santo -- ES -- Brazil\cite{UFES}, and is curently taking
+Computer Science in Pontificial Catholic
+University in Rio de Janeiro -- RJ -- Brazil\cite{PUC}. It is expected
+that he will be a Master of Science in 2004.
 
-He joined \emph{Sourceforge}\cite{SF} in December 2001, and then registered \emph{PopAsm} as a \emph{SourceForge}
-project. The project was finally open to the Free Software community. In July 2002, he joined \emph{Advogato}
+He joined \emph{Sourceforge}\cite{SF} in December 2001, and then
+registered \popasm\ as a \emph{SourceForge}
+project. The project was finally open to the Free Software community.
+In July 2002, he joined \emph{Advogato}
 \cite{ADV}\cite{ADVPRSN} and \emph{FreshMeat}\cite{FRESH}
 
 \chapter*{Acknowledgements}
-\emph{PopAsm} is the result of many months of work. Despite being the sole author of this project, I would like to
-thank everybody that somehow contributed to this project. Among those are the hundreds of people who have already
-visited \emph{PopAsm} home page, talked about it with friends, mailed me for comments, and so on.
+\popasm\ is the result of many months of work. Despite being the
+sole author of this project, I would like to
+thank everybody that somehow contributed to this project. Among those
+are the hundreds of people who have already
+visited \popasm\ home page, talked about it with friends, mailed
+me for comments, and so on.
 
-I would also like to thank the ones who use \emph{PopAsm} and trust it. I know I can always count on you for
-feedback about this project. \emph{Sourceforge} support was crucial, as it hosts \emph{PopAsm} CVS repository,
+I would also like to thank the ones who use \popasm\ and trust it.
+I know I can always count on you for
+feedback about this project. \emph{Sourceforge} support was crucial, as
+it hosts \popasm\ CVS repository,
 home page, and so on. Thank you very much.
 
-Special thanks go to my first university, UFES\cite{UFES}, where I learned the bulk of my computering skills, and
-to those classmates and teachers who believed \emph{PopAsm} project, such as professor and PhD S\'ergio Freitas%
-\cite{FREITAS}, who decided to adopt \emph{PopAsm} as the assembler for his graduate classes about assembly
-language.
+Special thanks go to my first university, UFES\cite{UFES}, where I
+learned the bulk of my computering skills, and
+to those classmates and teachers who believed \popasm\ project,
+such as professor and PhD S\'ergio Freitas%
+\cite{FREITAS}, who decided to adopt \popasm\ as the assembler for
+his graduate classes about assembly language, as soon as it is
+fully functional.
 
-Last, but not least, I would like to thank my family, friends and God for what I am now and what I have done so far.
+Last, but not least, I would like to thank my family, friends and God
+for what I am now and what I have done so far.
+
+\tableofcontents
+\newpage
+\listoftables
+\newpage
 
 \chapter{Introduction}
-\emph{PopAsm} stands for ``Popular Assembler''. It is an assembler, that is, and assembly language compiler\footnote{Technically
-speaking, assemblers are not compilers. They translate lines of code into machine language in a one-to-one basis. Compilers
-translate each line of code into several machine instructions. However, from this point on, this document will use both
-terms (compiler and assembler) indistinctly.}. Its objective is to convert human readable code to machine instructions.
-These instructions will then be either executed as binary programs or linked with other modules (possibly written in
+\popasm\ stands for ``Popular Assembler''. It is an assembler,
+that is, and assembly language compiler\footnote{Technically
+speaking, assemblers are not compilers. They translate lines of code
+into machine language in a one-to-one basis. Compilers
+translate each line of code into several machine instructions. However,
+from this point on, this document will use both
+terms (compiler and assembler) indistinctly.}. Its objective is to
+convert human readable code to machine instructions.
+These instructions will then be either executed as binary programs or
+linked with other modules (possibly written in
 other languages) to yield a computer program.
 
-Many assemblers already exist. Some are free and open source, others are not. Some will offer you features that others
-will not. Some will be suited for your needs, but others will not. \emph{PopAsm} was designed to gather in a single
-assembler the best features of the existing assemblers, yet adding its own improvements and remaining compatible with
-existing code as well. As a result, most of your legacy code can be compiled under \emph{PopAsm} without any modifications
+Many assemblers already exist. Some are free and open source, others
+are not. Some will offer you features that others
+will not. Some will be suited for your needs, but others will not.
+\popasm\ was designed to gather in a single
+assembler the best features of the existing assemblers, yet adding its
+own improvements and remaining compatible with
+existing code as well. As a result, most of your legacy code can be
+compiled under \popasm\ without any modifications
 at all.
 
-Besides the benefits discussed so far, \emph{PopAsm} is a free open source project written in ANSI C++, which means
-that anyone can read its source code, modify, and compile it anywhere an ANSI C++ compiler is avaiable. Its peculiar
+Besides the benefits discussed so far, \popasm\ is a free open
+source project written in ANSI C++, which means
+that anyone can read its source code, modify, and compile it anywhere
+an ANSI C++ compiler is avaiable. Its peculiar
 features make it suited for nearly any assembly programming project:
 
 \begin{itemize}
-	\item{Huge numbers internal representation} allows assembly-time expression evaluation in both integer and floating
-		point format without any practical limit;
-   \item{Smart default options} make your code cleaner, without the redundancy demanded by some other assemblers;
-	\item{Top flexibility} gives the developers the choice to use the infamous ``red tape'' present in some assemblers
-		or just write the good old raw assembly code;
-	\item{And more...}
+\item{Huge numbers internal representation} allows assembly-time
+expression evaluation in both integer and floating
+point format without any practical limit;
+   \item{Smart default options} make your code cleaner, without the
+redundancy demanded by some other assemblers;
+\item{Top flexibility} gives the developers the choice to use the
+infamous ``red tape'' present in some assemblers
+or just write the good old raw assembly code;
+\item{And more...}
 \end{itemize}
 
-Due to the reasons discussed above, this assembler was named the ``Popular Assembler''.
+Due to the reasons discussed above, this assembler was named the
+``Popular Assembler''.
 
 \chapter{Compiling and Installing PopAsm}
-This chapter explains how to compile and install \emph{PopAsm} under linux or other UNIX-like
-platforms. If you have already done that you may safely skip to the next chapter.
+This chapter explains how to compile and install \popasm\ under
+Linux or other UNIX-like
+platforms and DOS. If you have already done that you may safely skip to
+the next chapter.
+                          
+\section{Compiling PopAsm sources under UNIX
+enviroments\label{COMPILING}}
+In order to compile \popasm\ sources, you will need an ANSI C++
+compiler and its standard
+libraries\footnote{For the curious, I use egcs 2.91.66}. You will also
+need \popasm\ source
+code, which you should already have. If not, please go to
+\emph{http://popasm.sourceforge.net/}
+and download it. You will get an archive containing the source code to
+be built. Unpack it
+anywhere you like, using the appropriate software (e.g. if you
+downloaded a .tar.gz file, you
+should run \emph{tar xvzf popasm-x.y.z.tar.gz}, where $x$, $y$ and $z$
+are the version numbers
+of the package you got). At this point, a directory containing the
+source code will be created.
 
-\section{Compiling PopAsm sources\label{COMPILING}}
-In order to compile \emph{PopAsm} sources, you will need an ANSI C++ compiler and its standard
-libraries\footnote{For the curious, I use egcs 2.91.66}. You will also need \emph{PopAsm} source
-code, which you should already have. If not, please go to \emph{http://popasm.sourceforge.net/}
-and download it. You will get an archive containing the source code to be built. Unpack it
-anywhere you like, using the appropriate software (e.g. if you downloaded a .tar.gz file, you
-should run \emph{tar xvzf popasm-x.y.z.tar.gz}, where $x$, $y$ and $z$ are the version numbers
-of the package you got). At this point, a directory containing the source code will be created.
-
-Now, you should enter the directory containing the sources. e.g. \emph{/tmp/popasm-0.0.1}. Please
-do not mistake it for something like \emph{/tmp/popasm-0.0.1/src}. You should be in \emph{PopAsm}
+Now, you should enter the directory containing the sources. e.g.
+\emph{/tmp/popasm-0.0.1}. Please
+do not mistake it for something like \emph{/tmp/popasm-0.0.1/src}. You
+should be in \popasm
 source code root directory, as in the example above.
 
-\emph{PopAsm} relies on \emph{Autoconf}\cite{AUTOCONF} and \emph{Automake}\cite{AUTOMAKE} to probe
-your system for the necessary resources and generate the resulting \emph{Makefile}. This file will
-tell the \emph{Make}\cite{MAKE} utility how to compile \emph{PopAsm} sources. First, type
+\popasm\ relies on \emph{Autoconf}\cite{AUTOCONF} and
+\emph{Automake}\cite{AUTOMAKE} to probe
+your system for the necessary resources and generate the resulting
+\emph{Makefile}. This file will
+tell the \emph{Make}\cite{MAKE} utility how to compile \popasm\ sources.
+First, type
 
 \begin{verbatim}
 ./configure
 \end{verbatim}
 
-to perform the necessary checks. If everything is ok, you should have a \emph{Makefile}. The next
+to perform the necessary checks. If everything is ok, you should have a
+\emph{Makefile}. The next
 step is to compile the sources. Just type
 
 \begin{verbatim}
 make
 \end{verbatim}
 
-and the \emph{Make} utility will do the rest, but might take a few minutes. There should be no
-warnings and no errors. If you got any, please check whether your compiler is ANSI compliant. If
-it is, please let me know (contacting information can be found in this document).
+and the \emph{Make} utility will do the rest, but might take a few
+minutes. There should be no
+warnings and no errors. If you got any, please check whether your
+compiler is ANSI compliant. If
+it is, please let me know (contacting information can be found in this
+document).
 
-\section{Installing PopAsm}
+\section{Installing PopAsm under UNIX enviroments}
 
-There is basically two ways of installing \emph{PopAsm}: either from the source code or from a
+There is basically two ways of installing \popasm: either from
+the source code or from a
 RPM file.
 
 \subsection{Installing from Source Code}
-You should compile \emph{PopAsm} as in section \ref{COMPILING}. Remain in the directory you built
-\emph{PopAsm} and issue the command (you will need to be \emph{root} to do that):
+You should compile \popasm\ as in section \ref{COMPILING}. Remain
+in the directory you built
+\popasm\ and issue the command (you will need to be \emph{root} to
+do that):
 
 \begin{verbatim}
 make install
@@ -127,40 +193,331 @@ make install
 This will install the binary file, documentation, etc.
 
 \subsection{Installing from RPM files}
-The easiest way to install \emph{PopAsm} is to use RPM files. Get one from
-\emph{http://popasm.sourceforge.net/} if you do not have done so yet. Login as \emph{root} and
+The easiest way to install \popasm\ is to use RPM files. Get one
+from
+\emph{http://popasm.sourceforge.net/} if you do not have done so yet.
+Login as \emph{root} and
 type:
 
 \begin{verbatim}
 rpm -ivh popasm-x.y.z.rpm
 \end{verbatim}
 
-replacing $x$, $y$ and $z$ for the appropriate values. That's it, you're done.
+replacing $x$, $y$ and $z$ for the appropriate values. That's it,
+you're done.
+
+\section{Compiling PopAsm sources under DOS}
+To be written.
+
+\section{Installing PopAsm under DOS}
+To be written.
 
 \chapter{Running PopAsm}
 
-This chapter tackles the usage of PopAsm under command line. Arguments and options are
-discussed in detail.
+This chapter tackles the usage of \popasm\ under command line. Arguments,
+options and
+environment variables are discussed in detail.
 
 To be written.
 
 \chapter{PopAsm syntax}
 
-This chapter explains the PopAsm grammar and syntax. Compatibility issues with existing
-assemblers are also discussed.
+One of \popasm's major goals is compatibility with existing code.
+\popasm\ syntax is very similar to the ones supported by \tasm\ and
+\nasm. This chapter discusses \popasm\ syntax in detail, showing
+the differences from other assemblers as well.
 
-To be written.
+\section{Expressions}
 
-\begin{thebibliography}{9}
-\bibitem{UFES} Federal University of Esp\'irito Santo -- ES -- Brazil. http://www.ufes.br
-\bibitem{PUC} Pontificial Catholic University of Rio de Janeiro -- RJ -- Brazil. http://www.puc-rio.br
-\bibitem{SF} Pontificial Catholic University of Rio de Janeiro -- RJ -- Brazil. http://www.puc-rio.br
+An expression may be either a single term or a sequence of terms
+connected
+by operators. A term, in turn, can be a number or a symbol. This
+section
+explains how \popasm\ performs assembly-time arithmetics and works with
+numbers.
+
+\subsection{Numbers}
+\popasm\ accepts numbers in a variety of ways. A number is a sequence
+of as many digits as you want\footnote{There is no practical limit to
+number sizes in \popasm. If you want to write a 1,000,000-digits long
+number, \popasm\ will accept it gladly (well, if you have patience to
+type such a number...). Other assemblers are limited to 32-bit integer
+operations, such as \nasm\ v0.98.} in any base or separators, in any
+order, except that:
+
+\begin{itemize}
+\item{The first digit must be a 0--9 digit\footnote{Note that if the
+first
+digit is not decimal, \popasm\ (and other assemblers) will treat the
+string
+as a symbol, not a number. For instance, AH is a register, but 0AH is
+a number (10 in hex notation).}}
+\item{All digits must be valid in the number base}
+\end{itemize}
+
+A separator is an underline (\_) character that may appear anywhere
+among
+the number digits. They are ignored by \popasm, but help people read
+long
+numbers.
+
+Examples:
+
+\begin{itemize}
+\item{12345678} is a valid number, because all of its digits are in the
+range 0--9
+\item{12\_345\_678} is the same as above. Note how separators play the
+same role
+as a comma (that is, as a human being would write 12,345,678 to make
+it more readable)
+\item{12\_34\_5\_67\_\_\_8} also works, and is \emph{exactly} as the
+other two
+numbers above, despite looking weird and not being very useful.
+\end{itemize}
+
+Typical uses for separators include separating binary fields of bit
+records. As an example, let's suppose that a simple communication
+protocol uses a byte to encode information about a transmission as
+follows:
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}[h]{cl}
+Bits & Description\\
+\hline
+6--7 & Package priority (0--3 range)\\
+3--5 & Transmitter's ID (0--7 range)\\
+0--2 & Receiver's ID (0--7 range)\\
+\hline
+\end{tabular}
+\caption{Encoding of a simple transmission protocol header}
+\end{center}
+\end{table}
+Thanks to the separators, the programmer can now write:
+
+\begin{verbatim}
+                 ; p  snd recv
+        MOV     AL,11_000_010_B
+\end{verbatim}
+
+That is, a priority $p = 11 (binary) = 3$, a sender whose ID is $snd
+= 000 (binary) = 0$ and a receiver whose ID is $recv = 010 (binary)
+= 2$ are clearly encoded within AL. More complicated examples may
+look messy without separators. The B suffix appended to that
+number stands for ``binary'', as discussed in the next subsection.
+
+\subsubsection{Using other bases}
+As can be seen in the last example, \popasm\ allows one to specify a
+number in many bases
+simply by appending a suffix. Bases and suffixes supported by \popasm\
+are:
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}[h]{ccl}
+Prefix & Base & Valid digits\\
+\hline
+b, B, y or Y & Binary (base 2)  & 0--1 \\
+o, O, q or Q & Octal (base 8)  & 0--7 \\
+d, D, t or T & Decimal (base 10)  & 0--9 \\
+h or H & Hex (base 16)  & 0--9, A--F and a--f\protect{\footnotemark}\\
+\hline
+\end{tabular}
+\caption{Prefix and bases}
+\end{center}
+\end{table}
+
+\footnotetext{Note, however, that the first digit of an hex number
+\emph{must} be in 0--9 range, as explained before.}
+
+There are two other ways of declaring a number as hex:
+
+\begin{itemize}
+\item{Using the 0x or 0X prefix}, like in C language. If you use this prefix,
+the hex number that follows it does not need to begin with a decimal digit,
+that is, both 0xA and 0x0A are ok.
+\item{Using the \$ prefix}, which may be dangerous. Mistaking -\$70 (-70h)
+with \$-70 (current offset minus 70) will surely lead to disaster.
+\end{itemize}
+
+\subsubsection{Real numbers}
+Real numbers can be written in two forms:
+
+\begin{itemize}
+\item{The usual dot syntax}, like in 1.23, 3.1416, etc. Note that you can
+use alternate bases to write real numbers as well. Eg.: 101.01B (5.25 in binary)
+\item{Base and exponent}, as in 6.02e-23 (Avogadro\'{}s constant), 8.13e4 (8130),
+etc.
+\end{itemize}
+
+Unlike some other assembers, \popasm\ can perform assembly-time operations
+on both integer and real numbers. Real numbers have no storage limit either.
+\popasm\ has also the advantage of neither rounding nor truncating real numbers.
+They have their exact values stored as long as possible.
+
+\subsection{Operators}
+\popasm\ can perform several arithmetic operations on numbers and symbols. The
+operators currently supported, in increasing order of precedence, are listed in
+table \ref{OPTAB}.
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}[h]{ccl}
+\hline
+Precedence & Operator & Description\\
+\hline
+                   & BYTE & 8-bit qualifier\\
+                   & WORD & 16-bit qualifier\\
+                   & DWORD & Double WORD --- 32-bit qualifier\\
+                   & PWORD & triPle WORD --- 48-bit qualifier\\
+                   & FWORD & Far WORD --- Same as PWORD\\
+                   & QWORD & Quad WORD --- 64-bit qualifier\\
+Lowest precedence  & OWORD & Oct WORD --- 128-bit qualifier\\
+                   & TBYTE & Ten-BYTE --- 80-bit qualifier\\
+                   & TWORD & Ten-WORD --- Same as TBYTE\protect{\footnotemark}\\
+                   & SHORT & 8-bit relative displacement\\
+                   & NEAR & 16- or 32-bit relative displacement\\
+                   & FAR & 32- or 48-bit relative displacement\\
+\hline
+                   & OR $\vert$ & Inclusive or\\
+                   & XOR \^{} & Exclusive or\\
+\hline
+                   & AND \& & Boolean AND\\
+\hline
+                   & + & Addition\\
+                   & - & subtraction\\
+\hline
+                   & * & Multiplication\\
+                   & / & Division\\
+                   & MOD & Remainer (modulus)\\
+                   & SHL & Shift left\\
+                   & SHR & Shift right\\
+\hline
+                   & NOT & One's complement\\
+\hline
+                   & : & Segment and offset composition\\
+\hline
+Highest precedence & . & Member selection in structs and unions\\
+\hline
+\end{tabular}
+\caption{Operators and their precedence}
+\label{OPTAB}
+\end{center}
+\end{table}
+
+To be continued.
+
+\footnotetext{Due to compatibility with \nasm.}
+
+\section{Registers}
+\popasm\ supports all registers present in each x86 CPU, except the ones
+added in IA-64 architecture:
+
+\begin{itemize}
+\item{8-bit general-purpose registers:} AL, BL, CL, DL, AH, BH, CH and DH
+\item{16-bit general-purpose registers:} AX, BX, CX, DX, SP, BP, SI and DI
+\item{32-bit general-purpose registers:} EAX, EBX, ECX, EDX, ESP, EBP, ESI and EDI
+\item{Segment registers:} CS, DS, ES, FS, GS and SS
+\item{Control registers:} CR0 thru CR7
+\item{Debug registers:} DR0 thru DR7
+\item{Test registers:} TR0 thru TR7
+\item{FPU registers:} ST(0) thru ST(7). ST0 thru ST7 are also accepted for
+compatibility with \nasm. ST is an alias for ST(0).
+\item{MMX registers:} MM0 thru MM7. MM is an alias for MM0.
+\item{XMM registers:} XMM0 thru XMM7. XMM is an alias for XMM0.
+\end{itemize}
+
+Register names are case insensitive (i.e. AX, ax, aX and Ax are all the
+same thing).
+
+\section{Memory references}
+Memory references can be specified using square brackets [] around an expression.
+For instance:
+
+\begin{verbatim}
+        MOV     AX,1234
+\end{verbatim}
+
+writes the value $1234$ in AX, but
+
+\begin{verbatim}
+        MOV     AX,[1234]
+\end{verbatim}
+
+writes the word pointed to by $1234$ in AX. In this case, DS is used as the
+default segment register. If you wanted to use another segment register (say,
+ES), you would write:
+
+\begin{verbatim}
+        MOV     AX,ES:[1234]
+\end{verbatim}
+
+or
+
+\begin{verbatim}
+        MOV     AX,[ES:1234]     ; same as above
+\end{verbatim}
+
+This latter form was added for compatibility with \nasm\ and \tasm\ ideal mode.
+This document uses the former syntax throughoutly, though.
+
+\subsection{Weak and strong memory references}
+Programmers usually need to store data in variables. Those variables can then
+be referenced by their names. For example, if VALUE is a word variable, its
+contens can be copied to CX by the following command:
+
+\begin{verbatim}
+        MOV     CX,VALUE         ; CX = VALUE's contents
+\end{verbatim}
+
+Unfortunately, different assemblers may give different meanings to the line
+of code above. \tasm\ behaves as described here, but \nasm\ would place the
+variable's offset into CX. Because the name of a variable may be treated both
+as its contents and its offset (depending on the assembler being used), such
+memory references will be called \bf{weak memory references} in \popasm\ 
+documentation.
+
+\popasm\ behaves as described above (a variable's name means its contens, \bf{not}
+its offset.) with respect to weak memory references. If you wish to refer to
+a variable's offset, you should use the \emph{OFFSET} keyword. The example
+above would be rewritten as:
+
+\begin{verbatim}
+        MOV     CX,OFFSET VALUE  ; CX = VALUE's offset
+\end{verbatim}
+
+On the other hand, a \bf{strong memory reference} is always enclosed within a
+pair of matching square brackets. Example:
+
+\begin{verbatim}
+        MOV     CX,[VALUE]       ; CX = VALUE's contents
+\end{verbatim}
+
+The reader is strongly encouraged to avoid weak memory references, for its
+meaning is assembler-dependant. Instead, whenever you refer to a variable's
+offset, you should use the \emph{OFFSET} keyword, and whenever you want the
+variable's contents, a strong memory reference is the best choice. Doing
+that way, your code will rely neither on \popasm's default behavior, nor the
+presence/absence of command-line options.
+
+To be continued.
+
+\begin{thebibliography}{12}
+\bibitem{UFES} Federal University of Esp\'{\i}rito Santo -- ES -- Brazil.
+http://www.ufes.br
+\bibitem{PUC} Pontificial Catholic University of Rio de Janeiro -- RJ
+-- Brazil. http://www.puc-rio.br
+\bibitem{SF} SourceForge. http://sorceforge.net
 \bibitem{ADV}Advogato. http://www.advogato.com
-\bibitem{ADVPRSN}H\'elcio Mello's personal page at Advogato. http://www.advogato.com/person/helcio
+\bibitem{ADVPRSN}H\'elcio Mello's personal page at Advogato.
+http://www.advogato.com/person/helcio
 \bibitem{FRESH}FreshMeat. http://www.freahmeat.net
-\bibitem{FREITAS}Professor PhD S\'ergio A. A. Freitas. http://www.inf.ufes.br/~sergio.
-\bibitem{AUTOCONF}GNU Autoconf. http://www.gnu.org/software/autoconf/autoconf.html
-\bibitem{AUTOMAKE}GNU Automake. http://www.gnu.org/software/automake/automake.html
+\bibitem{FREITAS}Professor PhD S\'ergio A. A. Freitas.
+http://www.inf.ufes.br/\~{}sergio.
+\bibitem{AUTOCONF}GNU Autoconf.
+http://www.gnu.org/software/autoconf/autoconf.html
+\bibitem{AUTOMAKE}GNU Automake.
+http://www.gnu.org/software/automake/automake.html
 \bibitem{MAKE}GNU Make. http://www.gnu.org/software/make/make.html
 \end{thebibliography}
 
