@@ -76,13 +76,20 @@ void Argument::TypeCheck (const vector<Argument *> &args, CheckType ct) throw (T
 				break;
 			}
 
-			if (Sizes[0] != Sizes[1]) throw TypeMismatch (args);
+			if ((Sizes[0] != Sizes[1]) && (!args[0]->IsUndefined()) && (!args[1]->IsUndefined()))
+				throw TypeMismatch (args);
 			break;
 
 		case GREATER:
+			// Accepts undefined arguments as ok.
+			if ((args[0]->IsUndefined()) || (args[1]->IsUndefined()))
+				break;
+
 			// Both sizes MUST be known
-			if ((Sizes[0] == 0) || (Sizes[1] == 0)) throw OneUndefinedSize();
-			if  (Sizes[0] <= Sizes[1]) throw TypeMismatch (args);
+			if ((Sizes[0] == 0) || (Sizes[1] == 0))
+				throw OneUndefinedSize();
+			if  (Sizes[0] <= Sizes[1])
+				throw TypeMismatch (args);
 			break;
 
 		case HALF:
@@ -99,7 +106,8 @@ void Argument::TypeCheck (const vector<Argument *> &args, CheckType ct) throw (T
 				break;
 			}
 
-			if (Sizes[0] != (Sizes[1] / 2)) throw TypeMismatch (args);
+			if ((Sizes[0] != (Sizes[1] / 2)) && (!args[0]->IsUndefined()) && (!args[1]->IsUndefined()))
+				throw TypeMismatch (args);
 			break;
 
 		case MINUS_16BITS:
@@ -115,7 +123,8 @@ void Argument::TypeCheck (const vector<Argument *> &args, CheckType ct) throw (T
 				break;
 			}
 
-			if (Sizes[0] != Sizes[1] - 16) throw TypeMismatch (args);
+			if ((Sizes[0] != Sizes[1] - 16) && (!args[0]->IsUndefined()) && (!args[1]->IsUndefined()))
+				throw TypeMismatch (args);
 			break;
 
 		case BIT_NUMBER:
@@ -137,11 +146,13 @@ void Argument::TypeCheck (const vector<Argument *> &args, CheckType ct) throw (T
 					Sizes[1] = Sizes[0];
 				}
 
-				if (Sizes[0] != Sizes[1]) throw TypeMismatch (vector<Argument *> (args.begin(), args.begin()+2));
+				if ((Sizes[0] != Sizes[1]) && (!args[0]->IsUndefined()) && (!args[1]->IsUndefined()))
+					throw TypeMismatch (vector<Argument *> (args.begin(), args.begin()+2));
 			}
 
 			unsigned long int s = static_cast<const Immediate *> (args.back()->GetData())->GetLong();
-			if (Sizes[0] <= s) throw BitOutOfBounds (args[0]->GetData(), s);
+			if ((Sizes[0] <= s) && (!args[0]->IsUndefined()))
+				throw BitOutOfBounds (args[0]->GetData(), s);
 			break;
 		}
 
