@@ -203,7 +203,12 @@ Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, e
 			break;
 
 		case Type::WEAK_MEMORY:
-			break;
+		{
+			Expression temp(e);
+
+			temp.SetType (CurrentAssembler->TranslateWeakMemory());
+			return MakeArgument (temp);
+		}
 
 		case Type::STRONG_MEMORY:
 			return MakeMemory (e);
