@@ -227,11 +227,13 @@ Expression &Expression::MemberSelect (const Expression &e)
 Expression &Expression::Compose (Expression &e)
 {
 	Data = Data->Compose (*e.Data);
+
+	// Takes the second argument's data to prevent the evaluator to delete it
+	// (because it is now part of the result)
 	e.Data = 0;
 	return *this;
 }
 
-// This method must check compatibility between types before doing anything else
 Expression &Expression::AddToList (Expression &e)
 {
 	Data = DupExpression::AddToList (Data, e.Data);
@@ -242,6 +244,9 @@ Expression &Expression::AddToList (Expression &e)
 Expression &Expression::DUP (Expression &e)
 {
 	Data = DupExpression::DUP (Data, e.Data);
+
+	// Takes the second argument's data to prevent the evaluator to delete it
+	// (because it is now part of the result)
 	e.Data = 0;
 	return *this;
 }
@@ -257,6 +262,16 @@ const DupExpression *Expression::GetDupExpression() const throw ()
 }
 
 ExpressionData::~ExpressionData () throw () {}
+
+void ExpressionData::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) const throw (InvalidSize, CastFailed, CastConflict)
+{
+	const_cast<ExpressionData *> (this)->Type::SetSize (s);
+}
+
+void ExpressionData::SetDistanceType (int dist) const throw (InvalidSizeCast, CastConflict)
+{
+	const_cast<ExpressionData *> (this)->Type::SetDistanceType (dist);
+}
 
 const SimpleExpression *ExpressionData::GetSimpleExpression() const throw ()
 {
@@ -307,7 +322,7 @@ void SimpleExpression::SetSize (unsigned int s, Number::NumberType nt = Number::
 			if ((*i)->Constant())
 			{
 				(*i)->first->SetSize (s, nt);
-				This->Type::SetSize (s);
+				ExpressionData::SetSize (s);
 				return;
 			}
 		}
@@ -316,13 +331,10 @@ void SimpleExpression::SetSize (unsigned int s, Number::NumberType nt = Number::
 		Number *dummy = new Number (0);
 		dummy->SetSize (s, nt);
 		This->Value += BasicExpression<Number, Symbol> (dummy, 0);
-		This->Type::SetSize (s);
 	}
-	else
-	{
-		// STRONG or WEAK memory. The user is allowed to change the Size at will
-		This->Type::SetSize(s);
-	}
+
+	// STRONG or WEAK memory references are allowed to change the Size at will
+	ExpressionData::SetSize (s);
 }
 
 void SimpleExpression::SetDistanceType (int dist) const throw (InvalidSizeCast, CastConflict)
@@ -692,7 +704,7 @@ DupExpression::DupExpression (const Type &t) throw () : ExpressionData(t)
 
 DupExpression::DupExpression (const DupExpression &t) throw () : ExpressionData(t)
 {
-	Count = t.Count->Clone();
+	Count = (t.Count == 0) ? 0 : t.Count->Clone();
 
 	for (vector<ExpressionData *>::const_iterator i = t.DupList.begin(); i != t.DupList.end(); i++)
 		DupList.push_back ((*i)->Clone());
@@ -708,15 +720,73 @@ DupExpression::~DupExpression () throw ()
 
 string DupExpression::Print () const throw ()
 {
-	return string();
+	string s;
+
+	if (Count != 0)
+	{
+		s = Count->Print();
+		s += " DUP ";
+	}
+
+	s += "(";
+
+	s += DupList.front()->Print();
+
+	for (vector<ExpressionData *>::const_iterator i = DupList.begin() + 1; i != DupList.end(); i++)
+	{
+		s += ", ";
+		s += (*i)->Print();
+	}
+
+	s += ")";
+	return s;
 }
 
 void DupExpression::Write (vector<Byte> &Output) const throw ()
 {
+	if (GetSize() == 0)
+		throw 0;
+
+	unsigned int sz1 = Output.size();
+
+	try
+	{
+		for (vector <ExpressionData *>::const_iterator i = DupList.begin(); i != DupList.end(); i++)
+			(*i)->Write (Output);
+
+		if (Count != 0)
+		{
+			const Number *num = Count->GetNumber();
+			if (num == 0)
+				throw 0;
+
+			unsigned long int len1 = Output.size() - sz1;
+			unsigned long int n1 = num->GetUnsignedLong();
+
+			if (n1 == 0)
+				throw 0;
+
+			Output.resize (sz1 + len1 * n1);
+			vector<Byte>::iterator i = Output.begin() + sz1;
+			vector<Byte>::iterator j = i + len1;
+
+			for (; j != Output.end(); i++, j++)
+				*j = *i;
+		}
+	}
+	catch (...)
+	{
+		Output.resize(sz1);
+		throw;
+	}
 }
 
 void DupExpression::SetSize (unsigned int s, Number::NumberType nt = Number::ANY) const throw (InvalidSize, CastFailed, CastConflict)
 {
+	for (vector <ExpressionData *>::const_iterator i = DupList.begin(); i != DupList.end(); i++)
+		(*i)->SetSize (s, nt);
+
+	ExpressionData::SetSize (s, nt);
 }
 
 void DupExpression::SetDistanceType (int dist) const throw (InvalidSizeCast, CastConflict)
@@ -729,20 +799,26 @@ void DupExpression::SetNumericalType (int num) throw ()
 
 DupExpression &DupExpression::operator= (const ExpressionData &e)
 {
-	const DupExpression *exp = e.GetDupExpression();
-	if (exp == 0)
-		throw 0;
+	if (&e != this)
+	{
+		const DupExpression *exp = e.GetDupExpression();
+		if (exp == 0)
+			throw 0;
 
-	delete Count;
-	Count = exp->Count->Clone();
+		// Copies the Count member
+		delete Count;
+		Count = (exp->Count == 0) ? 0 : exp->Count->Clone();
 
-	for (vector<ExpressionData *>::iterator i = DupList.begin(); i != DupList.end(); i++)
-		delete *i;
+		// Erases the old DupList
+		for (vector<ExpressionData *>::iterator i = DupList.begin(); i != DupList.end(); i++)
+			delete *i;
 
-	DupList.clear();
+		DupList.clear();
 
-	for (vector<ExpressionData *>::const_iterator i = exp->DupList.begin(); i != exp->DupList.end(); i++)
-		DupList.push_back ((*i)->Clone());
+		// Duplicates new DupList
+		for (vector<ExpressionData *>::const_iterator i = exp->DupList.begin(); i != exp->DupList.end(); i++)
+			DupList.push_back ((*i)->Clone());
+	}
 
 	return *this;
 }

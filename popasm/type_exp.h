@@ -104,8 +104,8 @@ class ExpressionData : public Type
 	virtual ExpressionData *Clone() const = 0;
 	virtual string Print () const throw () = 0;
 	virtual void Write (vector<Byte> &Output) const throw () = 0;
-	virtual void SetSize (unsigned int s, Number::NumberType nt = Number::ANY) const throw (InvalidSize, CastFailed, CastConflict) = 0;
-	virtual void SetDistanceType (int dist) const throw (InvalidSizeCast, CastConflict) = 0;
+	virtual void SetSize (unsigned int s, Number::NumberType nt = Number::ANY) const throw (InvalidSize, CastFailed, CastConflict);
+	virtual void SetDistanceType (int dist) const throw (InvalidSizeCast, CastConflict);
 
 	virtual ExpressionData &operator=  (const ExpressionData &e) throw () {Type::operator= (e); return *this;}
 	virtual ExpressionData &operator+= (const ExpressionData &e) {Type::operator+= (e); return *this;}
@@ -248,6 +248,8 @@ class DupExpression : public ExpressionData
 
 	static ExpressionData *AddToList (ExpressionData *e1, ExpressionData *e2);
 	static ExpressionData *DUP (ExpressionData *e1, ExpressionData *e2);
+
+	const SimpleExpression *GetCount() const throw () {return Count;}
 };
 
 class UnexpectedSegmentPrefix : public ExpressionException
