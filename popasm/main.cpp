@@ -1,5 +1,5 @@
 /***************************************************************************
-                          popasm.cpp  -  description
+                          main.cpp  -  description
                              -------------------
     begin                : Tue May 28 2002
     copyright            : (C) 2002 by Helcio Mello
@@ -19,53 +19,37 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <string>
 #include <iostream>
-#include <vector>
-#include <exception>
 
 #include "inp_file.h"
-#include "parser.h"
 #include "asmer.h"
+#include "popasm.h"
 
-#include "instruct.h"
-
-void PrintVector (const vector<Byte> &v)
-{
-	for (vector<Byte>::const_iterator i = v.begin(); i != v.end(); i++)
-	{
-		Byte b = *i;
-		if (b < 16) cout << "0";
-		cout << hex << (unsigned int) b << " ";
-	}
-
-	cout << endl;
-}
+Assembler *CurrentAssembler;
 
 int main (int argc, char **argv)
 {
-	if (argc != 2) return 1;
-	InputFile inp (argv[1]);
-
-	if (!inp)
+	if (argc == 1)
 	{
-		cout << "File not found" << endl;
+		cerr << "Error: expected at least one source file as argument." << endl;
 		return 1;
 	}
 
-	Parser p (inp);
-	Assembler *a = new PopAsm();
-	vector <Byte> Encoding;
+	CurrentAssembler = new PopAsm(16);
 
-	while (inp)
+	for (int i = 1; i < argc; i++)
 	{
-		try
+		InputFile f (argv[i]);
+
+		if (!f)
 		{
-			Encoding = p.ParseLine (16);
-			PrintVector (Encoding);
-		} catch (exception &e) {cout << e.what() << endl;}
+			cerr << "Unable to open file " << argv[i] << "." << endl;
+			return 2;
+		}
+
+		CurrentAssembler->AssembleFile (f);
 	}
 
-	delete a;
+	delete CurrentAssembler;
 	return 0;
 }
