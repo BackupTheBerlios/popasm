@@ -23,36 +23,44 @@
 #include <iostream>
 #include <vector>
 #include <exception>
+#include <typeinfo>
 
 #include "inp_file.h"
 #include "lexical.h"
 #include "parser.h"
 #include "asmer.h"
+#include "hashtab.h"
 
-bool EndOfLine (Token *t)
+bool ParseLine (InputFile &inp)
 {
-	Token *tt = dynamic_cast<UnknownToken *> (t);
-	return (tt != 0);
-}
+	Token *t;
+	vector<Token *> v;
+	Symbol *s;
+	Expression *e;
 
-string *ShowString (InputFile &inp)
-{
-	string *s;
-
-	cout << "Reading from line " << inp.GetCurrentLine() << endl;
-	s = inp.GetString();
-
-	cout << "String read: ";
-	if (*s == "\n")
+	while (true)
 	{
-		cout << "End of line." << endl;
-	}
-	else
-	{
-		cout << *s << endl;
+		t = Token::GetToken(inp);
+
+		if (t == 0) return false;
+
+		s = dynamic_cast<Symbol *> (t);
+		if (s != 0)
+		{
+			if (s->GetName() == "\n")
+			{
+				if (v.empty()) break;
+
+				e = Parser::EvaluateExpression (v);
+				cout << e->Print() << endl;
+				break;
+			}
+		}
+
+		v.push_back (t);
 	}
 
-	return s;
+	return true;
 }
 
 int main (int argc, char **argv)
@@ -64,25 +72,16 @@ int main (int argc, char **argv)
 	if (!inp)
 	{
 		cout << "File not found" << endl;
+		return 1;
 	}
-
-	vector<Token *> v;
-	Token *t;
 
 	do
 	{
-		t = GetToken (inp);
-		if (EndOfLine (t)) break;
-		v.push_back (t);
+		try
+		{
+			if (!ParseLine (inp)) break;
+		} catch (exception &e) {cout << e.what() << endl;}
 	} while (true);
-
-	try
-	{
-		Expression *e = Parser::EvaluateExpression (v);
-		e->Print();
-		delete e;
-	}
-	catch (exception &e) {cout << e.what() << endl;}
 
 	delete a;
 	return 0;
