@@ -148,6 +148,9 @@ class OpenBracket : public EncloserData<T>
 	public:
 	OpenBracket (const string &n, const string &c) throw () : EncloserData (n, c) {}
 	~OpenBracket () throw () {}
+
+	// Unary prefix
+	T &operator() (T &x) const throw () {x[0]; return x;}
 };
 
 template <class T = int>
@@ -235,6 +238,19 @@ class ShiftRight : public OperatorData<T>
 	~ShiftRight () throw () {}
 
 	T &operator() (T &x, T &y) const {return x >>= y;}
+};
+
+template <class T = int>
+class SizeCast : public OperatorData<T>
+{
+	unsigned int Size;
+
+	public:
+	SizeCast (const string &n, unsigned int p0, unsigned int p1, unsigned int s) throw ()
+		: OperatorData (n, p0, p1), Size(s) {}
+	~SizeCast () throw () {}
+
+	T &operator() (T &x) const {x.SetSize(Size); return x;}
 };
 
 //------- Exceptions
