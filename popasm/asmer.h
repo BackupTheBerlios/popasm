@@ -22,8 +22,11 @@
 #ifndef ASMER_H
 #define ASMER_H
 
+#include <string>
+
 #include "inp_file.h"
 #include "type.h"
+#include "segment.h"
 
 class Parser;
 
@@ -37,6 +40,8 @@ class Assembler
 	unsigned long int CurrentOffset;
 	Parser *CurrentParser;
 
+	vector<Segment *> Segments;
+
 	bool PerformPass (InputFile &File) throw ();
 
 	public:
@@ -47,8 +52,11 @@ class Assembler
 	void SetCurrentMode (unsigned int n);
 	unsigned long int GetCurrentOffset () const throw () {return CurrentOffset;}
 	unsigned long int GetCurrentLine () const throw ();
-	void AssembleFile (InputFile &File) throw ();
 
+	void AddSegment (Segment *seg);
+	void CloseSegment (const string &s);
+
+	void AssembleFile (InputFile &File) throw ();
 	virtual Type::TypeName TranslateWeakMemory() throw () = 0;
 };
 

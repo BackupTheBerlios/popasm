@@ -83,7 +83,17 @@ bool Assembler::PerformPass (InputFile &File) throw ()
 		try
 		{
 			LineEncoding = CurrentParser->ParseLine ();
+
+			// Creates a default segment if none exists or is open
+			if (Segments.empty())
+				Segments.push_back(new Segment ());
+
+			if (!Segments.back()->IsOpen())
+				Segments.push_back(new Segment ());
+
 			CurrentOffset += LineEncoding.size();
+			Segments.back()->AddContents (LineEncoding);
+
 			PrintVector (LineEncoding);
 		}
 		catch (exception &e)
@@ -97,4 +107,26 @@ bool Assembler::PerformPass (InputFile &File) throw ()
 	}
 
 	return false;
+}
+
+void Assembler::AddSegment (Segment *seg)
+{
+	Segments.push_back(seg);
+}
+
+void Assembler::CloseSegment (const string &s)
+{
+	if (Segments.empty ())
+	{
+		cout << "Segment not found " << s << endl;
+		throw 0;
+	}
+
+	if (Segments.back()->GetName() != s)
+	{
+		cout << "Segment not found " << s << endl;
+		throw 0;
+	}
+
+	Segments.back()->Close();
 }
