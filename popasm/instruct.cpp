@@ -91,7 +91,8 @@ typedef Memory::IdFunctor<UNDEFINED | DWORD,               UNDEFINED,        (UN
 typedef Memory::IdFunctor<UNDEFINED | DWORD,               UNDEFINED,        (UNDEFINED | FLOAT)>   Mem32f;
 typedef Memory::IdFunctor<DWORD,                           UNDEFINED,        (UNDEFINED | INTEGER)> SMem32;
 typedef Memory::IdFunctor<DWORD,                           UNDEFINED,        (UNDEFINED | FLOAT)>   SMem32f;
-typedef Memory::IdFunctor<PWORD,                           UNDEFINED,        INTEGER>               SMem48;
+typedef Memory::IdFunctor<UNDEFINED | PWORD,               UNDEFINED,        (UNDEFINED | INTEGER)> Mem48;
+typedef Memory::IdFunctor<PWORD,                           UNDEFINED,        (UNDEFINED | INTEGER)> SMem48;
 typedef Memory::IdFunctor<UNDEFINED | QWORD,               UNDEFINED,        (UNDEFINED | INTEGER)> Mem64;
 typedef Memory::IdFunctor<QWORD,                           UNDEFINED,        (UNDEFINED | INTEGER)> SMem64;
 typedef Memory::IdFunctor<UNDEFINED | QWORD,               UNDEFINED,        (UNDEFINED | FLOAT)>   Mem64f;
@@ -942,25 +943,25 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0xF4),                   Syntax::NOTHING)),
 
 		Instruction ("IDIV",
-			new UnarySyntax           (Opcode (0xF6, 0x07),             Syntax::FIRST_ARGUMENT,                                                                  new OR<GPReg, GPMem>(), 1)),
+			new UnarySyntax           (Opcode (0xF6, 0x07),             Syntax::FIRST_ARGUMENT,                                                                  new OR<GPReg, SGPMem>(), 1)),
 
 		Instruction ("IMUL",
-			new UnarySyntax           (Opcode (0xF6, 0x05),             Syntax::FIRST_ARGUMENT,                                                                  new OR<GPReg, GPMem>(), 1),
-			new BinarySyntax          (Opcode (0x0F, 0xAF),             Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::PRESENT,        new WordReg(),                     new OR<WordReg, WordMem>()),
-			new BinarySyntax          (Opcode (0x6B),                   Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::PRESENT,        new WordReg(),                     new WordReg(),  new Immed<8, Number::SIGNED>()),
-			new BinarySyntax          (Opcode (0x6B),                   Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::REPEATED,       new WordReg(),                     new Immed<8, Number::SIGNED>()),
-			new BinarySyntax          (Opcode (0x69),                   Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::PRESENT,        new GPReg16(), new OR<GPReg16, Mem16>(), new Immed<16, Number::SIGNED>()),
-			new BinarySyntax          (Opcode (0x69),                   Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::REPEATED,       new GPReg16(), new Immed<16, Number::UNSIGNED>()),
-			new BinarySyntax          (Opcode (0x69),                   Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::PRESENT,        new GPReg32(), new OR <GPReg32, Mem32>(), new Immed<32, Number::SIGNED>()),
-			new BinarySyntax          (Opcode (0x69),                   Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::REPEATED,       new GPReg32(), new Immed<32, Number::SIGNED>())),
+			new UnarySyntax           (Opcode (0xF6, 0x05),             Syntax::FIRST_ARGUMENT,                                                                  new OR<GPReg, SGPMem>(), 1),
+			new BinarySyntax          (Opcode (0x0F, 0xAF),             Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::PRESENT,        new WordReg(), new OR<WordReg, WordMem>()),
+			new BinarySyntax          (Opcode (0x6B),                   Syntax::FIRST_ARGUMENT,  false, Argument::NONE,         0, BinarySyntax::REPEATED,       new WordReg(), new Immed<8, Number::SIGNED, false>()),
+			new BinarySyntax          (Opcode (0x69),                   Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::REPEATED,       new GPReg16(), new Immed<16, Number::SIGNED>()),
+			new BinarySyntax          (Opcode (0x69),                   Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::REPEATED,       new GPReg32(), new Immed<32, Number::SIGNED>()),
+			new BinarySyntax          (Opcode (0x6B),                   Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::PRESENT,        new WordReg(), new WordReg(),             new Immed<8, Number::SIGNED, false>()),
+			new BinarySyntax          (Opcode (0x69),                   Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::PRESENT,        new GPReg16(), new OR<GPReg16, Mem16>(),  new Immed<16, Number::SIGNED>()),
+			new BinarySyntax          (Opcode (0x69),                   Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::PRESENT,        new GPReg32(), new OR <GPReg32, Mem32>(), new Immed<32, Number::SIGNED>())),
 
 		Instruction ("IN",
 			new BinarySyntax          (Opcode (0xE4),                   Syntax::FIRST_ARGUMENT,  false, Argument::NONE,         1, BinarySyntax::ABSENT,         new Accumulator(), new Immed<8, Number::UNSIGNED>()),
 			new BinarySyntax          (Opcode (0xEC),                   Syntax::FIRST_ARGUMENT,  false, Argument::NONE,         1, BinarySyntax::ABSENT,         new Accumulator(), new DX())),
 
 		Instruction ("INC",
-			new UnarySyntax           (Opcode (0xFE, 0x00),             Syntax::FIRST_ARGUMENT,                                                                  new OR<GPReg, SGPMem>(), 1),
-			new AdditiveUnarySyntax   (Opcode (0x40),                   Syntax::FIRST_ARGUMENT,                                                                  new WordReg())),
+			new AdditiveUnarySyntax   (Opcode (0x40),                   Syntax::FIRST_ARGUMENT,                                                                  new WordReg()),
+			new UnarySyntax           (Opcode (0xFE, 0x00),             Syntax::FIRST_ARGUMENT,                                                                  new OR<GPReg, SGPMem>(), 1)),
 
 		Instruction ("INS",
 			new StringSyntax          (Opcode (0x6C),                   Syntax::FIRST_ARGUMENT,         Argument::NONE,                                          new Memory::IdFunctor <BYTE, UNDEFINED, (UNDEFINED | INTEGER)>(),     new DX(), 2),
@@ -1125,9 +1126,9 @@ void Instruction::SetupInstructionTable () throw ()
 			new RelativeUnarySyntax   (Opcode (0x0F, 0x84),             Syntax::FIRST_ARGUMENT,                                                                  new RelativeArgument (NEAR))),
 
 		Instruction ("JMP",
-			new UnarySyntax           (Opcode (0xFF, 0x05),             Syntax::FULL_POINTER,                                                                    new Memory::FarMemory()),
 			new UnarySyntax           (Opcode (0xFF, 0x04),             Syntax::FIRST_ARGUMENT,                                                                  new OR <WordReg, NearMem>()),
-			new RelativeUnarySyntax   (Opcode (0xE8),                   Syntax::NOTHING,                                                                         new RelativeArgument (SHORT)),
+			new UnarySyntax           (Opcode (0xFF, 0x05),             Syntax::FULL_POINTER,                                                                    new Memory::FarMemory()),
+			new RelativeUnarySyntax   (Opcode (0xEB),                   Syntax::NOTHING,                                                                         new RelativeArgument (SHORT)),
 			new RelativeUnarySyntax   (Opcode (0xE9),                   Syntax::FIRST_ARGUMENT,                                                                  new RelativeArgument (NEAR)),
 			new UnarySyntax           (Opcode (0xEA),                   Syntax::FIRST_ARGUMENT,                                                                  new FullPointer::IdFunctor())),
 
@@ -1135,7 +1136,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0x9F),                   Syntax::NOTHING)),
 
 		Instruction ("LAR",
-			new BinarySyntax          (Opcode (0x0F, 0x02),             Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::PRESENT,        new WordReg(),    new OR<WordReg, WordMem>())),
+			new BinarySyntax          (Opcode (0x0F, 0x02),             Syntax::FIRST_ARGUMENT,  false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS, new WordReg(),    new OR<WordReg, WordMem>())),
 
 		Instruction ("LDMXCSR",
 			new UnarySyntax           (Opcode (0x0F, 0xAE, 0x02),       Syntax::NOTHING,                                                                         new GPReg32())),
@@ -1165,10 +1166,10 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax          (Opcode (0xC9),                   Syntax::NOTHING)),
 
 		Instruction ("LGDT",
-			new UnarySyntax           (Opcode (0x0F, 0x01, 0x02),       Syntax::NOTHING,                                                                         new SMem48())),
+			new UnarySyntax           (Opcode (0x0F, 0x01, 0x02),       Syntax::NOTHING,                                                                         new Mem48())),
 
 		Instruction ("LIDT",
-			new UnarySyntax           (Opcode (0x0F, 0x01, 0x03),       Syntax::NOTHING,                                                                         new SMem48())),
+			new UnarySyntax           (Opcode (0x0F, 0x01, 0x03),       Syntax::NOTHING,                                                                         new Mem48())),
 
 		Instruction ("LLDT",
 			new UnarySyntax           (Opcode (0x0F, 0x00, 0x02),       Syntax::NOTHING,                                                                         new OR<GPReg16, Mem16>())),
