@@ -42,13 +42,20 @@ class Memory : public BasicArgument
 	bool SIBUsed () const throw () {return (AddressSize == 32) && ((Code & 7) == 4);}
 
 	public:
+	enum ContentsType {UNKNOWN, INTEGER, FLOAT, BCD};
+
+	private:
+	ContentsType Type;
+
+	public:
 	Memory (unsigned int sz = 0) throw ()
-		: BasicArgument (sz), SegmentPrefix(0), SIB(0), Code(0), AddressSize(0) {}
+		: BasicArgument (sz), SegmentPrefix(0), SIB(0), Code(0), AddressSize(0), Type(UNKNOWN) {}
 	~Memory () throw () {}
 
 	void MakeMemory16Bits (const BaseRegister *Base16, const IndexRegister *Index16);
 	void MakeMemory32Bits (const GPRegister *Base32, const GPRegister *Index32, long int scale);
 
+	ContentsType GetType () const throw() {return Type;}
 	Byte GetSegmentPrefix () const throw () {return SegmentPrefix;}
 	void SetSegmentPrefix (Byte s) throw () {SegmentPrefix = s;}
 	unsigned int GetAddressSize () const throw () {return AddressSize;}
@@ -61,10 +68,11 @@ class Memory : public BasicArgument
 	void WriteSIB (vector<Byte> &Output) const throw () {if (SIBUsed()) Output.push_back (SIB);}
 	void WriteDisplacement (vector<Byte> &Output) const throw () {Displacement.Write (Output);}
 
-	// Checks whether ptr is a pointer to an instance of this class.
-	static const Memory * const ClassInstance;
-	bool Identify (const BasicArgument * const ptr) const throw ()
-		{return dynamic_cast<const Memory * const> (ptr) != 0;}
+	class IdFunctor : public BasicArgument::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg) {return dynamic_cast<const Memory *> (arg) != 0;}
+	};
 
 	string Print () const throw ()
 	{
@@ -80,6 +88,21 @@ class Memory : public BasicArgument
 		s += Displacement.Print();
 
 		return s;
+	}
+};
+
+// Short-hand for getting a functor for a memory of specific size.
+template <unsigned int n, Memory::ContentsType t = Memory::UNKNOWN>
+class Mem : public Memory::IdFunctor
+{
+	bool operator() (const BasicArgument *arg)
+	{
+		if (!Memory::IdFunctor::operator() (arg)) return false;
+
+		const Memory *m = dynamic_cast<const Memory *> (arg);
+		if ((m->GetSize() != 0) && (m->GetSize() != n)) return false;
+		if ((m->GetType() != Memory::UNKNOWN) && (m->GetType() != t)) return false;
+		return true;
 	}
 };
 

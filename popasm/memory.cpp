@@ -22,8 +22,6 @@
 #include "memory.h"
 #include "lexsym.h"
 
-const Memory * const Memory::ClassInstance = new Memory (0);
-
 void Memory::MakeMemory16Bits (const BaseRegister *Base16, const IndexRegister *Index16)
 {
 	if ((Base16 != 0) && (Index16 != 0))
