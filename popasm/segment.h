@@ -22,11 +22,16 @@
 
 #include "symbol.h"
 #include "defs.h"
+#include "lexical.h"
+#include "hashtab.h"
+#include "functors.h"
 
 class Segment : public BasicSymbol
 {
 	bool Open;
 	vector<Byte> Contents;
+
+	HashTable<BasicSymbol *, HashFunctor, PointerComparator<BasicSymbol> > SymbolTable;
 
 	public:
 	Segment (const string &n = "") : BasicSymbol (n), Open(true) {}
@@ -35,6 +40,10 @@ class Segment : public BasicSymbol
 	void Close () {if (!Open) throw 0; Open = false;}
 	bool IsOpen () const throw () {return Open;}
 	void AddContents (const vector<Byte> &v) throw () {Contents.insert(Contents.end(), v.begin(), v.end());}
+
+	Token *Read (const string &str, InputFile &inp) throw ();
+	void DefineSymbol (BasicSymbol *s) throw (MultidefinedSymbol);
+	BasicSymbol *Find (const string &name);
 };
 
 #endif
