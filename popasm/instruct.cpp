@@ -143,15 +143,35 @@ typedef Register::IdFunctor<SegmentRegister,   5, ANY> GS;
 
 // For convenience
 template <class A, class B>
-class OR : public  BinaryCompose <logical_or<bool>, A, B> {};
+class OR : public BasicArgument::IdFunctor
+{
+	public:
+	bool operator() (Argument &arg)
+	{
+		if (A() (arg))
+			return true;
+
+		return B() (arg);
+	}
+};
 
 template <class A, class B>
-class AND : public  BinaryCompose <logical_and<bool>, A, B> {};
+class AND : public BasicArgument::IdFunctor
+{
+	public:
+	bool operator() (Argument &arg)
+	{
+		if (A() (arg))
+			return B() (arg);
+
+		return false;
+	}
+};
 
 class FarProc : public BasicArgument::IdFunctor
 {
 	public:
-	bool operator() (const BasicArgument *)
+	bool operator() (Argument &)
 	{
 		const Procedure *cp = CurrentAssembler->GetCurrentProcedure();
 		if (cp == 0)
