@@ -756,8 +756,6 @@ BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberCl
 template <class NumberClass, class VariableClass, bool Redundant=true>
 BasicExpression<NumberClass, VariableClass, Redundant> &BasicExpression<NumberClass, VariableClass, Redundant>::operator- ()
 {
-	if (Zero()) return *this;
-
 	// Performs operation
 	-*Terms.back();
 	return *this;
