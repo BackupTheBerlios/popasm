@@ -24,7 +24,6 @@
 
 #include <exception>
 #include <vector>
-#include <typeinfo>
 
 #include "defs.h"
 #include "number.h"
@@ -33,62 +32,64 @@
 
 class BasicArgument
 {
-	unsigned int Size;	// Size of the argument, in bits. Zero means: no size constraint
+	mutable unsigned int Size;		// Size of the argument, in bits. Zero means: no size constraint
 
 	public:
 	BasicArgument (unsigned int sz = 0) throw () : Size(sz) {}
 	virtual ~BasicArgument () throw () {}
 
-	unsigned int GetSize () const {return Size;}
+	// Checks whether ptr is a pointer to an instance of this class.
+	virtual bool Identify (const BasicArgument * const ptr) const throw () = 0;
+
+	bool Match (const BasicArgument *arg) const {return arg->Identify(this);}
+
+	virtual void SetSize (unsigned int sz) const {Size = sz;}
+	unsigned int GetSize () const throw () {return Size;}
 	virtual string Print () const throw () = 0;
 };
 
 class Immediate : public BasicArgument
 {
-	public:
-	Immediate (unsigned int sz = 0) throw () : BasicArgument (sz) {}
-	~Immediate () throw () {}
-
-	virtual void Write (vector<Byte> &Output) const = 0;
-	virtual string Print () const throw () = 0;
-};
-
-class UnknownImmediate : public Immediate
-{
 	RealNumber Value;
 
 	public:
-	UnknownImmediate (const Number &n) throw () : Immediate(n.GetSize()), Value(n.GetValue()) {}
-	~UnknownImmediate () throw () {}
+	Immediate () {}
+	Immediate (const Number &n) throw () : BasicArgument(n.GetSize()), Value(n.GetValue()) {}
+	~Immediate () throw () {}
 
 	const RealNumber &GetValue() const throw () {return Value;}
+	void SetSize (unsigned int sz);
 
-	void Write (vector<Byte> &Output) const {throw 0;}
+	// Checks whether ptr is a pointer to an instance of this class.
+	static const Immediate * const ClassInstance;
+	bool Identify (const BasicArgument * const ptr) const throw ()
+		{return dynamic_cast<const Immediate * const> (ptr) != 0;}
+
+	// Cannot write a number if its size is unknown (zero)
+	void Write (vector<Byte> &Output) const {if (GetSize() == 0) throw 0; Value.Write(Output, GetSize() / 8);}
 	string Print() const throw() {return Value.Print();}
 };
 
 class UnsignedByte : public Immediate
 {
-	Byte Value;
-
 	public:
-	UnsignedByte (const RealNumber &n);
+	UnsignedByte () {}
 	~UnsignedByte () throw () {}
 
-	void Write (vector<Byte> &Output) const throw () {Output.push_back (Value);}
-	string Print() const throw() {return ::Print(Value);}
+	// Checks whether ptr is a pointer to an instance of this class.
+	static const UnsignedByte * const ClassInstance;
+	bool Identify (const BasicArgument * const ptr) const;
 };
 
 class SignedByte : public Immediate
 {
-	Byte Value;
-
 	public:
-	SignedByte (const RealNumber &n);
+	SignedByte () {}
 	~SignedByte () throw () {}
 
-	void Write (vector<Byte> &Output) const throw () {Output.push_back (Value);}
-	string Print() const throw() {return ::Print(Value);}
+	// Checks whether ptr is a pointer to an instance of this class.
+	static const SignedByte * const ClassInstance;
+	bool Identify (const BasicArgument * const ptr) const;
 };
 
 class Argument
@@ -105,7 +106,13 @@ class Argument
 	const BasicArgument *GetData () const throw () {return Data;}
 	static Argument *MakeArgument (const Expression &e, unsigned int CurrentAddressSize);
 
-	bool Match (const type_info &ti);
+	bool Match (const BasicArgument *arg) const {return Data->Match(arg);}
+
+	enum CheckType {NONE, EQUAL, GREATER};
+	bool TypeCheck (Argument &arg, CheckType ct);
+	unsigned int GetSize () const throw () {return Data->GetSize();}
+	void SetSize (unsigned int sz) const {Data->SetSize(sz);}
+
 	string Print () const throw () {return Data->Print();}
 };
 
