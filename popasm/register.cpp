@@ -20,7 +20,11 @@
 
 #include "register.h"
 
-Register::~Register () throw () {}
+const Register * const Register::ClassInstance = new Register ("", 0, 0);
+
+const Accumulator * const Accumulator::ClassInstance = new Accumulator ();
+
+const SegmentRegister * const SegmentRegister::ClassInstance = new SegmentRegister ("", 16, 0, 0);
 
 SegmentRegister SegmentRegister::RegisterTable[] =
 {
@@ -40,7 +44,7 @@ Register *SegmentRegister::Read (const string &str, InputFile &inp) throw ()
 	return 0;
 }
 
-GPRegister::~GPRegister () throw () {}
+const GPRegister * const GPRegister::ClassInstance = new GPRegister ("", 0, 0);
 
 Register *GPRegister::Read (const string &str, InputFile &inp) throw ()
 {
@@ -54,6 +58,8 @@ Register *GPRegister::Read (const string &str, InputFile &inp) throw ()
 
 	return GPRegister32Bits::Read (str, inp);
 }
+
+const GPRegister8Bits * const GPRegister8Bits::ClassInstance = new GPRegister8Bits ("", 8, 0);
 
 GPRegister8Bits GPRegister8Bits::RegisterTable[] =
 {
@@ -74,6 +80,8 @@ Register *GPRegister8Bits::Read (const string &str, InputFile &inp) throw ()
 
 	return 0;
 }
+
+const GPRegister16Bits * const GPRegister16Bits::ClassInstance = new GPRegister16Bits ("", 16, 0);
 
 GPRegister16Bits GPRegister16Bits::RegisterTable[] =
 {
@@ -96,6 +104,8 @@ Register *GPRegister16Bits::Read (const string &str, InputFile &inp) throw ()
 	return IndexRegister::Read (str, inp);
 }
 
+const GPRegister32Bits * const GPRegister32Bits::ClassInstance = new GPRegister32Bits ("", 32, 0);
+
 GPRegister32Bits GPRegister32Bits::RegisterTable[] =
 {
 	GPRegister32Bits ("EAX", 32, 0),
@@ -116,6 +126,8 @@ Register *GPRegister32Bits::Read (const string &str, InputFile &inp) throw ()
 	return 0;
 }
 
+const BaseRegister * const BaseRegister::ClassInstance = new BaseRegister ("", 16, 0, 0, 0);
+
 BaseRegister BaseRegister::RegisterTable[] =
 {
 	BaseRegister ("BX", 16, 3, 7, 0),
@@ -130,6 +142,8 @@ Register *BaseRegister::Read (const string &str, InputFile &inp) throw ()
 	return 0;
 }
 
+const IndexRegister * const IndexRegister::ClassInstance = new IndexRegister ("", 16, 0, 0, 0);
+
 IndexRegister IndexRegister::RegisterTable[] =
 {
 	IndexRegister ("SI", 16, 6, 4, 0),
@@ -143,6 +157,8 @@ Register *IndexRegister::Read (const string &str, InputFile &inp) throw ()
 
 	return 0;
 }
+
+const ControlRegister * const ControlRegister::ClassInstance = new ControlRegister ("", 32, 0);
 
 ControlRegister ControlRegister::RegisterTable[] =
 {
@@ -164,6 +180,8 @@ Register *ControlRegister::Read (const string &str, InputFile &inp) throw ()
 	return 0;
 }
 
+const TestRegister * const TestRegister::ClassInstance = new TestRegister ("", 32, 0);
+
 TestRegister TestRegister::RegisterTable[] =
 {
 	TestRegister ("TR0", 32, 0),
@@ -184,6 +202,8 @@ Register *TestRegister::Read (const string &str, InputFile &inp) throw ()
 	return 0;
 }
 
+const DebugRegister * const DebugRegister::ClassInstance = new DebugRegister ("", 32, 0);
+
 DebugRegister DebugRegister::RegisterTable[] =
 {
 	DebugRegister ("DR0", 32, 0),
@@ -203,6 +223,8 @@ Register *DebugRegister::Read (const string &str, InputFile &inp) throw ()
 
 	return 0;
 }
+
+const MMXRegister * const MMXRegister::ClassInstance = new MMXRegister ("", 64, 0);
 
 MMXRegister MMXRegister::RegisterTable[] =
 {
@@ -225,6 +247,8 @@ Register *MMXRegister::Read (const string &str, InputFile &inp) throw ()
 	return 0;
 }
 
+const XMMRegister * const XMMRegister::ClassInstance = new XMMRegister ("", 128, 0);
+
 XMMRegister XMMRegister::RegisterTable[] =
 {
 	XMMRegister ("XMM",  128, 0),
@@ -245,6 +269,8 @@ Register *XMMRegister::Read (const string &str, InputFile &inp) throw ()
 
 	return 0;
 }
+
+const FPURegister * const FPURegister::ClassInstance = new FPURegister ("", 80, 0);
 
 FPURegister FPURegister::RegisterTable[] =
 {
