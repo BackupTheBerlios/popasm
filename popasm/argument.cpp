@@ -27,7 +27,30 @@
 #include "lexnum.h"
 #include "immed.h"
 
-void Argument::TypeCheck (const vector<Argument *> &args, CheckType ct) throw (TypeMismatch)
+TypeMismatch::TypeMismatch (const vector<Argument *> v) throw () : WhatString ("Type mismatch between")
+{
+	for (unsigned int i = 0; i != v.size(); i++)
+	{
+		if (i == 0)
+			WhatString += " ";
+		else
+			if (i == v.size() - 1)
+				WhatString += " and ";
+			else
+				WhatString += ", ";
+
+		WhatString += v[i]->Print();
+	}
+}
+
+BitOutOfBounds::BitOutOfBounds (const BasicArgument *arg, unsigned int n) : WhatString ("Bit ")
+{
+	WhatString += Print(n);
+	WhatString += " lies outside ";
+	WhatString += arg->Print();
+}
+
+void Argument::TypeCheck (const vector<Argument *> &args, CheckType ct) throw (TypeMismatch, BitOutOfBounds)
 {
 	unsigned int Sizes[3];
 	for (unsigned int i = 0; i != args.size(); i++)
@@ -92,6 +115,13 @@ void Argument::TypeCheck (const vector<Argument *> &args, CheckType ct) throw (T
 
 			if (Sizes[0] != Sizes[1] - 16) throw TypeMismatch (args);
 			break;
+
+		case BIT_NUMBER:
+		{
+			unsigned long int s = static_cast<const Immediate *> (args.back()->GetData())->GetLong();
+			if (Sizes[0] <= s) throw BitOutOfBounds (args[0]->GetData(), s);
+			break;
+		}
 
 		case NONE:
 			break;

@@ -81,9 +81,19 @@ class TypeMismatch : public exception
 	string WhatString;
 
 	public:
-	TypeMismatch (const vector<Argument *> v) throw ()
-		: WhatString ("Type mismatch between ") {}
+	TypeMismatch (const vector<Argument *> v) throw ();
 	~TypeMismatch () throw () {}
+
+	const char *what() const throw () {return WhatString.c_str();}
+};
+
+class BitOutOfBounds : public exception
+{
+	string WhatString;
+
+	public:
+	BitOutOfBounds (const BasicArgument *arg, unsigned int n);
+	~BitOutOfBounds () {}
 
 	const char *what() const throw () {return WhatString.c_str();}
 };
@@ -104,8 +114,8 @@ class Argument
 
 	bool Match (BasicIdFunctor *arg) const {return (*arg)(Data);}
 
-	enum CheckType {NONE, EQUAL, GREATER, HALF, MINUS_16BITS};
-	static void TypeCheck (const vector<Argument *> &args, CheckType ct) throw (TypeMismatch);
+	enum CheckType {NONE, EQUAL, GREATER, HALF, MINUS_16BITS, BIT_NUMBER};
+	static void TypeCheck (const vector<Argument *> &args, CheckType ct) throw (TypeMismatch, BitOutOfBounds);
 
 	unsigned int GetSize () const throw () {return Data->GetSize();}
 	void SetSize (unsigned int sz) const {Data->SetSize(sz);}
