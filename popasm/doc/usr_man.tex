@@ -2027,193 +2027,217 @@ The purpose of this chapter is to summarize all machine instructions of
 all CPU's supported by \popasm\ and their valid syntaxes. The reader
 should refer to Intel and AMD documentation for further details.
 
-% Convencoes adotadas
-%
-% immed8 - an unsigned 8-bit immediate value
-% signed8 - a signed 8-bit immediate value
+The conventions adopted here are:
 
-% mem - A memory reference
+\begin{itemize}
+\item immed8 --- an 8-bit immediate value
+\item signed8 --- a signed 8-bit immediate value
+\item unsigned8 --- an unsigned 8-bit immediate value
+\item mem - A memory reference
+\item reg - a general purpose register
+\item xmmreg - an XMM register
+\end{itemize}
 
-% reg - a general purpose register
-% xmmreg - an XMM register
+\section{AAA - Ascii Adjust after Addition}
+
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+AAA (No arguments)           AAA
+\end{verbatim}
+
+\section{AAD - Ascii Adjust before Division}
+
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+AAD (No arguments)           AAD
+AAD unsigned8                AAD     16
+\end{verbatim}
+
+\subsection{Notes}
+\popasm\ does not check whether or not the immediate argument for this
+instruction is zero.
+
+\section{AAM - Ascii Adjust after Multiply}
+
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+AAD (No arguments)           AAM
+AAD unsigned8                AAM     10h
+\end{verbatim}
+
+\section{AAS - ASCII Adjust after Subtraction}
+
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+AAS (No arguments)           AAS
+\end{verbatim}
+
+\section{ADC - ADd with Carry}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+ADC reg,reg/mem              ADC     CL,DH
+ADC mem,reg                  ADC     [80h],EDX
+ADC reg/mem,immed            ADC     [VAR],18
+ADC reg/mem,signed8          ADC     EAX,-6
+\end{verbatim}
+
+\section{ADD - ADDition}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+ADD reg,reg/mem              ADD     CL,DH
+ADD mem,reg                  ADD     [80h],EDX
+ADD reg/mem,immed            ADD     [VAR],18
+ADD reg/mem,signed8          ADD     EAX,-6
+\end{verbatim}
+
+\section{ADDPD - ADD Packed Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+ADDPD xmmreg,xmmreg/mem128   ADDPD   XMM,XMM1
+\end{verbatim}
+
+\section{ADDPS - ADD Packed Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+ADDPS xmmreg,xmmreg/mem128   ADDPS   XMM5,TABLE[ESI]
+\end{verbatim}
+
+\section{ADDSD - ADD Scalar Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+ADDSD xmmreg,xmmreg/mem64    ADDSD   XMM5,[EDI+ARRAY]
+\end{verbatim}
+
+\section{ADDSS - ADD Scalar Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+ADDSS xmmreg,xmmreg/mem32    ADDSS   XMM3,ES:[BX]
+\end{verbatim}
+
+\section{AND - logical AND}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+AND reg,reg/mem              AND     AX,BX
+AND mem,reg                  AND     [80h],DL
+AND reg/mem,immed            AND     BYTE [GS:WORD_VAR],18
+AND reg/mem,signed8          AND     ESI,-6
+\end{verbatim}
+
+\section{ANDPD - bitwise AND Packed Double-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+ANDPD xmmreg,xmmreg/mem128   ANDPD   XMM7,[EAX]
+\end{verbatim}
+
+\section{ANDPS - bitwise AND Packed Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+ANDPS xmmreg,xmmreg/mem128   ANDPS   XMM0,[ESI*4]
+\end{verbatim}
+
+\section{ANDNPD - bitwise AND Not Packed Double-precision floating-point values}
+
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+ANDNPD xmmreg,xmmreg/mem128  ANDNPD  XMM7,[EAX]
+\end{verbatim}
+
+\section{ANDNPS - bitwise AND Not Packed Single-precision floating-point values}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+ANDNPS xmmreg,xmmreg/mem128  ANDNPS  XMM0,[ESI*4]
+\end{verbatim}
 
 
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline AAA (No arguments) & AAA
-\end{tabular}
-\caption{AAA - Ascii Adjust after Addition}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline AAD (No arguments) & AAD\\
-AAD immed8 & AAD 16
-\end{tabular}
-\caption{AAD - Ascii Adjust before Division}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline AAM (No arguments) & AAM\\
-AAM immed8 & AAM 10h
-\end{tabular}
-\caption{AAM - Ascii Adjust after Multiply}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline AAS (No arguments) & AAS
-\end{tabular}
-\caption{AAS - ASCII Adjust before Subtraction}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline ADC reg,reg/mem & ADC CL,DH\\
-ADC mem,reg & ADC [80h],EDX\\
-ADC reg/mem,immed & ADC [VAR],18\\
-ADC reg/mem,signed8 & ADC EAX,-6
-\end{tabular}
-\caption{ADC - ADd with Carry}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline ADD reg,reg/mem & ADD CL,DH\\
-ADD mem,reg & ADD [80h],EDX\\
-ADD reg/mem,immed & ADD [VAR],18\\
-ADD reg/mem,signed8 & ADD EAX,-6
-\end{tabular}
-\caption{ADD - ADD}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline ADDPD xmmreg,xmmreg/mem128 & ADDPD XMM,XMM1
-\end{tabular}
-\caption{ADDPD - ADD Packed Double-precision floating-point values}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline ADDPS xmmreg,xmmreg/mem128 & ADDPS XMM5,TABLE[ESI]
-\end{tabular}
-\caption{ADDPS - ADD Packed Single-precision floating-point values}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline ADDSD xmmreg,xmmreg/mem64 & ADDSD XMM5,[EDI+ARRAY]
-\end{tabular}
-\caption{ADDSD - ADD Scalar Double-precision floating-point values}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline ADDSS xmmreg,xmmreg/mem32 & ADDSS XMM3,ES:[BX]
-\end{tabular}
-\caption{ADDSS - ADD Scalar Single-precision floating-point values}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline AND reg,reg/mem & AND AX,BX\\
-AND mem,reg & AND [80h],DL\\
-AND reg/mem,immed & AND BYTE [GS:WORD\_VAR],18\\
-AND reg/mem,signed8 & AND ESI,-6
-\end{tabular}
-\caption{AND - logical AND}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline ANDPD xmmreg,xmmreg/mem128 & ANDPD XMM7,[EAX]
-\end{tabular}
-\caption{ANDPD - bitwise AND Packed Double-precision floating-point values}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline ANDPS xmmreg,xmmreg/mem128 & ANDPS XMM0,[ESI*4]
-\end{tabular}
-\caption{ANDPS - bitwise AND Packed Single-precision floating-point values}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline ANDNPD xmmreg,xmmreg/mem128 & ANDNPD XMM7,[EAX]
-\end{tabular}
-\caption{ANDNPD - bitwise AND Not Packed Double-precision floating-point values}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline ANDNPS xmmreg,xmmreg/mem128 & ANDNPS XMM0,[ESI*4]
-\end{tabular}
-\caption{ANDNPS - bitwise AND Not Packed Single-precision floating-point values}
-\end{center}
-\end{table}
-
-\begin{table}
-\begin{center}
-\begin{tabular}{ll}
-Valid Syntaxes & Example\\
-\hline ARPL reg16/mem16,reg16 & ARPL AX,[BX]
-\end{tabular}
-\caption{ARPL - Adjust RPL field of segment selector}
-\end{center}
-\end{table}
+\section{ARPL - Adjust RPL field of segment selector}
+\begin{verbatim}
+Valid Syntaxes               Example
+\end{verbatim}
+\vspace{-0.7cm}
+\hrulefill
+\vspace{-0.3cm}
+\begin{verbatim}
+ARPL reg16/mem16,reg16       ARPL    AX,[BX]
+\end{verbatim}
 
 To be continued.
 
-\chapter{Contacting info\label{CONTACT}}
-Up to date info about contacting \popasm\ team can be found at \popasm\ 
-homepage, at http://popasm.sourceforge.net.
+\include{contact}
 
 \begin{thebibliography}{12}
 \bibitem{UFES} Federal University of Esp\'{\i}rito Santo -- ES -- Brazil.
