@@ -27,7 +27,7 @@
 enum {UNDEFINED = 1, ANY = 255};
 enum {BYTE = 2, WORD = 4, DWORD = 8, PWORD = 16, QWORD = 32, TBYTE = 64, OWORD = 128};
 enum {SHORT = 2, NEAR = 4, FAR = 8};
-enum {INTEGER = 2, FLOAT = 4, BCD = 8};
+enum {INTEGER = 2, FLOAT = 4};
 bool Match (int Restriction, int i) throw ();
 bool MatchSize (int SizeRestriction, int sz);
 

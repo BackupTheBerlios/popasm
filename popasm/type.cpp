@@ -57,7 +57,6 @@ string Type::PrintNumerical (unsigned int num) throw ()
 	{
 		case INTEGER: return "integer";
 		case FLOAT: return "float";
-		case BCD: return "bcd";
 	}
 
 	return "unknown numerical type";
