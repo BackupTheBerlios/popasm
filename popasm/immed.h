@@ -71,7 +71,7 @@ class Immediate : public BasicArgument
 
 	public:
 	Immediate () {}
-	Immediate (const Number &n, int dist) throw ()
+	Immediate (const Number &n, int dist = UNDEFINED) throw ()
 		: BasicArgument(Type (n.GetSize(), SCALAR, dist, n.IsInteger() ? INTEGER : FLOAT)), Value(n.GetValue()) {}
 	~Immediate () throw () {}
 
@@ -86,7 +86,21 @@ class Immediate : public BasicArgument
 	class IdFunctor : public BasicArgument::IdFunctor
 	{
 		public:
-		bool operator() (const BasicArgument *arg) {return dynamic_cast<const Immediate *> (arg) != 0;}
+		bool operator() (Argument &arg)
+		{
+			const Immediate *immed = dynamic_cast<const Immediate *> (arg.GetData());
+
+			if (immed != 0)
+				return true;
+
+			if (arg.IsUndefined())
+			{
+				arg.SetData (new Immediate ());
+				return true;
+			}
+
+			return false;
+		}
 	};
 
 	// Cannot write a number if its size is unknown (zero)
@@ -100,13 +114,18 @@ class Immediate : public BasicArgument
 };
 
 template <int sz, long int n>
-class ImmedEqual : public UnaryFunction<const BasicArgument *, bool>
+class ImmedEqual : public BasicArgument::IdFunctor
 {
 	public:
-	result_type operator() (argument_type arg)
+	bool operator() (Argument &arg)
 	{
-		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
-		if (immed == 0) return false;
+		const Immediate *immed = dynamic_cast<const Immediate *> (arg.GetData());
+		if (immed == 0)
+		{
+			arg.SetData (new Immediate (Number (n, GetFirstSize(sz))));
+			return true;
+		}
+
 		if (!MatchSize (sz, immed->GetSize())) return false;
 		if (immed->GetNumericalType() != INTEGER) return false;
 		return immed->GetLong() == n;
@@ -114,13 +133,17 @@ class ImmedEqual : public UnaryFunction<const BasicArgument *, bool>
 };
 
 template <unsigned int n, long int a, long int b, Number::NumberType t = Number::ANY>
-class ImmedRange : public UnaryFunction<const BasicArgument *, bool>
+class ImmedRange : public BasicArgument::IdFunctor
 {
 	public:
-	result_type operator() (argument_type arg)
+	bool operator() (Argument &arg)
 	{
-		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
-		if (immed == 0) return false;
+		const Immediate *immed = dynamic_cast<const Immediate *> (arg.GetData());
+		if (immed == 0)
+		{
+			arg.SetData (new Immediate (Number (a, n)));
+			return true;
+		}
 
 		if (immed->GetNumericalType() != INTEGER)
 			throw IntegerExpected (immed->GetValue());
@@ -138,14 +161,24 @@ class ImmedRange : public UnaryFunction<const BasicArgument *, bool>
 };
 
 template <unsigned int n, Number::NumberType t, bool ThrowExceptions = true>
-class Immed : public UnaryFunction<const BasicArgument *, bool>
+class Immed : public BasicArgument::IdFunctor
 {
 	public:
-	result_type operator() (argument_type arg)
+	bool operator() (Argument &arg)
 	{
 		// Checks whether we have an integer immediate value
-		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
-		if (immed == 0) return false;
+		const Immediate *immed = dynamic_cast<const Immediate *> (arg.GetData());
+		if (immed == 0)
+		{
+			if (arg.IsUndefined())
+			{
+				arg.SetData (new Immediate (Number (0, n)));
+				return true;
+			}
+
+			return false;
+		}
+
 		if (immed->GetNumericalType() != INTEGER) throw IntegerExpected (immed->GetValue());
 
 		// If the size is the same but the type is different, throw exception.
@@ -173,7 +206,7 @@ class Immed : public UnaryFunction<const BasicArgument *, bool>
 	}
 };
 
-class RelativeArgument : public Immediate::IdFunctor
+class RelativeArgument : public BasicArgument::IdFunctor
 {
 	int RelativeDistance;
 
@@ -183,15 +216,24 @@ class RelativeArgument : public Immediate::IdFunctor
 
 	int GetRelativeDistance () const throw () {return RelativeDistance;}
 
-	result_type operator() (argument_type arg)
+	bool operator() (Argument &arg)
 	{
 		// Checks whether we have an integer immediate value
-		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
-		if (immed == 0) return false;
+		const Immediate *immed = dynamic_cast<const Immediate *> (arg.GetData());
+		if (immed == 0)
+		{
+			if (arg.IsUndefined())
+			{
+				arg.SetData (new Immediate (Number(), RelativeDistance));
+				return true;
+			}
 
-		if (arg->GetDistanceType() != RelativeDistance)
-			if (arg->GetDistanceType() == UNDEFINED)
-				return Type::CombineSD (arg->GetSize(), RelativeDistance);
+			return false;
+		}
+
+		if (immed->GetDistanceType() != RelativeDistance)
+			if (immed->GetDistanceType() == UNDEFINED)
+				return Type::CombineSD (immed->GetSize(), RelativeDistance);
 			else
 				return false;
 
@@ -199,16 +241,12 @@ class RelativeArgument : public Immediate::IdFunctor
 	}
 };
 
-class DefaultImmed : public UnaryFunction<const BasicArgument *, bool>
+class DefaultImmed : public BasicArgument::IdFunctor
 {
 	public:
-	result_type operator() (argument_type arg)
+	bool operator() (Argument &arg)
 	{
-		// Checks whether we have an integer immediate value
-		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
-		if (immed == 0) return false;
-
-		switch (immed->GetSize())
+		switch (arg.GetData()->GetSize())
 		{
 			case 0:
 				if (CurrentAssembler->GetCurrentMode() == 16)
@@ -218,7 +256,19 @@ class DefaultImmed : public UnaryFunction<const BasicArgument *, bool>
 
 			case 16:
 			case 32:
-				break;
+			{
+				const Immediate *immed = dynamic_cast<const Immediate *> (arg.GetData());
+				if (immed != 0)
+					return true;
+
+				if (arg.IsUndefined())
+				{
+					arg.SetData (new Immediate (Number (0, arg.GetData()->GetSize())));
+					return true;
+				}
+
+				return false;
+			}
 
 			default:
 				return false;
