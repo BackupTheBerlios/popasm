@@ -45,7 +45,31 @@ Expression *MakeTerm (Token *t)
 
 	// Checks for symbols
 	s = dynamic_cast<Symbol *> (t);
-	if (s != 0) return new Expression (0, s);
+	if (s != 0)
+	{
+		Expression *exp;
+		const UserDefined *ud = dynamic_cast<const UserDefined *> (s->GetData());
+		const Variable *v;
+
+		if (ud != 0)
+		{
+			v = dynamic_cast<const Variable *> (ud);
+
+			// Labels are treated as scalar; variables as weak memories
+			exp = new Expression (new Number (ud->GetOffset()), 0);
+			if (v != 0)
+			{
+				exp->SetType (Type::WEAK_MEMORY);
+				exp->SetSize (v->GetSize());
+			}
+		}
+		else
+		{
+			exp = new Expression (0, s);
+		}
+
+		return exp;
+	}
 
 	throw UnexpectedToken (t);
 }
@@ -297,6 +321,7 @@ vector<Byte> Parser::ParseLine ()
 	const Symbol *sym = 0;
 	const BasicSymbol *var = 0;
 	const Command *cmd = 0;
+	const Operator *op;
 
 	while (State != FINAL)
 	{
@@ -324,6 +349,13 @@ vector<Byte> Parser::ParseLine ()
 				// Checks if the user has specified more than one label
 				if (var != 0) throw CommandExpected(sym);
 				var = sym->GetData();
+				i++;
+
+				// Skips colon (if any)
+				op = dynamic_cast<const Operator *> (*i);
+				if (op != 0)
+					if (op->GetName() == ":")
+						i++;
 
 				State = INITIAL;
 				break;
