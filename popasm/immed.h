@@ -52,6 +52,17 @@ class UnexpectedSize : public exception
 	const char *what () const throw () {return WhatString.c_str();}
 };
 
+class OutOfRange : public exception
+{
+	string WhatString;
+
+	public:
+	OutOfRange (unsigned long int a, unsigned long int b) throw ();
+	~OutOfRange () throw () {}
+
+	const char *what () const throw () {return WhatString.c_str();}
+};
+
 class Immediate : public BasicArgument
 {
 	RealNumber Value;
@@ -100,7 +111,7 @@ class ImmedEqual : public UnaryFunction<const BasicArgument *, bool>
 	}
 };
 
-template <int sz, long int a, long int b>
+template <unsigned int n, long int a, long int b, Number::NumberType t = Number::ANY>
 class ImmedRange : public UnaryFunction<const BasicArgument *, bool>
 {
 	public:
@@ -108,11 +119,19 @@ class ImmedRange : public UnaryFunction<const BasicArgument *, bool>
 	{
 		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
 		if (immed == 0) return false;
-		if (!MatchSize (sz, immed->GetSize())) return false;
-		if (!immed->IsInteger()) return false;
+
+		if (!immed->IsInteger())
+			throw IntegerExpected (immed->GetValue());
+
+		if ((immed->GetSize() != n) && (immed->GetSize() != 0))
+			throw UnexpectedSize (n, immed->GetSize());
+
+		immed->SetSize (n, t);
 
 		long int x = immed->GetLong();
-		return (x >= a) && (x <= b);
+		if ((x < a) || (x > b)) throw OutOfRange(a, b);
+
+		return true;
 	}
 };
 

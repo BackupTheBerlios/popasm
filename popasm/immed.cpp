@@ -17,6 +17,12 @@
 
 #include "immed.h"
 
+OutOfRange::OutOfRange (unsigned long int a, unsigned long int b) throw ()
+	: WhatString ("Value out of range. Must be between ")
+{
+	WhatString += Print(a) + " and " + Print (b);
+}
+
 const char UnknownImmediateSize::WhatString[] = "Undefined size for immediate argument.";
 
 void Immediate::SetSize (unsigned int sz, Number::NumberType t = Number::ANY) const throw (InvalidSize, CastFailed)
