@@ -31,7 +31,6 @@ class NumberException;
 class InvalidBase;
 class InvalidDigit;
 class InvalidNumber;
-class Overflow;
 class Underflow;
 class DivisionByZero;
 class LeadingZero;
@@ -172,7 +171,7 @@ class IntegerNumber
 	const IntegerNumber operator*  (const IntegerNumber &n) const throw ();
 	const IntegerNumber operator/  (const IntegerNumber &n) const throw (DivisionByZero);
 	const IntegerNumber operator%  (const IntegerNumber &n) const throw (DivisionByZero);
-	const IntegerNumber operator<< (const IntegerNumber &n) const throw (Overflow, NegativeShift);
+	const IntegerNumber operator<< (const IntegerNumber &n) const throw (NegativeShift);
 	const IntegerNumber operator>> (const IntegerNumber &n) const throw (NegativeShift);
 	const IntegerNumber operator&  (const IntegerNumber &n) const throw ();
 	const IntegerNumber operator|  (const IntegerNumber &n) const throw ();
@@ -183,7 +182,7 @@ class IntegerNumber
 	IntegerNumber &operator*=  (const IntegerNumber &n) throw ();
 	IntegerNumber &operator/=  (const IntegerNumber &n) throw (DivisionByZero);
 	IntegerNumber &operator%=  (const IntegerNumber &n) throw (DivisionByZero);
-	IntegerNumber &operator<<= (const IntegerNumber &n) throw (Overflow, NegativeShift);
+	IntegerNumber &operator<<= (const IntegerNumber &n) throw (NegativeShift);
 	IntegerNumber &operator>>= (const IntegerNumber &n) throw (NegativeShift);
 	IntegerNumber &operator&=  (IntegerNumber n) throw ();
 	IntegerNumber &operator|=  (IntegerNumber n) throw ();
@@ -293,6 +292,7 @@ class RealNumber
 	bool operator== (const RealNumber &n) const throw ();
 	bool operator!= (const RealNumber &n) const throw ();
 
+	bool Zero () const throw () {return Mantissa.Zero();}
 	bool GreaterThanZero () const throw () {return Mantissa.GreaterThanZero();}
 	bool LesserThanZero () const throw () {return Mantissa.LesserThanZero();}
 
@@ -322,7 +322,7 @@ class InvalidBase : public NumberException
 
 	public:
 	InvalidBase (const Word w) :
-		NumberException ("Invalid base: " + NaturalNumber(w).Print (10) +
+		NumberException (string ("Invalid base: ") + Print (w) +
 		". Allowed ones are 2, 8, 10, and 16."), AttemptedBase (w) {}
 	~InvalidBase () {}
 };
@@ -350,14 +350,6 @@ class InvalidNumber : public NumberException
 	InvalidNumber (const string &s) :
 		NumberException (string ("Not a number: ") + s), AttemptedNumber (s) {}
 	~InvalidNumber () {}
-};
-
-// Overflow. Possible cause: operator<< with argument greater than 65535
-class Overflow : public NumberException
-{
-	public:
-	Overflow () : NumberException ("Overflow.") {}
-	~Overflow () {}
 };
 
 // The caller tried to decrement a null number

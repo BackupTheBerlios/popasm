@@ -6,6 +6,10 @@
     email                : helcio@users.sourceforge.net
  ***************************************************************************/
 
+//--------------------------------------------------------------------------
+// Allows the user to create huge numbers and operate on them
+//--------------------------------------------------------------------------
+
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -1078,7 +1082,7 @@ IntegerNumber &IntegerNumber::operator%=  (const IntegerNumber &n) throw (Divisi
 	return *this;
 }
 
-const IntegerNumber IntegerNumber::operator<< (const IntegerNumber &n) const throw (Overflow, NegativeShift)
+const IntegerNumber IntegerNumber::operator<< (const IntegerNumber &n) const throw (NegativeShift)
 {
 	IntegerNumber answer (*this);
 	answer <<= n;
@@ -1092,7 +1096,7 @@ const IntegerNumber IntegerNumber::operator>> (const IntegerNumber &n) const thr
 	return answer;
 }
 
-IntegerNumber &IntegerNumber::operator<<= (const IntegerNumber &n) throw (Overflow, NegativeShift)
+IntegerNumber &IntegerNumber::operator<<= (const IntegerNumber &n) throw (NegativeShift)
 {
 	// Sign is left unchanged
 	if (n.LesserThanZero())
