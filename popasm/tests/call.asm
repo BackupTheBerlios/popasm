@@ -8,3 +8,4 @@ call 1234h:dword 56789ABCh
 call [bx+si+34]
 call far [bx+si+34]
 call dword far [eax-12]
+call far dword [eax-12]
