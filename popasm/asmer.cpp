@@ -84,15 +84,21 @@ bool Assembler::PerformPass (InputFile &File) throw ()
 		{
 			LineEncoding = CurrentParser->ParseLine ();
 
-			// Creates a default segment if none exists or is open
-			if (Segments.empty())
-				Segments.push_back(new Segment ());
+			// Creates a default segment if none exists
+			if ((Segments.empty()) && (LineEncoding.size() != 0))
+				AddSegment(new Segment ());
 
-			if (!Segments.back()->IsOpen())
-				Segments.push_back(new Segment ());
+			if ((!Segments.back()->IsOpen()) && (LineEncoding.size() != 0))
+			{
+				cout << "Statement outside segment." << endl;
+				return false;
+			}
 
-			CurrentOffset += LineEncoding.size();
-			Segments.back()->AddContents (LineEncoding);
+			if (LineEncoding.size() != 0)
+			{
+				CurrentOffset += LineEncoding.size();
+				Segments.back()->AddContents (LineEncoding);
+			}
 
 			PrintVector (LineEncoding);
 		}
@@ -104,6 +110,11 @@ bool Assembler::PerformPass (InputFile &File) throw ()
 		{
 			cerr << "Line " << File.GetCurrentLine() - 1 << ": Internal error. Please send a bug report." << endl;
 		}
+	}
+
+	if ((Segments.back()->IsOpen()) && (Segments.back()->GetName() != ""))
+	{
+		cout << "Segment not ended - " << Segments.back()->GetName() << endl;
 	}
 
 	return false;
@@ -129,4 +140,48 @@ void Assembler::CloseSegment (const string &s)
 	}
 
 	Segments.back()->Close();
+}
+
+Token *Assembler::Read (const string &str, InputFile &inp) throw ()
+{
+	BasicSymbol *temp = Find (str);
+	if (temp != 0)
+		return new Symbol (temp, false);
+
+	return 0;
+}
+
+void Assembler::DefineSymbol (BasicSymbol *s) throw (MultidefinedSymbol)
+{
+	if (Segments.empty())
+		AddSegment (new Segment());
+
+	if (Segments.back()->IsOpen())
+		Segments.back()->DefineSymbol(s);
+	else
+	{
+		cout << "Symbol defined outside segment" << endl;
+	}
+}
+
+BasicSymbol *Assembler::Find (const string &name)
+{
+	if (Segments.empty())
+		return 0;
+
+	// If segment is still open, search its symbol table
+	if (Segments.back()->IsOpen())
+	{
+		BasicSymbol *temp = Segments.back()->Find (name);
+		if (temp != 0) return temp;
+	}
+
+	// If segment is closed or the symbol does not belong its symbol table, search through the segment table
+	for (vector<Segment *>::iterator i = Segments.begin(); i != Segments.end(); i++)
+	{
+		if ((*i)->GetName() == name)
+			return *i;
+	}
+
+	return 0;
 }

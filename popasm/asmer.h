@@ -24,11 +24,13 @@
 
 #include <string>
 
+#include "symbol.h"
 #include "inp_file.h"
 #include "type.h"
 #include "segment.h"
 
 class Parser;
+class Token;
 
 class Assembler
 {
@@ -55,6 +57,12 @@ class Assembler
 
 	void AddSegment (Segment *seg);
 	void CloseSegment (const string &s);
+
+	// Attempts to read a symbol from the given string.
+	// Returns 0 if there's currently no symbol with that name defined in any segment
+	Token *Read (const string &str, InputFile &inp) throw ();
+	void DefineSymbol (BasicSymbol *s) throw (MultidefinedSymbol);
+	BasicSymbol *Find (const string &name);
 
 	void AssembleFile (InputFile &File) throw ();
 	virtual Type::TypeName TranslateWeakMemory() throw () = 0;
