@@ -22,6 +22,7 @@
 #include "symbol.h"
 #include "hashtab.h"
 #include "inp_file.h"
+#include "functors.h"
 
 class Symbol : public Token
 {
