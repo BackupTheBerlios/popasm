@@ -73,8 +73,7 @@ I learned the bulk of my computering skills, and
 to those classmates and teachers who believed \popasm\ project,
 such as professor and PhD S\'ergio Freitas%
 \cite{FREITAS}, who decided to adopt \popasm\ as the assembler for
-his graduate classes about assembly language, as soon as it is
-fully functional.
+his graduate classes about assembly language.
 
 Last, but not least, I would like to thank my family, friends and God
 for what I am now and what I have done so far.
@@ -88,6 +87,9 @@ for what I am now and what I have done so far.
 
 \pagenumbering{arabic}
 \part{Getting Started}
+The first chapters of this manual explain what \popasm\ is, how
+to compile and install it, and how to run it, changing its default
+behavior as needed.
 
 \chapter{Introduction}
 \popasm\ stands for ``Popular Assembler''. It is an assembler,
@@ -137,7 +139,7 @@ Due to the reasons discussed above, this assembler was named the
 ``Popular Assembler''. The next sections comment the two main
 assemblers \popasm\ is compatible with.
 
-\section{\tasm}
+\section{Notes on \tasm}
 \tasm\ is not free software. It is also DOS/Windows only, and
 took some time to get the instructions of the new processors
 included. Such delay possibly contributed the creation of macros
@@ -153,7 +155,7 @@ Such major feature may boost people to give \popasm\ a try. If it
 is not of their liking, trying \popasm\ did not change their legacy
 code anyway, so there's very little to lose.
 
-\section{\nasm}
+\section{Notes on \nasm}
 \nasm\ is a free and portable assembler, and that's good. It looks
 like many people use \nasm\ today, but there are several points
 where \nasm\ can be questioned\footnote{The objective of this section
@@ -180,12 +182,13 @@ Another key point is the absence of good assembly-time arithmetics
 features, such as huge numbers arithmetics (both integer and floating
 point). \popasm\ overcomes such problems as described in this
 document. Other points could be mentioned, but the purpose of this
-manual is solely to document \popasm\ features.
+manual is solely to document \popasm\ features, not to point out
+problems in other assemblers.
 
 \chapter{Compiling and Installing \popasm}
 This chapter explains how to compile and install \popasm\ under
 Linux or other UNIX-like platforms and DOS/Windows. If you have
-already done that you may safely skip to the next chapter.
+already done that you may skip to the next chapter.
 
 \section{UNIX environments}
 
@@ -342,7 +345,16 @@ options and environment variables are discussed in detail.
 
 To be continued.
 
-\part{\popasm\ syntax}
+\part{\popasm\ Syntax from the Beginning}
+
+This part documents \popasm\ syntax, starting from the simplest concepts.
+Experienced assembly-language programmers are likely to feel compelled to
+skip the next few chapters, but are hereby advised not to do so before
+reading at least the their introductory paragraphs.
+
+After presenting the basic syntax, its elements are described in great
+detail, each in a subsequent chapter. After reading this part, the average
+devoloper should be able to use the most common features of \popasm\ easily.
 
 \chapter{Basic Syntax}
 
@@ -356,7 +368,7 @@ files as inputs, each one containing assembly-language statements. These
 statements, in turn, have the following general form:
 
 \begin{verbatim}
-label:          CMD     arguments               ; comments
+label:          CMD     arguments               ; comment
 \end{verbatim}
 
 where:
@@ -372,7 +384,7 @@ where:
 \item{\emph{arguments}} is a comma-separated list of arguments for the CMD
    command used in this line. An argument is any sort of \emph{expression}
    (see chapter \ref{EXPR}). Some commands neither require nor accept arguments.
-\item{\emph{comments}} is whatever you want to write to make your code easier
+\item{\emph{comment}} is whatever you want to write to make your code easier
    to read and maintain. Comments are placed after a semicolon, and
    \popasm\ ignores them altogether.
 \end{itemize}
@@ -410,7 +422,7 @@ comments at column 49).
 
 \section{Notes on labels\label{NOTELABEL}}
 
-Valid labels are strings of letters (a--z or A--Z), digits (0--9 )or any
+Valid labels are strings of letters (a--z or A--Z), digits (0--9) or any
 of the following characters:
 
 \begin{center}
@@ -490,7 +502,7 @@ Examples:
    other two numbers above, despite looking weird and not being very useful.
 \item{\_12\_345\_678} is not a number because the first character is not
    a digit.
-\item{3241\_7779q} is not an acceptable binary number because ``9'' is not
+\item{3241\_7779q} is not an acceptable octal number because ``9'' is not
 	a valid digit in octal notation (``q'' here stands for octal. Explained
 	later).
 \end{itemize}
@@ -502,8 +514,8 @@ follows:
 
 \begin{table}[h]
 \begin{center}
-\begin{tabular}[h]{cl}
-Bits & Description\\
+\begin{tabular}[h]{c|l}
+\hline Bits & Description\\
 \hline
 6--7 & Package priority (0--3 range)\\
 3--5 & Transmitter's ID (0--7 range)\\
@@ -533,8 +545,8 @@ supported by \popasm\ are:
 
 \begin{table}[h]
 \begin{center}
-\begin{tabular}[h]{ccl}
-Prefix & Base & Valid digits\\
+\begin{tabular}[h]{c|c|l}
+\hline Prefix & Base & Valid digits\\
 \hline
 b, B, y or Y & Binary (base 2)  & 0--1 \\
 o, O, q or Q & Octal (base 8)  & 0--7 \\
@@ -542,7 +554,7 @@ d, D, t or T & Decimal (base 10)  & 0--9 \\
 h or H & Hex (base 16)  & 0--9, A--F and a--f\protect{\footnotemark}\\
 \hline
 \end{tabular}
-\caption{Prefix and bases}
+\caption{Prefixes and bases}
 \end{center}
 \end{table}
 
@@ -579,6 +591,34 @@ Unlike some other assembers, \popasm\ can perform assembly-time operations
 on both integer and real numbers. Real numbers have no storage limit either.
 \popasm\ has also the advantage of neither rounding nor truncating real numbers.
 They have their exact values stored as long as possible.
+
+Another key point is that \popasm\ distinguishes between 0.0 and -0.0, because
+they have different encodings.
+
+\subsection{Special numbers}
+When converted to binary format, real numbers are encoded in IEEE format, which
+is the one used by x86 FPU's. However, some bit patterns have special meaning,
+such as NaN's and infinities. The ability of defining such values is very useful
+if FPU programming is concerned.
+
+In order to do so, \popasm\ uses the folowing keywords:
+
+\begin{itemize}
+\item{INFINITY} --- returns the IEEE encoding for $+\infty$. Because \popasm\ 
+supports arithmetics even on such special symbols, -INFINITY can be used to
+get $-\infty$ if needed.
+\item{QNAN n} --- defines a ``quiet NaN'' that hold value $n$ as part of it (see
+\cite{FPUMAN} for details).
+\item{SNAN n} --- defines a ``signaling NaN'' that hold value $n$ as part of
+it (see \cite{FPUMAN} for details).
+\end{itemize}
+
+Note that all of the above symbols, as well as all real numbers, are encoded
+differently, depending on the size of the variable that will hold them. For
+example, the 32-bit representation for $+\infty$ is obviously different from
+its 64-bit counterpart. \popasm\ detects which size to use based on commands
+issued previously (eg. if an INFINITY keyword appears after a DQ command, then
+its 64-bit encoding will be used).
 
 \chapter{Operators}
 \popasm\ can perform several arithmetic operations on numbers and symbols. The
@@ -623,8 +663,9 @@ Lowest             & OWORD & Oct WORD --- 128-bit qualifier\\
                    & * & Multiplication\\
                    & / & Division\\
                    & MOD or \% & Remainer (modulus)\\
-                   & SHL or $< <$ & Shift left\\
-                   & SHR or $> >$ & Shift right\\
+                   & SHL or $< <$ & Binary Shift left\\
+                   & SHR or $> >$ & Binary Shift right\\
+                   & SAL and SAR & Arithmetic shifts\\
 \hline
                    & NOT or \~{}& One's complement\\
                    & + (unary) & Ignored\\
@@ -632,7 +673,7 @@ Lowest             & OWORD & Oct WORD --- 128-bit qualifier\\
 \hline
                    & : & Segment and offset composition\\
 \hline
-Highest            & . & Member selection in structs and unions\\
+Highest            & . & Member selection in aggregates (see chapter \ref{AGGRCHAP})\\
 \hline
 \end{tabular}
 \caption{Operators and their precedence}
@@ -659,14 +700,14 @@ Real & Real & Real & 3.0 + 2.0 = 5.0\\
 \end{center}
 \end{table}
 
-The next sections provide additional details about each operator
+The next sections provide additional details about each operator.
 
-\section{+ -}
+\section{+ and -}
 These operators may be either unary or binary; their unary form
 have greater precedence. Unary minus change the sign of an expression.
 Unary plus performs no operation and exists for completeness.
 
-\section{AND OR XOR}
+\section{AND, OR and XOR}
 Bitwise boolean operators. They can only be used with integer arguments
 (positive or negative). Because numbers have, in theory, infinite bits
 to their left (positive numbers may be left padded with zeroes and
@@ -677,7 +718,10 @@ an example of sign influence on bitwise operations. Tables
 of signs, boolean bitwise operations and the way they affect the resulting
 sign.
 
-\begin{table}[h]
+Due to compatibility with \nasm, ``\&'', ``$\vert$'' and ``\^{}'' are also
+supported.
+
+\begin{table}
 \begin{center}
 \begin{tabular}[h]{lrr}
 \hline
@@ -685,6 +729,7 @@ sign.
 \hline
 Argument 1 &              $-75$ &  $1\cdots 110101$\\
 Argument 2 &               $ 3$ &  $0\cdots 000011$\\
+\hline
 AND Result &                $1$ &  $0\cdots 000001$\\
 OR  Result &               $-9$ &  $1\cdots 110111$\\
 XOR Result &              $-10$ &  $1\cdots 110110$\\
@@ -695,9 +740,9 @@ XOR Result &              $-10$ &  $1\cdots 110110$\\
 \end{center}
 \end{table}
 
-\begin{table}[h]
+\begin{table}
 \begin{center}
-\begin{tabular}[h]{ccc}
+\begin{tabular}[h]{c|cc}
 \hline
          & Positive & Negative\\
 \hline
@@ -710,24 +755,9 @@ Negative & Positive & Negative\\
 \end{center}
 \end{table}
 
-\begin{table}[h]
+\begin{table}
 \begin{center}
-\begin{tabular}[h]{ccc}
-\hline
-         & Positive & Negative\\
-\hline
-Positive & Positive & Positive\\
-Negative & Positive & Negative\\
-\hline
-\end{tabular}
-\caption{Relation between AND operator and the sign of its arguments}
-\label{ARGBOOLSIGN1}
-\end{center}
-\end{table}
-
-\begin{table}[h]
-\begin{center}
-\begin{tabular}[h]{ccc}
+\begin{tabular}[h]{c|cc}
 \hline
          & Positive & Negative\\
 \hline
@@ -740,9 +770,9 @@ Negative & Negative & Negative\\
 \end{center}
 \end{table}
 
-\begin{table}[h]
+\begin{table}
 \begin{center}
-\begin{tabular}[h]{ccc}
+\begin{tabular}[h]{c|cc}
 \hline
          & Positive & Negative\\
 \hline
@@ -755,18 +785,115 @@ Negative & Negative & Positive\\
 \end{center}
 \end{table}
 
+\section{/ and MOD}
+It is not possible to divide by or get the remainer by zero. Also,
+the MOD operator \emph{always} return the result with the same sign
+of the first argument. For example, \verb@-23 MOD 7 = -2@ and
+\verb@23 MOD -7 = 2@.
+
+\nasm\ operators $//$, $\%$ and $\%\%$ are supported for compatibility
+reasons.
+
+\section{SHL and SHR}
+These operators \bf{always} perform \bf{binary} shifts (i.e. they treat
+their arguments as unsigned numbers in two's complement notation). Do
+not mistake an SHL operator for the SHL instruction. In the examples
+below, the bits shifted in appear delimited by a separator:
+
+\begin{verbatim}
+                MOV     AX,101B                 ; AX = 101B here
+                SHL     AX,3                    ; SHL instruction
+                ; AX SHL 3 = 101B SHL 3 = 101_000B
+
+                MOV     AX,101B SHL 3           ; same as above
+
+                MOV     BL,-50 SHR 3            ; BL = 25
+                ; 11001110 SHR 3 = 000_11001
+\end{verbatim}
+
+\nasm\ counterparts for these operators ($< <$ and $> >$) are supported
+for compatibility reasons. Note, however, that, like \nasm\ and unlike
+ANSI C, such operators in \popasm\ always perform binary shifts. If you
+need their arithmetic versions, see next section.
+
+Another point to consider is that binary right shifting negative numbers
+require their two's complement value to be known. It is not possible to
+perform such calculation without fixing the number size in bits. For
+example:
+
+\begin{verbatim}
+                MOV     AL,-1 SHR 1             ; AL = 127
+                MOV     AX,-1 SHR 1             ; AX = 32767
+\end{verbatim}
+
+At first glance (without reading the comments), both instructions load
+the same value to their destination registers, but because $-1$ is encoded
+as $0FFh$ in 8 bits and as $0FFFFh$ in 16 bits, $-1 \ SHR \ 1$ will yield
+different results. The second line can be rewritten as:
+
+\begin{verbatim}
+                MOV     AX,BYTE -1 SHR 1        ; AX = 127 now
+\end{verbatim}
+
+\noindent in order to get the same result for the first line. If the
+operand size is omitted, then \popasm\ will get it from the context. As
+in the example before, because AX is a 16-bit register $-1$ is encoded
+in 16 bits as well.
+
+\section{SAL and SAR}
+These operators \bf{always} perform \bf{arithmetic} shifts. Do not
+mistake an SAR operator for the SAR instruction. In the examples
+below, the bits shifted in appear delimited by a separator:
+
+\begin{verbatim}
+                MOV     AX,5                    ; AX = 5 = 101B here
+                SAL     AX,3                    ; SAL instruction
+                ; AX SAL 3 = 101B SAL 3 = 101_000B
+
+                MOV     AX,5 SAL 3              ; same as above
+
+                MOV     BL,-50 SAR 3            ; BL = -7
+                ; 11001110 SAR 3 = 111_11001
+\end{verbatim}
+
+The cautious reader should note that SHL and SAL produce the same
+results. SAL is supported for completeness only. Note also that SAR
+does not depend on the operand size in bits, as SHR does. Repeating
+the example of the last section we have:
+
+\begin{verbatim}
+                MOV     AL,-1 SAR 1             ; AL = -1 = 255
+                MOV     AX,-1 SAR 1             ; AX = -1 = 65535
+\end{verbatim}
+
+\section{NOT}
+Performs the one´s complement operation (that is, it toggles all bits
+of its argument). \verb@NOT@ is both an instruction and an operator.
+For example:
+
+\begin{verbatim}
+                MOV     AL,5                    ; AL = 5 = 101B here
+                NOT     AL                      ; NOT instruction
+                ; AL = NOT 5 = NOT 101B = 11111_010B
+
+                MOV     AL,NOT 5                ; same as above
+\end{verbatim}
+
+\nasm\ counterpart for this operator, ``\~{}'', is supported for
+compatibility reasons.
+
 \chapter{Registers}
 \popasm\ supports all registers present in each x86 CPU, except the ones
-added in IA-64 architecture:
+added in IA-64 architecture (which will be added in a later version):
 
 \begin{itemize}
 \item{8-bit general-purpose registers:} AL, BL, CL, DL, AH, BH, CH and DH
 \item{16-bit general-purpose registers:} AX, BX, CX, DX, SP, BP, SI and DI
 \item{32-bit general-purpose registers:} EAX, EBX, ECX, EDX, ESP, EBP, ESI and EDI
 \item{Segment registers:} CS, DS, ES, FS, GS and SS
-\item{Control registers:} CR0 thru CR7
+\item{Control registers:} CR0, CR2, CR3 and CR4
 \item{Debug registers:} DR0 thru DR7
-\item{Test registers:} TR0 thru TR7
+\item{Test registers:} TR3 thru TR7
 \item{FPU registers:} ST(0) thru ST(7). ST0 thru ST7 are also accepted for
 compatibility with \nasm. ST is an alias for ST(0).
 \item{MMX registers:} MM0 thru MM7. MM is an alias for MM0.
@@ -775,6 +902,78 @@ compatibility with \nasm. ST is an alias for ST(0).
 
 Register names are case insensitive (i.e. AX, ax, aX and Ax are all the
 same thing).
+
+\chapter{Constants}
+Constants can be used to make code easier to understand and maintain.
+There are two kinds of constants supported by \popasm, which are discussed
+in the next sections.
+
+\section{Constant constants}
+Constant constants are assembly-time symbols that hold values that cannot
+be changed. This may sound redundant at first, because no constant could
+change its value anyway, so there would be no reason to say ``constant
+constant''.
+
+This kind of constant can be defined by the EQU command. Its syntax is:
+
+\begin{verbatim}
+label           EQU     expression
+\end{verbatim}
+
+\noindent where:
+
+\begin{itemize}
+\item{\emph{label}} is the name of the constant to be defined. It \emph{must not}
+   be followed by a colon. Rules for specifying labels can be found in
+   section \ref{NOTELABEL}.
+\item{\emph{expression}} is \emph{any} sort of expression. Expressions are
+explained in chapter \ref{EXPR}.
+\end{itemize}
+
+For example:
+
+\begin{verbatim}
+LINE_FEED       EQU     0Ah
+BIOS_SIGNATURE  EQU     55AAh
+MAX_RETRIES     EQU     3
+\end{verbatim}
+
+The lines of code above define three constants: LINE\_FEED (equal to 0Ah),
+BIOS\_SIGNATURE (equal to 55AAh) and MAX\_RETRIES (equal to 3).
+
+Besides the usual restrictions about defining labels, a constant constant
+is not allowed to be redefined. For example:
+
+\begin{verbatim}
+MAX_RETRIES     EQU     3                       ; 1st definition
+MAX_RETRIES     EQU     4                       ; error! redefined constant
+MAX_RETRIES     EQU     3                       ; error! redefined constant
+\end{verbatim}
+
+As the third line of the example above shows, constant constants cannot be
+redefined even if the value of the new definition is the same as the
+previous one.
+
+\section{Variable constants}
+Variable constants are constants that can be changed (redefined) in
+assembly-time. They can be defined (and redefined) by the $=$ operator.
+Despite sounding paradoxal, this makes sense, as the next example shows:
+
+\begin{verbatim}
+MAX_RETRIES     =       3
+; Normal code comes here
+
+MAX_RETRIES     EQU     10                      ; Redefinition ok.
+; Critical code! Must be allowed to retry more times!
+\end{verbatim}
+
+That is, the same constant is being used in different parts of the
+code. Such freedom may lead to bugs if misused, though. If all constants
+are made variable, one may accidentally redefine it thinking he would
+be defining a new one.
+
+
+
 
 \chapter{Expressions\label{EXPR}}
 
@@ -860,7 +1059,38 @@ To be continued.
 \chapter{Defining data\label{DEFDATA}}
 To be written.
 
+\part{\popasm\ Advanced Syntax}
+This part presents advanced \popasm\ features, including commands and macros
+that one might never use, but are here anyway due to the compatibiliy guideline
+that drove \popasm\ so far.
+
+\chapter{Aggregates\label{AGGRCHAP}}
+This chapter discusses the three ways a developer may aggregate several data
+fields into a single data unit, which can be manipulated easier than disjoint
+variables spread everywhere. Another good reason to pack data this way is
+that your code will become easier to read and maintain without any execution
+performance loss.
+
+\section{STRUCT}
+To be written.
+
+\section{UNION}
+To be written.
+
+\section{RECORD}
+To be written.
+
+\chapter{Macros}
+To be written.
+
+\appendix
+
 \chapter{\popasm\ commands}
+This chapter is a list of all commands supported by \popasm\ (except machine
+instructions, summarized in chapter \ref{INSTSUM}) in alphabetic order. If a
+command has already been mentioned before in this manual, it will be quickly
+summarized here, along with a reference to where it is detailed.
+
 \section{.RADIX\label{RADIXCMD}}
 This command allows the developer to change the default radix of numbers
 from the point the command is issued until the next .RADIX command or
@@ -919,7 +1149,15 @@ The same remarks hold for the binary suffixes ``B'' and ``Y'': ``11B''
 is an hex number when the current radix is 16, but ``11Y'' is always
 binary.
 
-\appendix
+To be continued.
+
+\chapter{Instruction Set Summary\label{INSTSUM}}
+The purpose of this chapter is to summarize all machine instructions of
+all CPU's supported by \popasm\ and their valid syntaxes. The reader
+should refer to Intel and AMD documentation for further details.
+
+To be written.
+
 \chapter{Contacting info\label{CONTACT}}
 
 \begin{thebibliography}{12}
@@ -939,6 +1177,7 @@ http://www.gnu.org/software/autoconf/autoconf.html
 \bibitem{AUTOMAKE}GNU Automake.
 http://www.gnu.org/software/automake/automake.html
 \bibitem{MAKE}GNU Make. http://www.gnu.org/software/make/make.html
+\bibitem{FPUMAN}FPU Programming on x86 FPU's
 \end{thebibliography}
 
 \end{document}
