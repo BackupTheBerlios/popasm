@@ -23,51 +23,26 @@
 #include <iostream>
 #include <vector>
 #include <exception>
-#include <typeinfo>
 
 #include "inp_file.h"
-#include "lexical.h"
 #include "parser.h"
 #include "asmer.h"
-#include "argument.h"
 
-bool ParseLine (InputFile &inp)
+#include "instruct.h"
+
+void PrintVector (const vector<Byte> &v)
 {
-	Token *t;
-	vector<Token *> v;
-	Symbol *s;
-	Expression *e;
-	Argument *a;
-
-	while (true)
+	for (vector<Byte>::const_iterator i = v.begin(); i != v.end(); i++)
 	{
-		t = Token::GetToken(inp);
-
-		if (t == 0) return false;
-
-		s = dynamic_cast<Symbol *> (t);
-		if (s != 0)
-		{
-			if (s->GetName() == "\n")
-			{
-				if (v.empty()) break;
-
-				e = Parser::EvaluateExpression (v);
-				a = Argument::MakeArgument (*e, 16);
-				cout << a->Print() << endl;
-				break;
-			}
-		}
-
-		v.push_back (t);
+		Byte b = *i;
+		cout << hex << (unsigned int) b << " ";
 	}
 
-	return true;
+	cout << endl;
 }
 
 int main (int argc, char **argv)
 {
-	Assembler *a = new PopAsm();
 	if (argc != 2) return 1;
 	InputFile inp (argv[1]);
 
@@ -77,13 +52,18 @@ int main (int argc, char **argv)
 		return 1;
 	}
 
-	do
+	Parser p (inp);
+	Assembler *a = new PopAsm();
+	vector <Byte> Encoding;
+
+	while (inp)
 	{
 		try
 		{
-			if (!ParseLine (inp)) break;
+			Encoding = p.ParseLine (16);
+			PrintVector (Encoding);
 		} catch (exception &e) {cout << e.what() << endl;}
-	} while (true);
+	}
 
 	delete a;
 	return 0;
