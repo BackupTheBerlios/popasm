@@ -43,7 +43,7 @@ class Immediate : public BasicArgument
 
 	public:
 	Immediate () {}
-	Immediate (const Number &n, Distance dist) throw () : BasicArgument(n.GetSize(), dist), Value(n.GetValue()) {}
+	Immediate (const Number &n, int dist) throw () : BasicArgument(n.GetSize(), dist), Value(n.GetValue()) {}
 	~Immediate () throw () {}
 
 	const RealNumber &GetValue() const throw () {return Value;}
@@ -114,13 +114,13 @@ class Immed : public UnaryFunction<const BasicArgument *, bool>
 
 class RelativeArgument : public Immediate::IdFunctor
 {
-	Type::Distance RelativeDistance;
+	int RelativeDistance;
 
 	public:
-	RelativeArgument (Type::Distance dist) throw () : RelativeDistance(dist) {}
+	RelativeArgument (int dist) throw () : RelativeDistance(dist) {}
 	~RelativeArgument () throw () {}
 
-	Type::Distance GetRelativeDistance () const throw () {return RelativeDistance;}
+	int GetRelativeDistance () const throw () {return RelativeDistance;}
 
 	result_type operator() (argument_type arg)
 	{
@@ -128,7 +128,7 @@ class RelativeArgument : public Immediate::IdFunctor
 		const Immediate *immed = dynamic_cast<const Immediate *> (arg);
 		if (immed == 0) return false;
 
-		return (arg->GetDistanceType() == Type::NONE) || (arg->GetDistanceType() == RelativeDistance);
+		return (arg->GetDistanceType() == UNDEFINED) || (arg->GetDistanceType() == RelativeDistance);
 	}
 };
 
