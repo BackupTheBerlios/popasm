@@ -35,7 +35,7 @@
 // Machine instructions
 class Instruction : public Command
 {
-	static HashTable<Instruction *, HashFunctor, PointerComparator<BasicSymbol> > InstructionTable;
+	static HashTable<Instruction *, HashFunctor, PointerComparator<Instruction> > InstructionTable;
 
 	typedef multiset <const Syntax *, PointerComparator<Syntax> > ContainerType;
 	ContainerType Syntaxes;
@@ -48,7 +48,7 @@ class Instruction : public Command
 		const Syntax *s1  = 0, const Syntax *s2  = 0, const Syntax *s3  = 0, const Syntax *s4  = 0,
 		const Syntax *s5  = 0, const Syntax *s6  = 0, const Syntax *s7  = 0, const Syntax *s8  = 0,
 		const Syntax *s9  = 0, const Syntax *s10 = 0, const Syntax *s11 = 0, const Syntax *s12 = 0) throw ();
-	~Instruction () throw ();
+	~Instruction () throw () {}
 
 	static void SetupInstructionTable () throw ();
 	static BasicSymbol *Read (const string &str, InputFile &inp);
