@@ -259,10 +259,10 @@ class SizeCast : public OperatorData<T>
 template <class T = int>
 class DistanceCast : public OperatorData<T>
 {
-	Type::Distance dist;
+	int dist;
 
 	public:
-	DistanceCast (const string &n, unsigned int p0, unsigned int p1, Type::Distance d) throw ()
+	DistanceCast (const string &n, unsigned int p0, unsigned int p1, int d) throw ()
 		: OperatorData (n, p0, p1), dist(d) {}
 	~DistanceCast () throw () {}
 
