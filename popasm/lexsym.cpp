@@ -47,7 +47,7 @@ void Symbol::SetData (BasicSymbol *bs, bool own) throw ()
 	Owner = own;
 }
 
-void Symbol::DefineSymbol (BasicSymbol *s)
+void Symbol::DefineSymbol (BasicSymbol *s) throw (MultidefinedSymbol)
 {
 	BasicSymbol * const * sym = SymbolTable.Find (s);
 
@@ -58,6 +58,6 @@ void Symbol::DefineSymbol (BasicSymbol *s)
 	else
 	{
 		// Symbol defined two or more times
-		throw 0;
+		throw MultidefinedSymbol (s->GetName());
 	}
 }
