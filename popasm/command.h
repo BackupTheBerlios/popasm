@@ -24,6 +24,7 @@
 #include "defs.h"
 #include "inp_file.h"
 #include "symbol.h"
+#include "lexical.h"
 
 // General assembler commands
 class Command : public BasicSymbol
@@ -32,7 +33,8 @@ class Command : public BasicSymbol
 	Command (const string &n) throw () : BasicSymbol (n) {}
 	~Command () throw () {}
 
-	virtual void Assemble (const BasicSymbol *sym, vector<Argument *> &Arguments, vector<Byte> &Encoding) const {}
+	virtual void Assemble (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j,
+		vector<Byte> &Encoding) const = 0;
 	static BasicSymbol *Read (const string &str, InputFile &inp);
 };
 
