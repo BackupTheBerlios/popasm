@@ -34,6 +34,9 @@ class Opcode
 	Opcode (Byte b0, Byte b1, Byte b2) throw () : Size(3) {Encoding[0] = b0; Encoding[1] = b1; Encoding[2] = b2;}
 	~Opcode () throw () {}
 
+	const Opcode operator+ (Byte b) const;
+	const Opcode operator| (const Opcode &op) const;
+
 	void Write (vector<Byte> &Output) const throw ();
 };
 

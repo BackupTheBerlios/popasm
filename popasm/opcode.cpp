@@ -22,3 +22,24 @@ void Opcode::Write (vector<Byte> &Output) const throw ()
 	for (unsigned int i = 0; i < Size; i++)
 		Output.push_back (Encoding[i]);
 }
+
+const Opcode Opcode::operator+ (Byte b) const
+{
+	// Checks if there's more room to place the aditional byte
+	if (Size == MaximumEncodingLength) throw 0;
+
+	Opcode answer (*this);
+	answer.Encoding[answer.Size++] = b;
+	return answer;
+}
+
+const Opcode Opcode::operator| (const Opcode &op) const
+{
+	Opcode answer(*this);
+	unsigned int i, j;
+
+	for (i = Size, j = op.Size; (i > 0) && (j > 0); i--, j--)
+		answer.Encoding[i - 1] |= op.Encoding[j - 1];
+
+	return answer;
+}
