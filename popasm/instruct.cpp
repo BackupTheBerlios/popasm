@@ -144,13 +144,13 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax        (110, Opcode (0x10),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,	       3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),  new MemGPReg()),
 			new BinarySyntax        (120, Opcode (0x80, 0x02),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::PARTIAL, new MemGPReg(),               new Immediate::IdFunctor()),
 			new BinarySyntax        (200, Opcode (0x14),             Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::ABSENT,  new Accumulator(),            new Immediate::IdFunctor()),
-			new OptimizedBinarySyntax (300, Opcode (0x83, 0x02),       Syntax::FIRST_ARGUMENT, false, Argument::GREATER,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
+			new OptimizedBinarySyntax	(300, Opcode (0x83, 0x02),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
 
 		Instruction ("ADD",
 			new BinarySyntax        (110, Opcode (0x00),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,	       3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),  new MemGPReg()),
 			new BinarySyntax        (120, Opcode (0x80, 0x00),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::PARTIAL, new MemGPReg(),               new Immediate::IdFunctor()),
 			new BinarySyntax        (200, Opcode (0x04),             Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::ABSENT,  new Accumulator(),            new Immediate::IdFunctor()),
-			new OptimizedBinarySyntax        (300, Opcode (0x83, 0x00),       Syntax::FIRST_ARGUMENT, false, Argument::GREATER,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
+			new OptimizedBinarySyntax	(300, Opcode (0x83, 0x00),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
 
 		Instruction ("ADDPD",
 			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
@@ -168,7 +168,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax        (110, Opcode (0x20),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,	       3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),  new MemGPReg()),
 			new BinarySyntax        (120, Opcode (0x80, 0x04),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::PARTIAL, new GPRegister::IdFunctor(),  new Immediate::IdFunctor()),
 			new BinarySyntax        (200, Opcode (0x24),             Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::ABSENT,  new Accumulator(),            new Immediate::IdFunctor()),
-			new OptimizedBinarySyntax        (300, Opcode (0x83, 0x04),       Syntax::FIRST_ARGUMENT, false, Argument::GREATER,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
+			new OptimizedBinarySyntax	(300, Opcode (0x83, 0x04),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
 
 		Instruction ("ANDPD",
 			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x54), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
@@ -337,7 +337,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax        (110, Opcode (0x38),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,	       3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),  new MemGPReg()),
 			new BinarySyntax        (120, Opcode (0x80, 0x07),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::PARTIAL, new GPRegister::IdFunctor(),  new Immediate::IdFunctor()),
 			new BinarySyntax        (200, Opcode (0x3C),             Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::ABSENT,  new Accumulator(),            new Immediate::IdFunctor()),
-			new OptimizedBinarySyntax        (300, Opcode (0x83, 0x07),       Syntax::FIRST_ARGUMENT, false, Argument::GREATER,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
+			new OptimizedBinarySyntax	(300, Opcode (0x83, 0x07),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
 
 		Instruction ("CMPPD",
 			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
@@ -1279,7 +1279,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax        (110, Opcode (0x08),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,	       3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),  new MemGPReg()),
 			new BinarySyntax        (120, Opcode (0x80, 0x01),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::PARTIAL, new GPRegister::IdFunctor(),  new Immediate::IdFunctor()),
 			new BinarySyntax        (200, Opcode (0x0C),             Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::ABSENT,  new Accumulator(),            new Immediate::IdFunctor()),
-			new OptimizedBinarySyntax        (300, Opcode (0x83, 0x01),       Syntax::FIRST_ARGUMENT, false, Argument::GREATER,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
+			new OptimizedBinarySyntax	(300, Opcode (0x83, 0x01),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
 
 		Instruction ("ORPD",
 			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x56), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
@@ -1817,7 +1817,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax        (110, Opcode (0x18),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,	       3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),  new MemGPReg()),
 			new BinarySyntax        (120, Opcode (0x80, 0x03),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::PARTIAL, new GPRegister::IdFunctor(),  new Immediate::IdFunctor()),
 			new BinarySyntax        (200, Opcode (0x1C),             Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::ABSENT,  new Accumulator(),            new Immediate::IdFunctor()),
-			new OptimizedBinarySyntax        (300, Opcode (0x83, 0x03),       Syntax::FIRST_ARGUMENT, false, Argument::GREATER,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
+			new OptimizedBinarySyntax	(300, Opcode (0x83, 0x03),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
 
 		Instruction ("SCAS",
 			new StringSyntax        (100, Opcode (0xAE),                                                                                              new Mem<8>(),  false),
@@ -2004,7 +2004,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax        (110, Opcode (0x28),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,	       3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),  new MemGPReg()),
 			new BinarySyntax        (120, Opcode (0x80, 0x05),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::PARTIAL, new GPRegister::IdFunctor(),  new Immediate::IdFunctor()),
 			new BinarySyntax        (200, Opcode (0x2C),             Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::ABSENT,  new Accumulator(),            new Immediate::IdFunctor()),
-			new OptimizedBinarySyntax        (300, Opcode (0x83, 0x05),       Syntax::FIRST_ARGUMENT, false, Argument::GREATER,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
+			new OptimizedBinarySyntax	(300, Opcode (0x83, 0x05),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
 
 		Instruction ("SUBPD",
 			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x5C), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
@@ -2082,7 +2082,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax        (110, Opcode (0x30),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,	       3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),  new MemGPReg()),
 			new BinarySyntax        (120, Opcode (0x80, 0x06),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::PARTIAL, new GPRegister::IdFunctor(),  new Immediate::IdFunctor()),
 			new BinarySyntax        (200, Opcode (0x34),             Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::ABSENT,  new Accumulator(),            new Immediate::IdFunctor()),
-			new OptimizedBinarySyntax        (300, Opcode (0x83, 0x06),       Syntax::FIRST_ARGUMENT, false, Argument::GREATER,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
+			new OptimizedBinarySyntax	(300, Opcode (0x83, 0x06),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
 
 		Instruction ("XORPD",
 			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x57), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
