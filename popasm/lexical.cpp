@@ -58,5 +58,5 @@ Token *Token::GetToken (InputFile &inp)
 	}
 
 	// If all of the above fails... who knows which token is this??
-	return new Symbol (new BasicSymbol (*s));
+	return new Symbol (new BasicSymbol (*s), true);
 }
