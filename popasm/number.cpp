@@ -1652,8 +1652,6 @@ const RealNumber RealNumber::operator/ (const RealNumber &n) const throw (Divisi
 
 RealNumber::operator IntegerNumber () const throw (PrecisionLoss)
 {
-	if (Integer) return Mantissa;
-
 	if (Exponent.LesserThanZero())
 	{
 		// If exponent is negative, there may be a precision loss, as in 1230.0e-2

@@ -261,8 +261,8 @@ class RealNumber
 	static bool GetWatchPrecisionLoss () throw () {return WatchPrecisionLoss;}
 	static void SetWatchPrecisionLoss (const bool yes) throw () {WatchPrecisionLoss = yes;}
 
-	bool GetInteger () const {return Integer;}
-	void SetInteger (bool NewInteger) {Integer = NewInteger;}
+	bool GetInteger () const throw () {return Integer;}
+	void SetInteger (bool NewInteger) throw () {Integer = NewInteger;}
 
 	const RealNumber operator+ (const RealNumber &n) const throw ();
 	const RealNumber operator- (const RealNumber &n) const throw ();
@@ -348,7 +348,7 @@ class InvalidNumber : public NumberException
 
 	public:
 	InvalidNumber (const string &s) :
-		NumberException (string ("Not a number: ") + s), AttemptedNumber (s) {}
+		NumberException (string ("Invalid number: ") + s), AttemptedNumber (s) {}
 	~InvalidNumber () {}
 };
 
