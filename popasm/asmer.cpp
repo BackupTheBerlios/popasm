@@ -57,6 +57,7 @@ bool Assembler::PerformPass (InputFile &File) throw ()
 
 	CurrentPass++;
 	CurrentOffset = 0;
+	CurrentMode = InitialMode;
 	File.ResetFile();
 
 	while (File)
