@@ -27,6 +27,44 @@
 #include "lexnum.h"
 #include "immed.h"
 
+BasicArgument::IdFunctor::~IdFunctor () throw ()
+{
+	if (DeleteComponents)
+	{
+		for (vector<const IdFunctor *>::iterator i = Components.begin(); i != Components.end(); i++)
+			delete *i;
+	}
+}
+
+bool BasicArgument::IdFunctor::operator() (const BasicArgument *arg)
+{
+	for (vector<const Components *>::iterator i = Components.begin(); i != Components.end(); i++)
+		if ((**i)(arg)) return true;
+
+	return false;
+}
+
+const IdFunctor *BasicArgument::operator| (const IdFunctor *i) const throw ()
+{
+	IdFunctor *result;
+
+	if (Components.empty())
+	{
+		// If left hand side is atomic, create a new functor and place both terms into Components
+		result = new IdFunctor ();
+		result->Components.push_back (this);
+		result->Components.push_back (i);
+	}
+	else
+	{
+		// If this functor is already a disjunction, place the new term at Components
+		result = this;
+		Components.push_back (i);
+	}
+
+	return result;
+}
+
 bool Argument::TypeCheck (Argument &arg, CheckType ct) const throw (UndefinedSize, OneUndefinedSize)
 {
 	if (ct == NONE) return true;

@@ -37,7 +37,7 @@ typedef UnaryFunction<const BasicArgument *, bool> BasicIdFunctor;
 class BasicArgument : public Type
 {
 	public:
-	BasicArgument (unsigned int sz = 0, Distance dist = NONE) throw () : Type (sz, SCALAR, dist) {}
+	BasicArgument (unsigned int sz = 0, int dist = UNDEFINED) throw () : Type (sz, SCALAR, dist) {}
 	BasicArgument (const Type &t) throw () : Type (t) {}
 	virtual ~BasicArgument () throw () {}
 
@@ -47,9 +47,15 @@ class BasicArgument : public Type
 
 	class IdFunctor : public BasicIdFunctor
 	{
+		vector<IdFunctor *> Components;
+		bool DeleteComponents;
+
 		public:
-		bool operator() (const BasicArgument *arg) = 0;
-		virtual ~IdFunctor() throw () {}
+		IdFunctor () throw () : DeleteComponents (false) {}
+		virtual ~IdFunctor () throw ();
+
+		virtual bool operator() (BasicArgument *arg);
+		IdFunctor *operator| (IdFunctor *i) const throw ();
 	};
 };
 
