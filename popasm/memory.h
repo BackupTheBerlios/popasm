@@ -32,111 +32,6 @@
 #include "type.h"
 #include "defs.h"
 
-class Memory : public BasicArgument
-{
-	Byte SegmentPrefix;			// Segment overide prefix (zero if none)
-	Byte SIB;						// SIB (Scaled Index Base)
-	Byte Code;						// mod___r/m byte
-	Number Displacement;			// Displacement (including any size casts)
-	unsigned int AddressSize;	// Address size: 16 or 32 bits, or zero if undecided
-
-	bool SIBUsed () const throw () {return (AddressSize == 32) && ((Code & 7) == 4);}
-
-	public:
-	enum ContentsType {UNKNOWN, INTEGER, FLOAT, BCD};
-
-	private:
-	ContentsType Type;
-
-	public:
-	Memory (unsigned int sz = 0, Distance dist = NONE) throw ()
-		: BasicArgument (sz, dist), SegmentPrefix(0), SIB(0), Code(0), AddressSize(0), Type(UNKNOWN) {}
-	~Memory () throw () {}
-
-	void MakeMemory16Bits (const BaseRegister *Base16, const IndexRegister *Index16);
-	void MakeMemory32Bits (const GPRegister *Base32, const GPRegister *Index32, long int scale);
-
-	ContentsType GetType () const throw() {return Type;}
-	Byte GetSegmentPrefix () const throw () {return SegmentPrefix;}
-	void SetSegmentPrefix (Byte s) throw () {SegmentPrefix = s;}
-	unsigned int GetAddressSize () const throw () {return AddressSize;}
-	void SetAddressSize (unsigned int as) throw () {AddressSize = as;}
-
-	Byte &GetCode () throw () {return Code;}
-	const Byte &GetCode () const throw () {return Code;}
-	Number &GetDisplacement() throw () {return Displacement;}
-
-	void WriteSIB (vector<Byte> &Output) const throw () {if (SIBUsed()) Output.push_back (SIB);}
-	void WriteDisplacement (vector<Byte> &Output) const throw () {Displacement.Write (Output);}
-
-	class IdFunctor : public BasicArgument::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg)
-		{
-			const Memory *mem = dynamic_cast<const Memory *> (arg);
-			if (mem == 0) return false;
-			if (mem->GetDistanceType() != NONE) throw 0;
-			return true;
-		}
-	};
-
-	class DirectMemory : public BasicArgument::IdFunctor
-	{
-		public:
-		bool operator() (const BasicArgument *arg)
-		{
-			const Memory *mem = dynamic_cast<const Memory *> (arg);
-			if (mem == 0) return false;
-			if (mem->GetDistanceType() != NONE) throw 0;
-
-			switch (mem->GetAddressSize())
-			{
-				case 16:
-					return mem->GetCode() == 6;
-
-				case 32:
-					return mem->GetCode() == 5;
-			}
-
-			return false;
-		}
-	};
-
-	string Print () const throw ()
-	{
-		string s ("AddressSize = ");
-		s += ::Print (AddressSize);
-		s += ", Segment prefix = ";
-		s += ::Print (SegmentPrefix);
-		s += ", Code = ";
-		s += ::Print (Code);
-		s += ", SIB = ";
-		s += ::Print (SIB);
-		s += ", Displacement = ";
-		s += Displacement.Print();
-
-		return s;
-	}
-};
-
-// Short-hand for getting a functor for a memory of specific size or type.
-template <unsigned int n, Memory::ContentsType t = Memory::UNKNOWN, Type::Distance dist = Type::NONE>
-class Mem : public Memory::IdFunctor
-{
-	public:
-	bool operator() (const BasicArgument *arg)
-	{
-		if (!Memory::IdFunctor::operator() (arg)) return false;
-
-		const Memory *m = dynamic_cast<const Memory *> (arg);
-		if ((m->GetSize() != 0) && (m->GetSize() != n)) return false;
-		if ((m->GetType() != Memory::UNKNOWN) && (m->GetType() != t)) return false;
-		if ((m->GetDistanceType() != Type::NONE) && (m->GetDistanceType() != dist)) return false;
-		return true;
-	}
-};
-
 class MemoryException : public exception
 {
 	string WhatString;
@@ -146,6 +41,13 @@ class MemoryException : public exception
 	~MemoryException () {}
 
 	const char *what() const throw () {return WhatString.c_str();}
+};
+
+class MisusedDistanceQualifier : public MemoryException
+{
+	public:
+	MisusedDistanceQualifier () throw () : MemoryException ("Cannot use distance qualifiers here.") {}
+	~MisusedDistanceQualifier () throw () {}
 };
 
 class InvalidScale : public MemoryException
@@ -259,6 +161,111 @@ class ShortDisplacement : public MemoryException
 	public:
 	ShortDisplacement () : MemoryException ("Cannot use a shorter displacement here.") {}
 	~ShortDisplacement () {}
+};
+
+class Memory : public BasicArgument
+{
+	Byte SegmentPrefix;			// Segment overide prefix (zero if none)
+	Byte SIB;						// SIB (Scaled Index Base)
+	Byte Code;						// mod___r/m byte
+	Number Displacement;			// Displacement (including any size casts)
+	unsigned int AddressSize;	// Address size: 16 or 32 bits, or zero if undecided
+
+	bool SIBUsed () const throw () {return (AddressSize == 32) && ((Code & 7) == 4);}
+
+	public:
+	enum ContentsType {UNKNOWN, INTEGER, FLOAT, BCD};
+
+	private:
+	ContentsType Type;
+
+	public:
+	Memory (unsigned int sz = 0, Distance dist = NONE) throw ()
+		: BasicArgument (sz, dist), SegmentPrefix(0), SIB(0), Code(0), AddressSize(0), Type(UNKNOWN) {}
+	~Memory () throw () {}
+
+	void MakeMemory16Bits (const BaseRegister *Base16, const IndexRegister *Index16);
+	void MakeMemory32Bits (const GPRegister *Base32, const GPRegister *Index32, long int scale);
+
+	ContentsType GetType () const throw() {return Type;}
+	Byte GetSegmentPrefix () const throw () {return SegmentPrefix;}
+	void SetSegmentPrefix (Byte s) throw () {SegmentPrefix = s;}
+	unsigned int GetAddressSize () const throw () {return AddressSize;}
+	void SetAddressSize (unsigned int as) throw () {AddressSize = as;}
+
+	Byte &GetCode () throw () {return Code;}
+	const Byte &GetCode () const throw () {return Code;}
+	Number &GetDisplacement() throw () {return Displacement;}
+
+	void WriteSIB (vector<Byte> &Output) const throw () {if (SIBUsed()) Output.push_back (SIB);}
+	void WriteDisplacement (vector<Byte> &Output) const throw () {Displacement.Write (Output);}
+
+	class IdFunctor : public BasicArgument::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg)
+		{
+			const Memory *mem = dynamic_cast<const Memory *> (arg);
+			if (mem == 0) return false;
+			if (mem->GetDistanceType() != NONE) throw MisusedDistanceQualifier();
+			return true;
+		}
+	};
+
+	class DirectMemory : public BasicArgument::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg)
+		{
+			const Memory *mem = dynamic_cast<const Memory *> (arg);
+			if (mem == 0) return false;
+			if (mem->GetDistanceType() != NONE) throw MisusedDistanceQualifier();
+
+			switch (mem->GetAddressSize())
+			{
+				case 16:
+					return mem->GetCode() == 6;
+
+				case 32:
+					return mem->GetCode() == 5;
+			}
+
+			return false;
+		}
+	};
+
+	string Print () const throw ()
+	{
+		string s ("AddressSize = ");
+		s += ::Print (AddressSize);
+		s += ", Segment prefix = ";
+		s += ::Print (SegmentPrefix);
+		s += ", Code = ";
+		s += ::Print (Code);
+		s += ", SIB = ";
+		s += ::Print (SIB);
+		s += ", Displacement = ";
+		s += Displacement.Print();
+
+		return s;
+	}
+};
+
+// Short-hand for getting a functor for a memory of specific size or type.
+template <unsigned int n, Memory::ContentsType t = Memory::UNKNOWN, Type::Distance dist = Type::NONE>
+class Mem : public Memory::IdFunctor
+{
+	public:
+	bool operator() (const BasicArgument *arg)
+	{
+		if (!Memory::IdFunctor::operator() (arg)) return false;
+
+		const Memory *m = dynamic_cast<const Memory *> (arg);
+		if ((m->GetSize() != 0) && (m->GetSize() != n)) return false;
+		if ((m->GetType() != Memory::UNKNOWN) && (m->GetType() != t)) return false;
+		if ((m->GetDistanceType() != Type::NONE) && (m->GetDistanceType() != dist)) return false;
+		return true;
+	}
 };
 
 #endif
