@@ -34,7 +34,18 @@ void Immediate::SetSize (unsigned int sz, Number::NumberType t = Number::ANY) co
 
 Argument *Immediate::MakeArgument (const Expression &e) throw (InvalidArgument, exception)
 {
-	return 0;
+	// Only scalars can be immediates
+	if (e.GetConstData().GetCurrentType() != Type::SCALAR)
+		return 0;
+
+	const SimpleExpression *pref;
+	const Number *num = e.GetNumber(pref);
+
+	// Immediate values cannot have prefixes
+	if (pref != 0)
+		return 0;
+
+	return new Argument (new Immediate (*num, e.GetConstData().GetDistanceType()));
 }
 
 bool Immediate::IdFunctor::operator() (Argument &arg)

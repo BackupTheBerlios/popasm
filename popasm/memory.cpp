@@ -207,7 +207,10 @@ Argument *Memory::MakeArgument (const Expression &exp) throw (InvalidArgument, e
 {
 	const SimpleExpression *e = dynamic_cast<const SimpleExpression *> (&exp.GetConstData());
 	if (e == 0)
-		throw 0;
+		return 0;
+
+	if (e->GetCurrentType() == SCALAR)
+		return 0;
 
 	Memory *mem = new Memory (*e);
 
@@ -215,9 +218,13 @@ Argument *Memory::MakeArgument (const Expression &exp) throw (InvalidArgument, e
 	if (e->GetSegmentPrefix() != 0)
 	{
 		const Symbol *s = e->GetSegmentPrefix()->GetSymbol();
+		if (s == 0)
+			throw 0;
+
 		const SegmentRegister *segreg = dynamic_cast <const SegmentRegister *> (s->GetData());
 		if (segreg == 0)
 			throw SegmentPrefixExpected (s);
+
 		mem->SetSegmentPrefix(segreg->GetPrefixCode());
 	}
 
@@ -430,7 +437,7 @@ Argument *Memory::MakeArgument (const Expression &exp) throw (InvalidArgument, e
 			break;
 	}
 
-	return new Argument (mem, true);
+	return new Argument (mem);
 }
 
 string Memory::Print() const throw ()

@@ -166,6 +166,14 @@ Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, e
 {
 	Argument *arg;
 
+	if (e.GetConstData().GetCurrentType() == Type::WEAK_MEMORY)
+	{
+		Expression temp(e);
+
+		temp.GetData().SetCurrentType (CurrentAssembler->TranslateWeakMemory());
+		return MakeArgument (temp);
+	}
+
 	arg = Register::MakeArgument (e);
 	if (arg != 0)
 		return arg;
@@ -186,95 +194,11 @@ Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, e
 	if (arg != 0)
 		return arg;
 
+	if (e.GetConstData().GetCurrentType() != Type::UNKNOWN)
+		throw InvalidArgument (e.GetConstData());
+
 	return new Argument (0, false, true);
 };
-
-/*
-	const SimpleExpression *se = dynamic_cast<const SimpleExpression *> (&e.GetConstData());
-	const DupExpression *de = dynamic_cast<const DupExpression *> (&e.GetConstData());
-	const SimpleExpression *Prefix = 0;
-	const Number *num;
-	const Symbol *sym;
-
-	if (se != 0)
-	{
-		Prefix = se->GetSegmentPrefix();
-		num = se->GetNumber();
-		sym = se->GetSymbol();
-	}
-
-	if (de != 0)
-		return new Argument (new DupArgument (e), false);
-
-	switch (se->GetCurrentType())
-	{
-		case Type::SCALAR:
-			if (
-
-			if (e.QuantityOfTerms() == 1)
-			{
-				// Get a reference for the only term of the expression
-				const pair<Number *, Symbol *> *p = e.TermAt(0);
-
-				// Checks for a symbol
-				if ((p->first == 0) && (p->second != 0))
-				{
-					const BasicSymbol *data = p->second->GetData();
-
-					// Checks for registers
-					const Register *reg = dynamic_cast<const Register *> (data);
-					if (reg != 0)
-					{
-						// Registers cannot be preceeded by prefixes like ES:
-						if (Prefix != 0) throw InvalidFullPointer();
-						if (e.GetDistanceType() != UNDEFINED) throw MisusedDistanceQualifier();
-						return new Argument (reg, false);
-					}
-
-					throw InvalidArgument (e);
-				}
-				else
-				{
-					// Checks for immediate arguments
-					if ((p->first != 0) && (p->second == 0))
-					{
-						if (Prefix == 0) return new Argument (new Immediate (*p->first, e.GetDistanceType()), true);
-
-						// Checks for full-pointers. The prefix must be constant
-						if (Prefix->QuantityOfTerms() != 1) throw InvalidFullPointer();
-						const pair<Number *, Symbol *> *q = Prefix->TermAt(0);
-						if ((q->first == 0) || (q->second != 0)) throw InvalidFullPointer();
-
-						Dword seg = q->first->GetUnsignedLong ();
-						Dword off = p->first->GetUnsignedLong ();
-						if (seg > 0xFFFF) throw SegmentOverflow();
-						return new Argument (new FullPointer (p->first->GetSize(), static_cast<Word> (seg), off), true);
-					}
-
-					throw InvalidArgument (e);
-				}
-			}
-			else throw InvalidArgument (e);
-			break;
-
-		case Type::WEAK_MEMORY:
-		{
-			Expression temp(e);
-
-			temp.SetCurrentType (CurrentAssembler->TranslateWeakMemory());
-			return MakeArgument (temp);
-		}
-
-		case Type::STRONG_MEMORY:
-			return MakeMemory (e);
-
-		case Type::UNKNOWN:
-			return new Argument (0, false, true);
-	}
-
-	return 0;
-}
-*/
 
 const char UndefinedSize::WhatString[] = "Operation size undefined. At least one argument must be explicitly sized.";
 const char OneUndefinedSize::WhatString[] = "Operation size undefined. Both arguments must be explicitly sized.";

@@ -1,6 +1,6 @@
 /***************************************************************************
                           register.cpp  -  description
-                             -------------------
+                             --------------------
     copyright            : (C) 2001 by Helcio Mello
     email                : helcio@users.sourceforge.net
  ***************************************************************************/
@@ -22,7 +22,30 @@
 
 Argument *Register::MakeArgument (const Expression &e) throw (InvalidArgument, exception)
 {
-	return 0;
+	// Only scalars can be registers
+	if (e.GetConstData().GetCurrentType() != Type::SCALAR)
+		return 0;
+
+	const SimpleExpression *pref;
+	const Symbol *sym = e.GetSymbol (pref);
+
+	if (sym == 0)
+		return 0;
+
+	// Check if the only symbol is a register
+	const Register *reg = dynamic_cast<const Register *> (sym->GetData());
+	if (reg == 0)
+		return 0;
+
+	// Registers cannot have prefixes
+	if (pref != 0)
+		throw 0;
+
+	// Cannot have NEAR, or FAR registers
+	if (e.GetConstData().GetDistanceType() != UNDEFINED)
+		throw 0;
+
+	return new Argument (reg, false);
 }
 
 SegmentRegister SegmentRegister::RegisterTable[] =
