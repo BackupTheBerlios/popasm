@@ -56,6 +56,9 @@ class Type
 	Type (TypeName t = SCALAR) throw () : CurrentType (t) {}
 	~Type () throw () {}
 
+	const TypeName &GetCurrentType () const throw () {return CurrentType;}
+	void SetCurrentType (const TypeName &NewType) throw () {CurrentType = NewType;}
+
 	Type &operator+= (const Type &t) throw (IncompatibleTypes);
 	Type &operator-= (const Type &t) throw (IncompatibleTypes);
 	Type &operator*= (const Type &t) throw (IncompatibleTypes);
