@@ -38,22 +38,29 @@ void Directive::Assemble (const Symbol *sym, Parser &p, vector<Byte> &Encoding) 
 	vector<Token *> Tokens;
 	p.ReadLine (Tokens);
 
-	vector<Token *>::iterator i = Tokens.begin();
-	vector<Token *>::iterator j = Tokens.end();
-	(*Function) (sym, i, j, Encoding);
+	(*Function) (sym, Tokens, Encoding);
 
-	for (; i != j; i++)
+	for (vector<Token *>::iterator i = Tokens.begin(); i != Tokens.end(); i++)
 		delete *i;
 }
 
 void DefinitionDirective::Assemble (const Symbol *sym, Parser &p, vector<Byte> &Encoding) const
 {
-	// Converts the tokens into arguments.
+	Variable *newvar = 0;
+
+	// Defines new variable immediatelly for its arguments may depend on it
+	if (sym != 0)
+	{
+		newvar = new Variable (sym->GetName(), Type(Size, Type::WEAK_MEMORY, UNDEFINED), 1);
+		CurrentAssembler->DefineSymbol (newvar);
+	}
+
 	vector<Argument *> Arguments;
 	p.ParseArguments (Arguments);
 	unsigned int length = 0;
 	int NumericalType;
 
+	// Converts the tokens into arguments.
 	if (Arguments.size() == 0)
 	{
 		cout << "Expected at least one argument" << endl;
@@ -98,17 +105,18 @@ void DefinitionDirective::Assemble (const Symbol *sym, Parser &p, vector<Byte> &
 		length++;
 	}
 
-	if (sym != 0)
+	// Adjusts numerical type and length
+	if (newvar != 0)
 	{
-		Variable *newvar = new Variable (sym->GetName(), Type(Size, Type::WEAK_MEMORY, UNDEFINED, NumericalType), length);
-		CurrentAssembler->DefineSymbol (newvar);
+		newvar->SetNumericalType (NumericalType);
+		newvar->SetLength (length);
 	}
 
 	for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
 		delete *x;
 }
 
-void FunctionBITS (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+void FunctionBITS (const Symbol *sym, vector<Token *> &Tokens, vector<Byte> &Encoding)
 {
 	if (sym != 0)
 	{
@@ -117,7 +125,7 @@ void FunctionBITS (const Symbol *sym, vector<Token *>::iterator i, vector<Token 
 
 	// Converts the tokens into arguments.
 	vector<Argument *> Arguments;
-	Parser::ParseArguments (Arguments, i, j);
+	Parser::ParseArguments (Arguments, Tokens);
 
 	if (Arguments.size() != 1)
 	{
@@ -139,52 +147,49 @@ void FunctionBITS (const Symbol *sym, vector<Token *>::iterator i, vector<Token 
 	}
 
 	CurrentAssembler->SetCurrentMode (immed->GetUnsignedLong());
-		for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
-			delete *x;
+	for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
+		delete *x;
 }
 
-void FunctionEQU (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+void FunctionEQU (const Symbol *sym, vector<Token *> &Tokens, vector<Byte> &Encoding)
 {
 	Constant *c;
+	vector<Token *>::iterator i = Tokens.begin();
 
 	if (sym == 0)
 		throw NameMissing ();
 
-	c = new Constant (sym->GetName(), Parser::EvaluateExpression (vector<Token *> (i, j)));
+	c = new Constant (sym->GetName(), Parser::EvaluateExpression (Tokens, i));
 	CurrentAssembler->DefineSymbol (c);
 }
 
-void FunctionEQUAL (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+void FunctionEQUAL (const Symbol *sym, vector<Token *> &Tokens, vector<Byte> &Encoding)
 {
-	Constant *c;
+	vector<Token *>::iterator i = Tokens.begin();
 
 	if (sym == 0)
 		throw NameMissing ();
 
 	BasicSymbol *bs = CurrentAssembler->Find (sym->GetName());
-	if (bs != 0)
-	{
-		c = dynamic_cast<Constant *> (bs);
-		if (c == 0)
-			throw MultidefinedSymbol (bs->GetName());
-	}
-	else
+	Constant *c = dynamic_cast<Constant *> (bs);
+
+	if ((bs == 0) || (c == 0))
 	{
 		c = new Constant (sym->GetName(), 0, true);
 		CurrentAssembler->DefineSymbol (c);
 	}
 
-	c->SetValue (Parser::EvaluateExpression (vector<Token *> (i, j)));
+	c->SetValue (Parser::EvaluateExpression (Tokens, i));
 }
 
-void FunctionSEGMENT (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+void FunctionSEGMENT (const Symbol *sym, vector<Token *> &Tokens, vector<Byte> &Encoding)
 {
 	Segment *seg;
 
 	if (sym == 0)
 		throw NameMissing ();
 
-	if (i != j)
+	if (!Tokens.empty())
 	{
 		cout << "Extra characters on line" << endl;
 		throw 0;
@@ -194,12 +199,12 @@ void FunctionSEGMENT (const Symbol *sym, vector<Token *>::iterator i, vector<Tok
 	CurrentAssembler->AddSegment (seg);
 }
 
-void FunctionENDS (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+void FunctionENDS (const Symbol *sym, vector<Token *> &Tokens, vector<Byte> &Encoding)
 {
 	if (sym == 0)
 		throw NameMissing ();
 
-	if (i != j)
+	if (!Tokens.empty())
 	{
 		cout << "Extra characters on line" << endl;
 		throw 0;
@@ -208,26 +213,26 @@ void FunctionENDS (const Symbol *sym, vector<Token *>::iterator i, vector<Token 
 	CurrentAssembler->CloseSegment (sym->GetName());
 }
 
-void FunctionPROC (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+void FunctionPROC (const Symbol *sym, vector<Token *> &Tokens, vector<Byte> &Encoding)
 {
 	if (sym == 0)
 		throw NameMissing ();
 
 	Procedure *NewProc;
 
-	if (i == j)
+	if (Tokens.empty())
 	{
 		NewProc = new Procedure (sym->GetName());
 	}
 	else
 	{
-		if (i + 1 != j)
+		if (Tokens.size() > 1)
 		{
 			cout << "Extra characters on line" << endl;
 			throw 0;
 		}
 
-		Operator *op = dynamic_cast<Operator *> (*i);
+		Operator *op = dynamic_cast<Operator *> (Tokens[0]);
 		if (op == 0)
 		{
 			cout << "Procedures must be either NEAR or FAR." << endl;
@@ -252,7 +257,7 @@ void FunctionPROC (const Symbol *sym, vector<Token *>::iterator i, vector<Token 
 	CurrentAssembler->AddProcedure (NewProc);
 }
 
-void FunctionENDP (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
+void FunctionENDP (const Symbol *sym, vector<Token *> &Tokens, vector<Byte> &Encoding)
 {
 	if (sym == 0)
 		throw NameMissing ();
@@ -271,7 +276,7 @@ void FunctionENDP (const Symbol *sym, vector<Token *>::iterator i, vector<Token 
 		return;
 	}
 
-	if (i != j)
+	if (!Tokens.empty())
 	{
 		cout << "Extra characters on line" << endl;
 		throw 0;

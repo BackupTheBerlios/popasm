@@ -19,6 +19,7 @@
 #define DIRECTIV_H
 
 #include <string>
+#include <vector>
 #include <exception>
 
 #include "command.h"
@@ -27,7 +28,7 @@
 #include "lexsym.h"
 #include "constant.h"
 
-typedef void (*DirectiveFunction) (const Symbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding);
+typedef void (*DirectiveFunction) (const Symbol *sym, vector<Token *> &Tokens, vector<Byte> &Encoding);
 
 // Assembler directives, such as DB, DW, STRUCT, etc
 class Directive : public Command
