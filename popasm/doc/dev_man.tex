@@ -1,0 +1,85 @@
+\newcommand{\popasm}{\emph{PopAsm}}
+\newcommand{\nasm}{\emph{NASM}}
+\newcommand{\tasm}{\emph{TASM}}
+
+\documentclass[a4paper,draft,12pt]{book}
+\title{\popasm\ --- The Popular Assembler\\Developer's Manual}
+\author{Helcio B. de Mello}
+\date{\today}
+
+\begin{document}
+
+\begin{titlepage}
+\maketitle
+\end{titlepage}
+
+\pagenumbering{roman}
+
+\bf{NOTE:} This is but a draft of the \popasm\ Developer's Manual.
+The contents of this document may change as needed, until the release
+of the first official full version. Comments on English mistakes
+or contents are welcome, given the author's native language is not
+English. Please see appendix \ref{CONTACT} for contacting info.
+
+\chapter*{About this document}
+This document is part of \popasm, the Popular Assembler Project.
+It has been totally written in \LaTeX\ by
+\popasm\ author himself.
+
+At the time of this writing, \popasm\ had two manuals:
+
+\begin{itemize}
+\item{User's Manual} --- Aimed to those who wish to \emph{use}
+\popasm, regardless the way it was developed and its internal
+implementation. This document also concerns about instalation
+procedures.
+\item{Programmer's Guide} --- This document. Documents \popasm\
+source code in detail. It is recommended to those who want to
+read, understand and/or modify \popasm\ sources.
+\end{itemize}
+
+Please check which manual is the one intended for your needs.
+
+\include{author}
+\include{acks}
+
+\tableofcontents
+\newpage
+\listoftables
+\newpage
+\listoffigures
+\newpage
+
+\pagenumbering{arabic}
+\part{Getting Started}
+% The first chapters of this manual explain the basic modules
+
+\chapter{Introduction}
+
+\appendix
+
+\chapter{Contacting info\label{CONTACT}}
+Up to date info about contacting \popasm\ team can be found at \popasm\ 
+homepage, at http://popasm.sourceforge.net.
+
+\begin{thebibliography}{12}
+\bibitem{UFES} Federal University of Esp\'{\i}rito Santo -- ES -- Brazil.
+http://www.ufes.br
+\bibitem{PUC} Pontificial Catholic University of Rio de Janeiro -- RJ
+-- Brazil. http://www.puc-rio.br
+\bibitem{SF} SourceForge. http://sorceforge.net
+\bibitem{ADV}Advogato. http://www.advogato.com
+\bibitem{ADVPRSN}H\'elcio Mello's personal page at Advogato.
+http://www.advogato.com/person/helcio
+\bibitem{FRESH}FreshMeat. http://www.freahmeat.net
+\bibitem{FREITAS}Professor PhD S\'ergio A. A. Freitas.
+http://www.inf.ufes.br/\~{}sergio.
+\bibitem{AUTOCONF}GNU Autoconf.
+http://www.gnu.org/software/autoconf/autoconf.html
+\bibitem{AUTOMAKE}GNU Automake.
+http://www.gnu.org/software/automake/automake.html
+\bibitem{MAKE}GNU Make. http://www.gnu.org/software/make/make.html
+\bibitem{FPUMAN}FPU Programming on x86 FPU's
+\end{thebibliography}
+
+\end{document}
