@@ -18,6 +18,7 @@
 #include "directiv.h"
 #include "immed.h"
 #include "parser.h"
+#include "asmer.h"
 
 BasicSymbol *Directive::Read (const string &str, InputFile &inp)
 {
@@ -36,6 +37,13 @@ void DefinitionDirective::Assemble (const BasicSymbol *sym, vector<Token *>::ite
 	vector<Argument *> Arguments;
 	Parser::ParseArguments (i, j, Arguments);
 	unsigned int length = 0;
+	int NumericalType;
+
+	if (Arguments.size() == 0)
+	{
+		cout << "Expected at least one argument" << endl;
+		return;
+	}
 
 	for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
 	{
@@ -61,6 +69,15 @@ void DefinitionDirective::Assemble (const BasicSymbol *sym, vector<Token *>::ite
 			throw IntegerExpected (temp);
 		}
 
+		// The numerical type of this variable is the same as the first of its arguments
+		if (x == Arguments.begin())
+			NumericalType = immed->GetNumericalType();
+		else
+			if (NumericalType != immed->GetNumericalType())
+			{
+				cout << "Cannot mix integer and floating-point values" << endl;
+			}
+
 		immed->SetSize (Size);
 		immed->Write (Encoding);
 		length++;
@@ -68,7 +85,13 @@ void DefinitionDirective::Assemble (const BasicSymbol *sym, vector<Token *>::ite
 
 	if (sym != 0)
 	{
-		Symbol::DefineSymbol (new Variable (sym->GetName(), Size, length));
+		Variable *newvar = new Variable (sym->GetName(), Size, length);
+
+		if ((Size == 80) && (NumericalType == INTEGER))
+			NumericalType = BCD;
+
+//		newvar->SetNumericalType (NumericalType);
+		CurrentAssembler->DefineSymbol (newvar);
 	}
 
 	for (vector<Argument *>::iterator x = Arguments.begin(); x != Arguments.end(); x++)
@@ -79,7 +102,7 @@ void FunctionBITS (const BasicSymbol *sym, vector<Token *>::iterator i, vector<T
 {
 	if (sym != 0)
 	{
-		Symbol::DefineSymbol (new Label (sym->GetName()));
+		CurrentAssembler->DefineSymbol (new Label (sym->GetName()));
 	}
 
 	// Converts the tokens into arguments.
@@ -117,7 +140,7 @@ void FunctionEQU (const BasicSymbol *sym, vector<Token *>::iterator i, vector<To
 	if (sym == 0)
 		throw NameMissing ();
 
-	BasicSymbol *bs = Symbol::Find (sym->GetName());
+	BasicSymbol *bs = CurrentAssembler->Find (sym->GetName());
 	if (bs != 0)
 	{
 		c = dynamic_cast<Constant *> (bs);
@@ -128,7 +151,7 @@ void FunctionEQU (const BasicSymbol *sym, vector<Token *>::iterator i, vector<To
 	}
 
 	c = new Constant (sym->GetName(), Parser::EvaluateExpression (vector<Token *> (i, j)));
-	Symbol::DefineSymbol (c);
+	CurrentAssembler->DefineSymbol (c);
 }
 
 void FunctionEQUAL (const BasicSymbol *sym, vector<Token *>::iterator i, vector<Token *>::iterator j, vector<Byte> &Encoding)
@@ -138,7 +161,7 @@ void FunctionEQUAL (const BasicSymbol *sym, vector<Token *>::iterator i, vector<
 	if (sym == 0)
 		throw NameMissing ();
 
-	BasicSymbol *bs = Symbol::Find (sym->GetName());
+	BasicSymbol *bs = CurrentAssembler->Find (sym->GetName());
 	if (bs != 0)
 	{
 		c = dynamic_cast<Constant *> (bs);
@@ -148,7 +171,7 @@ void FunctionEQUAL (const BasicSymbol *sym, vector<Token *>::iterator i, vector<
 	else
 	{
 		c = new Constant (sym->GetName(), 0, true);
-		Symbol::DefineSymbol (c);
+		CurrentAssembler->DefineSymbol (c);
 	}
 
 	c->SetValue (Parser::EvaluateExpression (vector<Token *> (i, j)));
