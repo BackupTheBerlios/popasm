@@ -229,15 +229,15 @@ class SuffixedBinarySyntax : public BinarySyntax
 
 class StringSyntax : public Syntax
 {
-	bool Overrideable;
+	// Specifies which argument may be segment-overrided. A value graater than 1 means none.
+	unsigned int Overrideable;
 
 	// Type check to be performed
 	Argument::CheckType Check;
 
 	public:
-	StringSyntax (unsigned int p, const Opcode &op, BasicIdFunctor *arg1, bool ovr) throw ();
 	StringSyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, Argument::CheckType chk,
-		BasicIdFunctor *arg1, BasicIdFunctor *arg2) throw ();
+		BasicIdFunctor *arg1, BasicIdFunctor *arg2, unsigned int ovr) throw ();
 	~StringSyntax () throw () {}
 
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const;

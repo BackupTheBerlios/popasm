@@ -446,17 +446,12 @@ bool FPUBinarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Out
 	return true;
 }
 
-StringSyntax::StringSyntax (unsigned int p, const Opcode &op, BasicIdFunctor *arg1, bool ovr) throw ()
-	: Syntax (p, op, FIRST_ARGUMENT, false), Overrideable (ovr), Check (Argument::NONE)
+StringSyntax::StringSyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep,
+	Argument::CheckType chk, BasicIdFunctor *arg1, BasicIdFunctor *arg2, unsigned int ovr) throw ()
+	: Syntax (p, op, dep, false), Overrideable (ovr), Check (chk)
 {
 	ArgumentTypes.push_back (arg1);
-}
-
-StringSyntax::StringSyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, Argument::CheckType chk,
-	BasicIdFunctor *arg1, BasicIdFunctor *arg2) throw () : Syntax (p, op, dep, false), Overrideable (false), Check(chk)
-{
-	ArgumentTypes.push_back (arg1);
-	ArgumentTypes.push_back (arg2);
+	if (arg2 != 0)	ArgumentTypes.push_back (arg2);
 }
 
 bool StringSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const
@@ -468,14 +463,13 @@ bool StringSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 	// Verifies the type of each argument
 	if (!Match (Arguments)) return false;
 
+	// Performs type checking
 	if (Arguments.size() == 2)
 	{
 		if (!Arguments[0]->TypeCheck (*Arguments[1], Check)) throw TypeMismatch(Arguments[0]->GetData(), Arguments[1]->GetData());
 	}
 
-	// Writes the operand size prefix if necessary
-	WriteOperandSizePrefix (Arguments, Output);
-
+	// Gets the relevant argument for type specification
 	switch (OperandSizePrefixUsage)
 	{
 		case FIRST_ARGUMENT:
@@ -492,16 +486,42 @@ bool StringSyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output
 
 	// Checks for the need for prefixes
 	AddressSizePrefix = (CurrentAssembler->GetCurrentMode() == 16) != (mem->GetAddressSize() == 16);
-	SegmentPrefix = mem->GetSegmentPrefix ();
 
-	// Writes prefixes
-	if (AddressSizePrefix) Output.push_back (0x67);
-	if (SegmentPrefix != 0)
+	for (unsigned int i = 0; i < Arguments.size(); i++)
 	{
-		if (!Overrideable) throw InvalidSegmentOverride();
-		Output.push_back (SegmentPrefix);
+		Byte temp;
+		mem = dynamic_cast<const Memory *> (Arguments[i]->GetData());
+		if (mem == 0) continue;
+
+		temp = mem->GetSegmentPrefix ();
+		if (i != Overrideable)
+		{
+			switch (temp)
+			{
+				case 0:
+					break;
+
+				case 0x26:
+//					Warning (new OverrideIgnored (0x26));
+					cout << "Ignoring segment prefix." << endl;
+					break;
+
+				default:
+					// If he attempts to override it with other segment, throw exception
+					throw InvalidSegmentOverride();
+			}
+		}
+		else
+			SegmentPrefix = temp;
 	}
 
+	// Writes prefixes
+	WriteOperandSizePrefix (Arguments, Output);
+	if (AddressSizePrefix) Output.push_back (0x67);
+	if (SegmentPrefix != 0)
+		Output.push_back (SegmentPrefix);
+
 	Encoding.Write (Output);
+
 	return true;
 }
