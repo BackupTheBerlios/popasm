@@ -19,6 +19,7 @@
 #include "register.h"
 #include "memory.h"
 #include "immed.h"
+#include "full_ptr.h"
 
 Syntax::~Syntax () throw ()
 {
@@ -132,6 +133,7 @@ bool UnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output)
 	const Register *reg = 0;
 	const Memory *mem = 0;
 	const Immediate *immed = 0;
+	const FullPointer *fptr = 0;
 
 	// Verifies the type of each argument
 	if (!Match (Arguments)) return false;
@@ -149,35 +151,45 @@ bool UnarySyntax::Assemble (vector<Argument *> &Arguments, vector<Byte> &Output)
 	}
 	else
 	{
-		const BasicArgument *arg = Arguments[0]->GetData();
-		if (arg->GetSize() > 8) dw = 1 & dw_mask;
-
-		// Checks for register
-		reg = dynamic_cast<const Register *> (arg);
-		if (reg != 0)
+		// Checks for full pointers
+		fptr = dynamic_cast<const FullPointer *> (Arguments[0]->GetData());
+		if (fptr != 0)
 		{
-			mod_reg_rm = 0xC0 + reg->GetCode();
+			Encoding.Write (Output);
+			fptr->Write (Output);
 		}
 		else
 		{
-			// If neither immediate nor register, try memory
-			mem = dynamic_cast<const Memory *> (arg);
-			if (mem == 0) throw 0;
+			const BasicArgument *arg = Arguments[0]->GetData();
+			if (arg->GetSize() > 8) dw = 1 & dw_mask;
 
-			// Checks for the need of prefix
-			if ((CurrentAssembler->GetCurrentMode() == 16) != (mem->GetAddressSize() == 16)) Output.push_back (0x67);
-			mod_reg_rm = mem->GetCode();
-			SegmentPrefix = mem->GetSegmentPrefix ();
-			if (SegmentPrefix != 0) Output.push_back (SegmentPrefix);
+			// Checks for register
+			reg = dynamic_cast<const Register *> (arg);
+			if (reg != 0)
+			{
+				mod_reg_rm = 0xC0 + reg->GetCode();
+			}
+			else
+			{
+				// If neither immediate nor register, try memory
+				mem = dynamic_cast<const Memory *> (arg);
+				if (mem == 0) throw 0;
 
-			// Schedule the SIB and displacement for writing
-			mem->WriteSIB (TrailerOpcode);
-			mem->WriteDisplacement (TrailerOpcode);
+				// Checks for the need of prefix
+				if ((CurrentAssembler->GetCurrentMode() == 16) != (mem->GetAddressSize() == 16)) Output.push_back (0x67);
+				mod_reg_rm = mem->GetCode();
+				SegmentPrefix = mem->GetSegmentPrefix ();
+				if (SegmentPrefix != 0) Output.push_back (SegmentPrefix);
+
+				// Schedule the SIB and displacement for writing
+				mem->WriteSIB (TrailerOpcode);
+				mem->WriteDisplacement (TrailerOpcode);
+			}
+
+			// Writes the encoding, the mod_reg_rm byte and the rest of the encoding
+			((Encoding << 3) | Opcode (dw, mod_reg_rm)).Write (Output);
+			Output.insert (Output.end(), TrailerOpcode.begin(), TrailerOpcode.end());
 		}
-
-		// Writes the encoding, the mod_reg_rm byte and the rest of the encoding
-		((Encoding << 3) | Opcode (dw, mod_reg_rm)).Write (Output);
-		Output.insert (Output.end(), TrailerOpcode.begin(), TrailerOpcode.end());
 	}
 
 	return true;

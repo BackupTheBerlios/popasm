@@ -103,7 +103,7 @@ class AdditiveUnarySyntax : public UnarySyntax
 class RelativeUnarySyntax : public UnarySyntax
 {
 	public:
-	RelativeUnarySyntax (unsigned int p, const Opcode &op, BasicIdFunctor *arg) throw () : UnarySyntax (p, op, FIRST_ARGUMENT, arg) {}
+	RelativeUnarySyntax (unsigned int p, const Opcode &op, OperandSizeDependsOn dep, BasicIdFunctor *arg) throw () : UnarySyntax (p, op, dep, arg) {}
 	~RelativeUnarySyntax () throw () {}
 
 	bool Assemble (vector<Argument *> &Arguments, vector<Byte> &Output) const throw ();
