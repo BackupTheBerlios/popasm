@@ -394,9 +394,9 @@ void Instruction::SetupInstructionTable () throw ()
 			new SuffixedBinarySyntax (100, Opcode (0x0F, 0xC2),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), 7)),
 
 		Instruction ("CMPS",
-			new StringSyntax        (100, Opcode (0xA6),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<8>(),     new Mem<8>()),
-			new StringSyntax        (110, Opcode (0xA7),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<16>(),    new Mem<16>()),
-			new StringSyntax        (120, Opcode (0xA7),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<32>(),    new Mem<32>())),
+			new StringSyntax         (100, Opcode (0xA6),             Syntax::FIRST_ARGUMENT,        Argument::EQUAL,                                  new Mem<8>(),     new Mem<8>(), 0),
+			new StringSyntax         (110, Opcode (0xA7),             Syntax::FIRST_ARGUMENT,        Argument::EQUAL,                                  new Mem<16>(),    new Mem<16>(), 0),
+			new StringSyntax         (120, Opcode (0xA7),             Syntax::FIRST_ARGUMENT,        Argument::EQUAL,                                  new Mem<32>(),    new Mem<32>(), 0)),
 
 		Instruction ("CMPSB",
 			new ZerarySyntax        (100, Opcode (0xA6),             Syntax::NOTHING)),
@@ -466,10 +466,10 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax         (100, Opcode (0x0F, 0xC7, 0x01), Syntax::NOTHING,                                                          new Mem<64>())),
 
 		Instruction ("COMISD",
-			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x2F), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x2F), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
 
 		Instruction ("COMISS",
-			new BinarySyntax        (100, Opcode (0x66, 0x0F),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x2F),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::EXCHANGED_REGS,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
 
 		Instruction ("CPUID",
 			new ZerarySyntax        (100, Opcode (0x0F, 0xA2),       Syntax::NOTHING)),
@@ -943,9 +943,9 @@ void Instruction::SetupInstructionTable () throw ()
 			new AdditiveUnarySyntax (110, Opcode (0x40),             Syntax::FIRST_ARGUMENT,                                                   new WordReg())),
 
 		Instruction ("INS",
-			new StringSyntax        (100, Opcode (0x6C),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<8>(),     new DX()),
-			new StringSyntax        (110, Opcode (0x6D),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<16>(),    new DX()),
-			new StringSyntax        (120, Opcode (0x6D),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<32>(),    new DX())),
+			new StringSyntax        (100, Opcode (0x6C),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<8>(),     new DX(), 2),
+			new StringSyntax        (110, Opcode (0x6D),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<16>(),    new DX(), 2),
+			new StringSyntax        (120, Opcode (0x6D),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<32>(),    new DX(), 2)),
 
 		Instruction ("INSB",
 			new ZerarySyntax        (100, Opcode (0x6C),             Syntax::NOTHING)),
@@ -1160,9 +1160,9 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax        (100, Opcode (0xF0),             Syntax::NOTHING)),
 
 		Instruction ("LODS",
-			new StringSyntax        (100, Opcode (0xAC),                                                                                              new Mem<8>(),  true),
-			new StringSyntax        (110, Opcode (0xAD),                                                                                              new Mem<16>(), true),
-			new StringSyntax        (120, Opcode (0xAD),                                                                                              new Mem<32>(), true)),
+			new StringSyntax        (100, Opcode (0xAC),             Syntax::NOTHING,               Argument::NONE,                                   new Mem<8>(),  0, 0),
+			new StringSyntax        (110, Opcode (0xAD),             Syntax::NOTHING,               Argument::NONE,                                   new Mem<16>(), 0, 0),
+			new StringSyntax        (120, Opcode (0xAD),             Syntax::NOTHING,               Argument::NONE,                                   new Mem<32>(), 0, 0)),
 
 		Instruction ("LODSB",
 			new ZerarySyntax        (100, Opcode (0xAC),             Syntax::NOTHING)),
@@ -1314,9 +1314,9 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0xD6), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MMXRegister::IdFunctor())),
 
 		Instruction ("MOVS",
-			new StringSyntax        (100, Opcode (0xAC),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<8>(),     new Mem<8>()),
-			new StringSyntax        (110, Opcode (0xAD),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<16>(),    new Mem<16>()),
-			new StringSyntax        (120, Opcode (0xAD),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<32>(),    new Mem<32>())),
+			new StringSyntax        (100, Opcode (0xAC),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<8>(),     new Mem<8>(), 0),
+			new StringSyntax        (110, Opcode (0xAD),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<16>(),    new Mem<16>(), 0),
+			new StringSyntax        (120, Opcode (0xAD),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<32>(),    new Mem<32>(), 0)),
 
 		Instruction ("MOVSB",
 			new ZerarySyntax        (100, Opcode (0xAC),             Syntax::NOTHING)),
@@ -1390,9 +1390,9 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax         (130, Opcode (0xE7),             Syntax::SECOND_ARGUMENT,                                                         new Immed<8, Number::UNSIGNED>(), new AL())),
 
 		Instruction ("OUTS",
-			new StringSyntax        (100, Opcode (0x6E),             Syntax::SECOND_ARGUMENT,       Argument::NONE,                                   new DX(),         new Mem<8>()),
-			new StringSyntax        (110, Opcode (0x6F),             Syntax::SECOND_ARGUMENT,       Argument::NONE,                                   new DX(),         new Mem<16>()),
-			new StringSyntax        (120, Opcode (0x6F),             Syntax::SECOND_ARGUMENT,       Argument::NONE,                                   new DX(),         new Mem<32>())),
+			new StringSyntax        (100, Opcode (0x6E),             Syntax::SECOND_ARGUMENT,       Argument::NONE,                                   new DX(),         new Mem<8>(), 1),
+			new StringSyntax        (110, Opcode (0x6F),             Syntax::SECOND_ARGUMENT,       Argument::NONE,                                   new DX(),         new Mem<16>(), 1),
+			new StringSyntax        (120, Opcode (0x6F),             Syntax::SECOND_ARGUMENT,       Argument::NONE,                                   new DX(),         new Mem<32>(), 1)),
 
 		Instruction ("OUTSB",
 			new ZerarySyntax        (100, Opcode (0x6E),             Syntax::NOTHING)),
@@ -1916,9 +1916,9 @@ void Instruction::SetupInstructionTable () throw ()
 			new OptimizedBinarySyntax	(300, Opcode (0x83, 0x03),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
 
 		Instruction ("SCAS",
-			new StringSyntax        (100, Opcode (0xAE),                                                                                              new Mem<8>(),  false),
-			new StringSyntax        (110, Opcode (0xAF),                                                                                              new Mem<16>(), false),
-			new StringSyntax        (120, Opcode (0xAF),                                                                                              new Mem<32>(), false)),
+			new StringSyntax        (100, Opcode (0xAE),             Syntax::NOTHING,               Argument::NONE,                                   new Mem<8>(),  0, 2),
+			new StringSyntax        (110, Opcode (0xAF),             Syntax::NOTHING,               Argument::NONE,                                   new Mem<16>(), 0, 2),
+			new StringSyntax        (120, Opcode (0xAF),             Syntax::NOTHING,               Argument::NONE,                                   new Mem<32>(), 0, 2)),
 
 		Instruction ("SCASB",
 			new ZerarySyntax        (100, Opcode (0xAE),             Syntax::NOTHING)),
@@ -2080,9 +2080,9 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax         (100, Opcode (0x0F, 0xAE, 0x03), Syntax::NOTHING,                                                                 new GPRegister32Bits::IdFunctor())),
 
 		Instruction ("STOS",
-			new StringSyntax        (100, Opcode (0xAA),                                                                                              new Mem<8>(),  false),
-			new StringSyntax        (110, Opcode (0xAB),                                                                                              new Mem<16>(), false),
-			new StringSyntax        (120, Opcode (0xAB),                                                                                              new Mem<32>(), false)),
+			new StringSyntax        (100, Opcode (0xAA),             Syntax::NOTHING,               Argument::NONE,                                   new Mem<8>(),  0, 2),
+			new StringSyntax        (110, Opcode (0xAB),             Syntax::NOTHING,               Argument::NONE,                                   new Mem<16>(), 0, 2),
+			new StringSyntax        (120, Opcode (0xAB),             Syntax::NOTHING,               Argument::NONE,                                   new Mem<32>(), 0, 2)),
 
 		Instruction ("STOSB",
 			new ZerarySyntax        (100, Opcode (0xAA),             Syntax::NOTHING)),
@@ -2169,7 +2169,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new AdditiveUnarySyntax (100, Opcode (0x90),             Syntax::FIRST_ARGUMENT,                                                          new WordReg(),    new Accumulator())),
 
 		Instruction ("XLAT",
-			new StringSyntax        (100, Opcode (0xD7),                                                                                              new Mem<8>(),  true)),
+			new StringSyntax        (100, Opcode (0xD7),             Syntax::NOTHING,               Argument::NONE,                                                 new Mem<8>(),     0, 0)),
 
 		Instruction ("XLATB",
 			new ZerarySyntax        (100, Opcode (0xD7),             Syntax::NOTHING)),
@@ -2178,7 +2178,7 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax        (110, Opcode (0x30),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,	       3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),  new MemGPReg()),
 			new BinarySyntax        (120, Opcode (0x80, 0x06),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::PARTIAL, new GPRegister::IdFunctor(),  new Immediate::IdFunctor()),
 			new BinarySyntax        (200, Opcode (0x34),             Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::ABSENT,  new Accumulator(),            new Immediate::IdFunctor()),
-			new OptimizedBinarySyntax	(300, Opcode (0x83, 0x06),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,      1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
+			new OptimizedBinarySyntax	(300, Opcode (0x83, 0x06),    Syntax::FIRST_ARGUMENT, false, Argument::NONE,         1, BinarySyntax::PARTIAL, new MemWordReg(),             new Immed<8, Number::SIGNED, false>())),
 
 		Instruction ("XORPD",
 			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x57), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
