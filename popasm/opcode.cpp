@@ -19,27 +19,31 @@
 
 void Opcode::Write (vector<Byte> &Output) const throw ()
 {
-	for (unsigned int i = 0; i < Size; i++)
-		Output.push_back (Encoding[i]);
+	Output.insert (Output.end(), begin(), end());
 }
 
 const Opcode Opcode::operator+ (Byte b) const
 {
-	// Checks if there's more room to place the aditional byte
-	if (Size == MaximumEncodingLength) throw 0;
-
 	Opcode answer (*this);
-	answer.Encoding[answer.Size++] = b;
+	answer.push_back (b);
 	return answer;
 }
 
 const Opcode Opcode::operator| (const Opcode &op) const
 {
 	Opcode answer(*this);
-	unsigned int i, j;
+	vector<Byte>::reverse_iterator i;
+	vector<Byte>::const_reverse_iterator j;
 
-	for (i = Size, j = op.Size; (i > 0) && (j > 0); i--, j--)
-		answer.Encoding[i - 1] |= op.Encoding[j - 1];
+	for (i = answer.rbegin(), j = op.rbegin(); (i != answer.rend()) && (j != op.rend()); i++, j++)
+		*i |= *j;
 
+	return answer;
+}
+
+const Opcode Opcode::operator<< (unsigned int n) const
+{
+	Opcode answer (*this);
+	answer.back() <<= n;
 	return answer;
 }

@@ -21,21 +21,18 @@
 #include <vector>
 #include "defs.h"
 
-class Opcode
+class Opcode :	vector<Byte>
 {
-	unsigned int Size;
-	enum {MaximumEncodingLength = 3};
-	Byte Encoding[MaximumEncodingLength];
-
 	public:
-	Opcode () throw () : Size(0) {}
-	Opcode (Byte b0) throw () : Size(1) {Encoding[0] = b0;}
-	Opcode (Byte b0, Byte b1) throw () : Size(2) {Encoding[0] = b0; Encoding[1] = b1;}
-	Opcode (Byte b0, Byte b1, Byte b2) throw () : Size(3) {Encoding[0] = b0; Encoding[1] = b1; Encoding[2] = b2;}
+	Opcode () throw () {}
+	Opcode (Byte b0) throw () {push_back (b0);}
+	Opcode (Byte b0, Byte b1) throw () {push_back (b0); push_back (b1);}
+	Opcode (Byte b0, Byte b1, Byte b2) throw () {push_back (b0); push_back (b1); push_back (b2);}
 	~Opcode () throw () {}
 
 	const Opcode operator+ (Byte b) const;
 	const Opcode operator| (const Opcode &op) const;
+	const Opcode operator<< (unsigned int n) const;
 
 	void Write (vector<Byte> &Output) const throw ();
 };
