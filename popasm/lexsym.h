@@ -55,6 +55,7 @@ class Symbol : public Token
 	// The returned token might be a Number, if the symbol found has a value or offset
 	static Token *Read (const string &str, InputFile &inp) throw ();
 	static void DefineSymbol (BasicSymbol *s) throw (MultidefinedSymbol);
+	static BasicSymbol *Find (const string &name);
 
 	string Print() const throw () {return s->Print();}
 

@@ -22,6 +22,17 @@
 // Symbol table starts empty
 HashTable<BasicSymbol *, HashFunctor, PointerComparator<BasicSymbol> > Symbol::SymbolTable;
 
+BasicSymbol *Symbol::Find (const string &name)
+{
+	BasicSymbol bs (name);
+	BasicSymbol * const *sd = SymbolTable.Find (&bs);
+
+	if (sd != 0)
+		return *sd;
+
+	return 0;
+}
+
 Token *Symbol::Read (const string &str, InputFile &inp) throw ()
 {
 	// Tests for registers
@@ -29,9 +40,8 @@ Token *Symbol::Read (const string &str, InputFile &inp) throw ()
 	if (t != 0) return new Symbol (t, false);
 
 	// Tests for symbols defined in the symbol table
-	BasicSymbol bs (str);
-	BasicSymbol * const *sd = SymbolTable.Find (&bs);
-	if (sd != 0) return new Symbol (*sd, false);
+	BasicSymbol *bs = Find (str);
+	if (bs != 0) return new Symbol (bs, false);
 
 	t = Command::Read (str, inp);
 	if (t != 0) return new Symbol (t, false);
