@@ -22,14 +22,14 @@
 
 Register::~Register () throw () {}
 
-SegmentRegister SegmentRegister:: RegisterTable[] =
+SegmentRegister SegmentRegister::RegisterTable[] =
 {
-	SegmentRegister ("ES", 16, 0),
-	SegmentRegister ("CS", 16, 1),
-	SegmentRegister ("SS", 16, 2),
-	SegmentRegister ("DS", 16, 3),
-	SegmentRegister ("FS", 16, 4),
-	SegmentRegister ("GS", 16, 5)
+	SegmentRegister ("ES", 16, 0, 0x26),
+	SegmentRegister ("CS", 16, 1, 0x2E),
+	SegmentRegister ("SS", 16, 2, 0x36),
+	SegmentRegister ("DS", 16, 3, 0x3E),
+	SegmentRegister ("FS", 16, 4, 0x64),
+	SegmentRegister ("GS", 16, 5, 0x65)
 };
 
 Register *SegmentRegister::Read (const string &str, InputFile &inp) throw ()
@@ -40,9 +40,8 @@ Register *SegmentRegister::Read (const string &str, InputFile &inp) throw ()
 	return 0;
 }
 
-GPRegister GPRegister:: RegisterTable[] =
+GPRegister GPRegister::RegisterTable[] =
 {
-	GPRegister ("EAX", 32, 0),
 	GPRegister ("ECX", 32, 1),
 	GPRegister ("EDX", 32, 2),
 	GPRegister ("EBX", 32, 3),
@@ -51,16 +50,10 @@ GPRegister GPRegister:: RegisterTable[] =
 	GPRegister ("ESI", 32, 6),
 	GPRegister ("EDI", 32, 7),
 
-	GPRegister ("AX", 16, 0),
 	GPRegister ("CX", 16, 1),
 	GPRegister ("DX", 16, 2),
-	GPRegister ("BX", 16, 3),
 	GPRegister ("SP", 16, 4),
-	GPRegister ("BP", 16, 5),
-	GPRegister ("SI", 16, 6),
-	GPRegister ("DI", 16, 7),
 
-	GPRegister ("AL", 8, 0),
 	GPRegister ("CL", 8, 1),
 	GPRegister ("DL", 8, 2),
 	GPRegister ("BL", 8, 3),
@@ -78,7 +71,50 @@ Register *GPRegister::Read (const string &str, InputFile &inp) throw ()
 	return 0;
 }
 
-ControlRegister ControlRegister:: RegisterTable[] =
+Accumulator Accumulator::RegisterTable[] =
+{
+	Accumulator ("EAX", 32, 0),
+	Accumulator ("AX", 16, 0),
+	Accumulator ("AL", 8, 0)
+};
+
+Register *Accumulator::Read (const string &str, InputFile &inp) throw ()
+{
+	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (Accumulator); i++)
+		if (RegisterTable[i].GetName() == str) return RegisterTable + i;
+
+	return 0;
+}
+
+BaseRegister BaseRegister::RegisterTable[] =
+{
+	BaseRegister ("BX", 16, 3, 7, 0),
+	BaseRegister ("BP", 16, 5, 6, 2)
+};
+
+Register *BaseRegister::Read (const string &str, InputFile &inp) throw ()
+{
+	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (BaseRegister); i++)
+		if (RegisterTable[i].GetName() == str) return RegisterTable + i;
+
+	return 0;
+}
+
+IndexRegister IndexRegister::RegisterTable[] =
+{
+	IndexRegister ("SI", 16, 6, 4, 0),
+	IndexRegister ("DI", 16, 7, 5, 1)
+};
+
+Register *IndexRegister::Read (const string &str, InputFile &inp) throw ()
+{
+	for (unsigned int i = 0; i < sizeof (RegisterTable) / sizeof (IndexRegister); i++)
+		if (RegisterTable[i].GetName() == str) return RegisterTable + i;
+
+	return 0;
+}
+
+ControlRegister ControlRegister::RegisterTable[] =
 {
 	ControlRegister ("CR0", 32, 0),
 	ControlRegister ("CR1", 32, 1),
@@ -98,7 +134,7 @@ Register *ControlRegister::Read (const string &str, InputFile &inp) throw ()
 	return 0;
 }
 
-TestRegister TestRegister:: RegisterTable[] =
+TestRegister TestRegister::RegisterTable[] =
 {
 	TestRegister ("TR0", 32, 0),
 	TestRegister ("TR1", 32, 1),
@@ -118,7 +154,7 @@ Register *TestRegister::Read (const string &str, InputFile &inp) throw ()
 	return 0;
 }
 
-DebugRegister DebugRegister:: RegisterTable[] =
+DebugRegister DebugRegister::RegisterTable[] =
 {
 	DebugRegister ("DR0", 32, 0),
 	DebugRegister ("DR1", 32, 1),
@@ -138,7 +174,7 @@ Register *DebugRegister::Read (const string &str, InputFile &inp) throw ()
 	return 0;
 }
 
-MMXRegister MMXRegister:: RegisterTable[] =
+MMXRegister MMXRegister::RegisterTable[] =
 {
 	MMXRegister ("MM",  64, 0),
 	MMXRegister ("MM0", 64, 0),
@@ -159,7 +195,7 @@ Register *MMXRegister::Read (const string &str, InputFile &inp) throw ()
 	return 0;
 }
 
-XMMRegister XMMRegister:: RegisterTable[] =
+XMMRegister XMMRegister::RegisterTable[] =
 {
 	XMMRegister ("XMM",  128, 0),
 	XMMRegister ("XMM0", 128, 0),
@@ -180,7 +216,7 @@ Register *XMMRegister::Read (const string &str, InputFile &inp) throw ()
 	return 0;
 }
 
-FPURegister FPURegister:: RegisterTable[] =
+FPURegister FPURegister::RegisterTable[] =
 {
 	FPURegister ("ST0", 80, 0),
 	FPURegister ("ST1", 80, 1),
@@ -251,6 +287,15 @@ Register *Register::Read (const string &str, InputFile &inp) throw ()
 	if (answer != 0) return answer;
 
 	answer = GPRegister::Read (UppercaseName, inp);
+	if (answer != 0) return answer;
+
+	answer = Accumulator::Read (UppercaseName, inp);
+	if (answer != 0) return answer;
+
+	answer = BaseRegister::Read (UppercaseName, inp);
+	if (answer != 0) return answer;
+
+	answer = IndexRegister::Read (UppercaseName, inp);
 	if (answer != 0) return answer;
 
 	answer = ControlRegister::Read (UppercaseName, inp);
