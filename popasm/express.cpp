@@ -22,4 +22,3 @@
 
 const char IncompatibleTerms::WhatString[] = "Incompatible terms.";
 const char ConstantExpected::WhatString[] = "Operation expected a constant term.";
-const char DivisionException::WhatString[] = "Division by zero or non-constant expression.";

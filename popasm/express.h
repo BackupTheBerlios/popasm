@@ -50,25 +50,25 @@ class ConstantExpected : public exception
 	const char *what() const {return WhatString;}
 };
 
+// Root of exception classes hierarchy
 class ExpressionException : public exception
 {
-	public:
-	ExpressionException () {}
-	virtual ~ExpressionException () {}
+	protected:
+	string WhatString;
 
-	virtual const char *what() const = 0;
+	public:
+	ExpressionException (const string &s) : WhatString(s) {}
+	~ExpressionException () {}
+
+	virtual const char *what() const throw () {return WhatString.c_str();}
 };
 
 // Thrown when one attempts to divide by an empty, zero or non-constant expression
 class DivisionException : public ExpressionException
 {
-	static const char WhatString[];
-
 	public:
-	DivisionException () {}
+	DivisionException () : ExpressionException ("Division by zero or non-constant expression.") {}
 	~DivisionException () {}
-
-	const char *what() const {return WhatString;}
 };
 
 // A BasicTerm is a pair whose first element is a pointer to a numeric constant and the second element is
