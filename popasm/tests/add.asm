@@ -15,4 +15,3 @@ add [200h],5
 add byte [200h],5
 add byte [200h],byte 5
 add [200h],byte 5
-
