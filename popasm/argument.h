@@ -57,18 +57,18 @@ class Argument
 	const BasicArgument *Data;
 	bool Owner;
 
-	static Argument *MakeMemory (const Expression &e, unsigned int CurrentAddressSize);
+	static Argument *MakeMemory (const Expression &e);
 
 	public:
 	Argument (const BasicArgument *d, bool own) : Data(d), Owner(own) {}
 	~Argument () {if (Owner) delete Data;}
 
 	const BasicArgument *GetData () const throw () {return Data;}
-	static Argument *MakeArgument (const Expression &e, unsigned int CurrentAddressSize);
+	static Argument *MakeArgument (const Expression &e);
 
 	bool Match (BasicIdFunctor *arg) const {return (*arg)(Data);}
 
-	enum CheckType {NONE, EQUAL, GREATER, HALF};
+	enum CheckType {NONE, EQUAL, GREATER, HALF, MINUS_16BITS};
 	bool TypeCheck (Argument &arg, CheckType ct);
 	unsigned int GetSize () const throw () {return Data->GetSize();}
 	void SetSize (unsigned int sz) const {Data->SetSize(sz);}

@@ -74,7 +74,22 @@ bool Argument::TypeCheck (Argument &arg, CheckType ct)
 				return true;
 			}
 
-			return s1 == s2 / 2;
+			return s1 == (s2 / 2);
+
+		case MINUS_16BITS:
+			if (s1 == 0)
+			{
+				SetSize (s2 - 16);
+				return true;
+			}
+
+			if (s2 == 0)
+			{
+				arg.SetSize (s1 + 2);
+				return true;
+			}
+
+			return (s1 == s2 - 16);
 
 		case NONE:
 			break;
@@ -83,7 +98,7 @@ bool Argument::TypeCheck (Argument &arg, CheckType ct)
 	return true;
 }
 
-Argument *Argument::MakeArgument (const Expression &e, unsigned int CurrentAddressSize)
+Argument *Argument::MakeArgument (const Expression &e)
 {
 	switch (e.GetType())
 	{
@@ -119,7 +134,7 @@ Argument *Argument::MakeArgument (const Expression &e, unsigned int CurrentAddre
 			break;
 
 		case Type::STRONG_MEMORY:
-			return MakeMemory (e, CurrentAddressSize);
+			return MakeMemory (e);
 	}
 
 	return 0;
