@@ -88,7 +88,7 @@ class Parser
 
 	public:
 	static Expression *EvaluateExpression (const vector<Token *> &v);
-	vector<Byte> ParseLine (unsigned int CurrentMode);
+	vector<Byte> ParseLine ();
 
 	Parser (InputFile &i) throw () : Input(i) {}
 	~Parser () throw () {}

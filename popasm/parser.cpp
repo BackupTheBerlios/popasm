@@ -203,7 +203,7 @@ Expression *Parser::EvaluateExpression (const vector<Token *> &v)
 	return Result;
 }
 
-vector<Byte> Parser::ParseLine (unsigned int CurrentMode)
+vector<Byte> Parser::ParseLine ()
 {
 	// Reads all tokens in the line to Tokens vector
 	vector<Token *> Tokens;
@@ -239,13 +239,20 @@ vector<Byte> Parser::ParseLine (unsigned int CurrentMode)
 				// Checks wheter we got a label or a command
 				cmd = dynamic_cast<const Command *> (sym->GetData());
 				State = (cmd == 0) ? LABEL : COMMAND;
-				i++;
 				break;
 
 			case LABEL:
+				// Checks if the user has specified more than one label
+				if (var != 0) throw 0;
+				var = sym->GetData();
+
+				State = INITIAL;
 				break;
 
 			case COMMAND:
+				// Skips command name
+				i++;
+
 				// Gets all command arguments
 				while (i != Tokens.end())
 				{
@@ -270,7 +277,7 @@ vector<Byte> Parser::ParseLine (unsigned int CurrentMode)
 
 					// Converts the tokens into an argument
 					Expression *e = EvaluateExpression (vector<Token *> (i, j));
-					Arguments.push_back (Argument::MakeArgument (*e, CurrentMode));
+					Arguments.push_back (Argument::MakeArgument (*e));
 					delete e;
 
 					// Skips the comma
@@ -279,7 +286,7 @@ vector<Byte> Parser::ParseLine (unsigned int CurrentMode)
 				}
 
 				// Assemble the command
-				cmd->Assemble (var, Arguments, Encoding, CurrentMode);
+				cmd->Assemble (var, Arguments, Encoding);
 
 				// Delete what was used during parsing. var needs not be deleted because it's within sym
 				delete sym;
