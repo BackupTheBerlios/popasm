@@ -203,7 +203,19 @@ class Memory : public BasicArgument
 		{
 			const Memory *mem = dynamic_cast<const Memory *> (arg);
 			if (mem == 0) return false;
-			return MatchSize (size, GetSize()) && Match (dist, GetDistance()) && Match (type, Type);
+			return MatchSize (size, mem->GetSize()) && Match (dist, mem->GetDistanceType()) && Match (type, mem->GetType());
+		}
+	};
+
+	class FarMemory : public BasicArgument::IdFunctor
+	{
+		public:
+		bool operator() (const BasicArgument *arg)
+		{
+			const Memory *mem = dynamic_cast<const Memory *> (arg);
+			if (mem == 0) return false;
+			if (mem->GetDistanceType() == NEAR) return false;
+			return (mem->GetSize() == 32) || (mem->GetSize() == 48);
 		}
 	};
 
