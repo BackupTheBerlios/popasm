@@ -623,7 +623,7 @@ NaturalNumber &NaturalNumber::operator-= (const NaturalNumber &n) throw (Underfl
 	{
 		// Underflow has occured. Checks the most significant bit, because if it zero and the carry is
 		// 0xFFFF, its placement would be redundant
-		if (!(carry == 0xFFFF) && (back() & 0x8000 != 0))
+		if (!(carry == 0xFFFF) && ((back() & 0x8000) != 0))
 			push_back (static_cast<Word> (carry));
 
 		throw Underflow(*this);
@@ -911,6 +911,26 @@ Word NaturalNumber::IsRadix (char c) throw ()
 	}
 
 	return 0;
+}
+
+unsigned long int NaturalNumber::GetValue () const throw (Overflow)
+{
+	unsigned long int value = 0;
+
+	switch (Size())
+	{
+		case 2:
+			value += static_cast<unsigned long int> ((*this)[1]) << 16;
+		case 1:
+			value += static_cast<unsigned long int> ((*this)[0]);
+		case 0:
+			break;
+
+		default:
+			throw Overflow ();
+	}
+
+	return value;
 }
 
 //--- Integer Numbers
@@ -1367,6 +1387,32 @@ const IntegerNumber IntegerNumber::Divide (const IntegerNumber &n, IntegerNumber
 	// Quotient is positive if dividend and divisor have the same sign
 	Quotient.Negative = Negative != n.Negative;
 	return Quotient;
+}
+
+long int IntegerNumber::GetValue (bool CheckSign = true) const throw (Overflow)
+{
+	// Gets the value of the AbsoluteValue
+	long int t = static_cast<long int> (AbsoluteValue.GetValue());
+
+	if (CheckSign)
+	{
+		// Changes the sign if necessary and tests for overflow
+		if (Negative)
+		{
+			t = -t;
+			if (t > 0) throw Overflow();
+		}
+		else
+		{
+			if (t < 0) throw Overflow();
+		}
+	}
+	else
+	{
+		if (Negative) t = -t;
+	}
+
+	return t;
 }
 
 bool IntegerNumber::Test () throw ()

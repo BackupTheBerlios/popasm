@@ -32,6 +32,7 @@ class InvalidBase;
 class InvalidDigit;
 class InvalidNumber;
 class Underflow;
+class Overflow;
 class DivisionByZero;
 class LeadingZero;
 class PrecisionLoss;
@@ -140,6 +141,8 @@ class NaturalNumber : vector <Word>
 	string Print (Word Base = 10) const throw ();
 	// Detects if a number is zero
 	bool Zero() const throw (LeadingZero);
+	// Returns the value of the number as an unsigned long int
+	unsigned long int GetValue () const throw (Overflow);
 
 	// Performs tests to check if the class is working without bugs
 	static bool Test () throw ();
@@ -224,6 +227,8 @@ class IntegerNumber
 	bool Zero() const throw (LeadingZero);
 	// Gets the absolute value of the number
 	const NaturalNumber Abs() const throw () {return AbsoluteValue;}
+	// Returns the value of the number as a signed long int
+	long int GetValue (bool CheckSign) const throw (Overflow);
 
 	// Performs tests to check if the class is working without bugs
 	static bool Test () throw ();
@@ -362,6 +367,14 @@ class Underflow : public NumberException
 	public:
 	Underflow (const NaturalNumber &n) : NumberException ("Underflow."), Complement(n) {}
 	~Underflow () {}
+};
+
+// The caller tried to convert a number to a long int, but the number was too big
+class Overflow : public NumberException
+{
+	public:
+	Overflow () : NumberException ("Overflow.") {}
+	~Overflow () {}
 };
 
 // Division by zero attempted
