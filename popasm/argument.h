@@ -75,17 +75,6 @@ class OneUndefinedSize : public exception
 	const char *what() const throw() {return WhatString;}
 };
 
-class InvalidFullPointer : public exception
-{
-	static const char WhatString[];
-
-	public:
-	InvalidFullPointer () throw () {}
-	~InvalidFullPointer () throw () {}
-
-	const char *what() const throw() {return WhatString;}
-};
-
 class Argument
 {
 	const BasicArgument *Data;
@@ -98,7 +87,7 @@ class Argument
 	~Argument () {if (Owner) delete Data;}
 
 	const BasicArgument *GetData () const throw () {return Data;}
-	static Argument *MakeArgument (const Expression &e) throw (InvalidArgument, InvalidFullPointer, exception);
+	static Argument *MakeArgument (const Expression &e) throw (InvalidArgument, exception);
 
 	bool Match (BasicIdFunctor *arg) const {return (*arg)(Data);}
 

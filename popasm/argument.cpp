@@ -99,7 +99,7 @@ bool Argument::TypeCheck (Argument &arg, CheckType ct) const throw (UndefinedSiz
 	return true;
 }
 
-Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, InvalidFullPointer, exception)
+Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, exception)
 {
 	const Expression *Prefix = e.GetSegmentPrefix();
 
@@ -139,9 +139,10 @@ Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, I
 						const pair<Number *, Symbol *> *q = Prefix->TermAt(0);
 						if ((q->first == 0) || (q->second != 0)) throw InvalidFullPointer();
 
-						Word seg = q->first->GetInteger (false);
+						Dword seg = q->first->GetInteger (false);
 						Dword off = p->first->GetInteger (false);
-						return new Argument (new FullPointer (e.GetSize(), seg, off), true);
+						if (seg > 0xFFFF) throw InvalidFullPointer();
+						return new Argument (new FullPointer (p->first->GetSize(), static_cast<Word> (seg), off), true);
 					}
 
 					throw InvalidArgument (e);
@@ -162,4 +163,3 @@ Argument *Argument::MakeArgument (const Expression &e) throw (InvalidArgument, I
 
 const char UndefinedSize::WhatString[] = "Operation size undefined. At least one argument must be explicitly sized.";
 const char OneUndefinedSize::WhatString[] = "Operation size undefined. Both arguments must be explicitly sized.";
-const char InvalidFullPointer::WhatString[] = "Non-constant full-pointer. Both parts must be constants.";
