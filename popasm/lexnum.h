@@ -25,18 +25,6 @@
 #include "lexical.h"
 #include "inp_file.h"
 
-class IntegerExpected : public exception
-{
-	RealNumber n;
-	string WhatString;
-
-	public:
-	IntegerExpected (const RealNumber &nn) throw () : n(nn), WhatString ("Integer number expected, got ")	{WhatString += nn.Print();}
-	~IntegerExpected () throw () {}
-
-	const char *what() const {return WhatString.c_str();}
-};
-
 // Thrown when the user attempts to set the size of an expression to a number not multiple of eight
 class InvalidSize : public exception
 {
@@ -79,7 +67,11 @@ class Number : public Token
 
 	const RealNumber &GetValue () const throw() {return n;}
 	bool IsInteger () const throw () {return n.GetInteger();}
-	long int GetInteger (bool Signed = true) const throw (IntegerExpected, Overflow);
+
+	// Returns the value of the number as an unsigned long int
+	unsigned long int GetUnsignedLong () const throw (IntegerExpected, Overflow) {return n.GetUnsignedLong();}
+	// Returns the value of the number as a long int
+	long int GetLong () const throw (IntegerExpected, Overflow) {return n.GetLong();}
 
 	// Math operators reset Size constraints
 	Number &operator+= (const Number &x) {n += x.n; Size = 0; return *this;}
