@@ -25,5 +25,5 @@ void Constant::SetValue(Expression *NewValue) throw ()
 		Value = NewValue;
 	}
 	else
-		throw RedefinedConstant (GetName());
+		throw MultidefinedSymbol (GetName());
 }

@@ -24,17 +24,6 @@
 #include "variable.h"
 #include "type_exp.h"
 
-class RedefinedConstant : public exception
-{
-	string WhatString;
-
-	public:
-	RedefinedConstant (const string &s) throw () : WhatString ("Illegal constant redefinition: ") {WhatString += s;}
-	~RedefinedConstant () throw () {}
-
-	const char *what () const throw () {return WhatString.c_str();}
-};
-
 class Constant : public UserDefined
 {
 	Expression *Value;
