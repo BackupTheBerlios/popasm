@@ -19,7 +19,10 @@
  *                                                                         *
  ***************************************************************************/
 
+#include "argument.h"
 #include "parser.h"
+#include "command.h"
+#include "lexsym.h"
 
 EncloserMismatch::EncloserMismatch (const Encloser *op, const Encloser *cl) throw () : Opener(op), Closer(cl)
 {
@@ -56,7 +59,7 @@ const char *UnexpectedEnd::WhatString = "Unexpected end of expression reached.";
 enum StopCondition {END_REACHED, TERM_REACHED, ENCLOSER_REACHED};
 
 // Reads all unary operators from i on, and store them in v
-StopCondition ReadPrefixOperators (vector<Operator *> &UnaryOps, vector<Token *> &v, vector<Token *>::iterator &i)
+StopCondition ReadPrefixOperators (vector<Operator *> &UnaryOps, const vector<Token *> &v, vector<Token *>::const_iterator &i)
 {
 	Operator *op;
 	Encloser *enc;
@@ -87,7 +90,7 @@ StopCondition ReadPrefixOperators (vector<Operator *> &UnaryOps, vector<Token *>
 	return END_REACHED;
 }
 
-Operator *GetBinaryOperator (vector<Token *> &v, vector<Token *>::iterator &i, Encloser *Opener)
+Operator *GetBinaryOperator (const vector<Token *> &v, vector<Token *>::const_iterator &i, Encloser *Opener)
 {
 	Operator *BinaryOp;
 	Encloser *enc;
@@ -114,7 +117,7 @@ Operator *GetBinaryOperator (vector<Token *> &v, vector<Token *>::iterator &i, E
 	return BinaryOp;
 }
 
-Expression *GetExpression (vector<Token *> &v, vector<Token *>::iterator &i, unsigned int PreviousPrec, Encloser *Opener)
+Expression *GetExpression (const vector<Token *> &v, vector<Token *>::const_iterator &i, unsigned int PreviousPrec, Encloser *Opener)
 {
 	vector <Operator *> UnaryOps;
 	Operator *op, *BinaryOp;
@@ -191,11 +194,105 @@ Expression *GetExpression (vector<Token *> &v, vector<Token *>::iterator &i, uns
 	return Term;
 }
 
-Expression *Parser::EvaluateExpression (vector<Token *> &v)
+Expression *Parser::EvaluateExpression (const vector<Token *> &v)
 {
 	Expression *Result;
-	vector<Token *>::iterator i = v.begin();
+	vector<Token *>::const_iterator i = v.begin();
 
 	Result = GetExpression (v, i, 0, 0);
 	return Result;
+}
+
+vector<Byte> Parser::ParseLine (unsigned int CurrentAddressSize)
+{
+	// Reads all tokens in the line to Tokens vector
+	vector<Token *> Tokens;
+	Token::ReadLine (Tokens, Input);
+	vector<Token *>::iterator i = Tokens.begin();
+
+	vector<Argument *> Arguments;
+
+	vector<Byte> Encoding;
+	enum {INITIAL, LABEL, COMMAND, FINAL} State = INITIAL;
+
+	const Symbol *sym = 0;
+	const BasicSymbol *var = 0;
+	const Command *cmd = 0;
+
+	while (State != FINAL)
+	{
+		switch (State)
+		{
+			// Beginning of line
+			case INITIAL:
+				// Checks for end-of-line
+				if (i == Tokens.end())
+				{
+					State = FINAL;
+					break;
+				}
+
+				// The first token MUST be a symbol, otherwise we have a syntax error
+				sym = dynamic_cast<Symbol *> (*i);
+				if (sym == 0) throw 0;
+
+				// Checks wheter we got a label or a command
+				cmd = dynamic_cast<const Command *> (sym->GetData());
+				State = (cmd == 0) ? LABEL : COMMAND;
+				i++;
+				break;
+
+			case LABEL:
+				break;
+
+			case COMMAND:
+				// Gets all command arguments
+				while (i != Tokens.end())
+				{
+					vector<Token *>::iterator j = i;
+
+					// Seeks the comma or the rest of the line
+					while (j != Tokens.end())
+					{
+						Operator *op = dynamic_cast <Operator *> (*j);
+						if (op != 0)
+						{
+							// If it is a comma, delete it
+							if (op->GetName() == ",")
+							{
+								delete *j;
+								break;
+							}
+						}
+
+						j++;
+					}
+
+					// Converts the tokens into an argument
+					Expression *e = EvaluateExpression (vector<Token *> (i, j));
+					Arguments.push_back (Argument::MakeArgument (*e, CurrentAddressSize));
+					delete e;
+
+					// Skips the comma
+					if (j != Tokens.end()) j++;
+					i = j;
+				}
+
+				// Assemble the command
+				cmd->Assemble (var, Arguments, Encoding);
+
+				// Delete what was used during parsing. var needs not be deleted because it's within sym
+				delete sym;
+				for (vector<Argument *>::iterator i = Arguments.begin(); i != Arguments.end(); i++)
+					delete *i;
+
+				State = FINAL;
+				break;
+
+			case FINAL:
+				break;
+		}
+	}
+
+	return Encoding;
 }

@@ -25,7 +25,11 @@
 #include <vector>
 #include <exception>
 #include <string>
+
+#include "lexical.h"
 #include "lexop.h"
+#include "inp_file.h"
+#include "defs.h"
 
 // Thrown when a pair of enclosers do not match. Eg. "(2 + 2]"
 class EncloserMismatch : public exception
@@ -80,11 +84,14 @@ class UnexpectedEnd : public exception
 
 class Parser
 {
-	public:
-	static Expression *EvaluateExpression (vector<Token *> &v);
+	InputFile &Input;
 
-	Parser () {}
-	~Parser () {}
+	public:
+	static Expression *EvaluateExpression (const vector<Token *> &v);
+	vector<Byte> ParseLine (unsigned int CurrentAddressSize);
+
+	Parser (InputFile &i) throw () : Input(i) {}
+	~Parser () throw () {}
 };
 
 #endif
