@@ -79,8 +79,25 @@ string *InputFile::GetString () throw ()
 	// Is it an alphanumeric string or a special char like '[', '.', etc.?
 	if (!AlphaNumeric (*i))
 	{
-		s = new string (i, i + 1);
-		RestOfLine = string (++i, RestOfLine.end());
+		// If these characters appear twice in a row, they must be treated as a single string, as in << or //
+		static char DoubleOperators[] = "/%<>$";
+		string::iterator j = i + 1;
+
+		for (unsigned int x = 0; x < sizeof(DoubleOperators); x++)
+		{
+			if (*i == DoubleOperators[x])
+			{
+				// Checks if the operator is repeated in the next character
+				if (*i == *j)
+				{
+					j++;
+					break;
+				}
+			}
+		}
+
+		s = new string (i, j);
+		RestOfLine = string (j, RestOfLine.end());
 	}
 	else
 	{
