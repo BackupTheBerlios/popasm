@@ -25,6 +25,7 @@
 #include <string>
 #include <exception>
 #include "defs.h"
+#include "type.h"
 
 class OperatorException;
 class InvalidArity;
@@ -253,6 +254,19 @@ class SizeCast : public OperatorData<T>
 	~SizeCast () throw () {}
 
 	T &operator() (T &x) const {x.SetSize(Size); return x;}
+};
+
+template <class T = int>
+class DistanceCast : public OperatorData<T>
+{
+	Type::Distance dist;
+
+	public:
+	DistanceCast (const string &n, unsigned int p0, unsigned int p1, Type::Distance d) throw ()
+		: OperatorData (n, p0, p1), dist(d) {}
+	~DistanceCast () throw () {}
+
+	T &operator() (T &x) const {x.SetDistanceType(dist); return x;}
 };
 
 template <class T = int>
