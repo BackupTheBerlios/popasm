@@ -19,9 +19,21 @@
 #define FULL_PTR_H
 
 #include <string>
+#include <exception>
 
 #include "argument.h"
 #include "defs.h"
+
+class InvalidFullPointer : public exception
+{
+	static const char WhatString[];
+
+	public:
+	InvalidFullPointer () throw () {}
+	~InvalidFullPointer () throw () {}
+
+	const char *what() const throw() {return WhatString;}
+};
 
 class FullPointer : public BasicArgument
 {
@@ -29,7 +41,7 @@ class FullPointer : public BasicArgument
 	Dword Offset;
 
 	public:
-	FullPointer (unsigned int sz, Word seg, Dword off) throw () : BasicArgument (sz), Offset(off) {}
+	FullPointer (unsigned int sz, Word seg, Dword off) throw (InvalidFullPointer);
 	~FullPointer () throw () {}
 
 	void Write (vector<Byte> &Output) const throw ();

@@ -18,6 +18,16 @@
 #include "full_ptr.h"
 #include "defs.h"
 
+const char InvalidFullPointer::WhatString[] = "Invalid immediate full-pointer.";
+
+FullPointer::FullPointer (unsigned int sz, Word seg, Dword off) throw (InvalidFullPointer) : BasicArgument (sz)
+{
+	if ((sz == 0) && (CurrentAssembler->GetCurrentMode() == 16) && (off > 0xFFFF)) throw InvalidFullPointer();
+
+	Segment = seg;
+	Offset = off;
+}
+
 void FullPointer::Write (vector<Byte> &Output) const throw ()
 {
 	BasicDataTypes TypesUnion;
