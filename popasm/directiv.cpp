@@ -154,18 +154,27 @@ void FunctionBITS (const Symbol *sym, vector<Token *> &Tokens, vector<Byte> &Enc
 void FunctionEQU (const Symbol *sym, vector<Token *> &Tokens, vector<Byte> &Encoding)
 {
 	Constant *c;
+	Expression *e;
 	vector<Token *>::iterator i = Tokens.begin();
 
 	if (sym == 0)
 		throw NameMissing ();
 
-	c = new Constant (sym->GetName(), Parser::EvaluateExpression (Tokens, i));
+	e = Parser::EvaluateExpression (Tokens, i);
+	if (i != Tokens.end())
+	{
+		cout << "Extra characters on line." << endl;
+		return;
+	}
+
+	c = new Constant (sym->GetName(), e);
 	CurrentAssembler->DefineSymbol (c);
 }
 
 void FunctionEQUAL (const Symbol *sym, vector<Token *> &Tokens, vector<Byte> &Encoding)
 {
 	vector<Token *>::iterator i = Tokens.begin();
+	Expression *e;
 
 	if (sym == 0)
 		throw NameMissing ();
@@ -177,6 +186,13 @@ void FunctionEQUAL (const Symbol *sym, vector<Token *> &Tokens, vector<Byte> &En
 	{
 		c = new Constant (sym->GetName(), 0, true);
 		CurrentAssembler->DefineSymbol (c);
+	}
+
+	e = Parser::EvaluateExpression (Tokens, i);
+	if (i != Tokens.end())
+	{
+		cout << "Extra characters on line." << endl;
+		return;
 	}
 
 	c->SetValue (Parser::EvaluateExpression (Tokens, i));
