@@ -51,6 +51,24 @@ Register *GPRegister::Read (const string &str, InputFile &inp) throw ()
 	return GPRegister32Bits::Read (str, inp);
 }
 
+const Register *GPRegister::GetRegister (Byte code, int size) throw ()
+{
+	switch (size)
+	{
+		case 8:
+			return GPRegister8Bits::GetRegister (code, size);
+
+		case 16:
+			return GPRegister16Bits::GetRegister (code, size);
+
+		case 32:
+		default:
+			break;
+	}
+
+	return GPRegister32Bits::GetRegister (code, size);
+}
+
 GPRegister8Bits GPRegister8Bits::RegisterTable[] =
 {
 	GPRegister8Bits ("AL", 8, 0),

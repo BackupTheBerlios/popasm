@@ -22,17 +22,20 @@
 #define REGISTER_H
 
 #include <string>
+#include <typeinfo>
 
 #include "symbol.h"
 #include "inp_file.h"
 #include "argument.h"
 
-class Register : public BasicSymbol, public BasicArgument
+class UndefinedArgument;
+
+class Register : public BasicArgument, public BasicSymbol
 {
 	unsigned int Code;	// Register code
 
 	public:
-	Register (const string &n, unsigned int s, unsigned int c) throw () : BasicSymbol (n), BasicArgument (s, UNDEFINED), Code (c) {}
+	Register (const string &n = "", unsigned int s = 0, unsigned int c = 0) throw () : BasicArgument (s, UNDEFINED), BasicSymbol (n), Code (c) {}
 	~Register () throw () {}
 
 	// Attempts to read a register from the given string. Gets more from inp if necessary. Returns 0 if failed.
@@ -43,11 +46,22 @@ class Register : public BasicSymbol, public BasicArgument
 	class IdFunctor : public BasicArgument::IdFunctor
 	{
 		public:
-		bool operator() (const BasicArgument *arg)
+		bool operator() (Argument &arg)
 		{
-			const T *reg = dynamic_cast<const T *> (arg);
-			if (reg == 0) return false;
-			return ((code == ANY) || (code == reg->GetCode())) && MatchSize (size, arg->GetSize());
+			const T *reg = dynamic_cast<const T *> (arg.GetData());
+
+			if (reg == 0)
+			{
+				if (arg.IsUndefined())
+				{
+					arg.SetData (T::GetRegister(code, GetFirstSize(size)), false);
+					return true;
+				}
+
+				return false;
+			}
+
+			return ((code == ANY) || (code == reg->GetCode())) && MatchSize (size, reg->GetSize());
 		}
 	};
 
@@ -67,6 +81,7 @@ class SegmentRegister : public Register
 	~SegmentRegister () throw () {}
 
 	Byte GetPrefixCode () const throw () {return PrefixCode;}
+	static const Register *GetRegister (Byte code, int size) throw () {return (code == 255) ? RegisterTable : RegisterTable + code;}
 
 	// Attempts to read a register from the given string. Gets more from inp if necessary. Returns 0 if failed.
 	static Register *Read (const string &str, InputFile &inp) throw ();
@@ -79,6 +94,7 @@ class GPRegister : public Register
 	GPRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~GPRegister () throw () {};
 
+	static const Register *GetRegister (Byte code, int size) throw ();
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -90,6 +106,7 @@ class GPRegister8Bits : public GPRegister
 	GPRegister8Bits (const string &n, unsigned int s, unsigned int c) throw () : GPRegister (n, s, c) {}
 	~GPRegister8Bits () throw () {}
 
+	static const Register *GetRegister (Byte code, int size) throw () {return (code == 255) ? RegisterTable : RegisterTable + code;}
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -101,6 +118,7 @@ class GPRegister16Bits : public GPRegister
 	GPRegister16Bits (const string &n, unsigned int s, unsigned int c) throw () : GPRegister (n, s, c) {}
 	~GPRegister16Bits () throw () {}
 
+	static const Register *GetRegister (Byte code, int size) throw () {return (code == 255) ? RegisterTable : RegisterTable + code;}
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -112,6 +130,7 @@ class GPRegister32Bits : public GPRegister
 	GPRegister32Bits (const string &n, unsigned int s, unsigned int c) throw () : GPRegister (n, s, c) {}
 	~GPRegister32Bits () throw () {}
 
+	static const Register *GetRegister (Byte code, int size) throw () {return (code == 255) ? RegisterTable : RegisterTable + code;}
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -152,6 +171,7 @@ class ControlRegister : public Register
 	ControlRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~ControlRegister () throw () {}
 
+	static const Register *GetRegister (Byte code, int size) throw () {return (code == 255) ? RegisterTable : RegisterTable + code;}
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -164,6 +184,7 @@ class TestRegister : public Register
 	TestRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~TestRegister () throw () {}
 
+	static const Register *GetRegister (Byte code, int size) throw () {return (code == 255) ? RegisterTable : RegisterTable + code;}
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -176,6 +197,7 @@ class DebugRegister : public Register
 	DebugRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~DebugRegister () throw () {}
 
+	static const Register *GetRegister (Byte code, int size) throw () {return (code == 255) ? RegisterTable : RegisterTable + code;}
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -188,6 +210,7 @@ class MMXRegister : public Register
 	MMXRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~MMXRegister () throw () {}
 
+	static const Register *GetRegister (Byte code, int size) throw () {return (code == 255) ? RegisterTable : RegisterTable + code;}
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -200,6 +223,7 @@ class XMMRegister : public Register
 	XMMRegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~XMMRegister () throw () {}
 
+	static const Register *GetRegister (Byte code, int size) throw () {return (code == 255) ? RegisterTable : RegisterTable + code;}
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
@@ -211,6 +235,7 @@ class FPURegister : public Register
 	FPURegister (const string &n, unsigned int s, unsigned int c) throw () : Register (n, s, c) {}
 	~FPURegister () throw () {}
 
+	static const Register *GetRegister (Byte code, int size) throw () {return (code == 255) ? RegisterTable : RegisterTable + code;}
 	static Register *Read (const string &str, InputFile &inp) throw ();
 };
 
