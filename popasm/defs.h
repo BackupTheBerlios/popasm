@@ -52,6 +52,7 @@ union BasicDataTypes
 };
 
 string Print (unsigned long int i) throw ();
+void UpperCase (string &s) throw ();
 
 class Assembler;
 extern Assembler *CurrentAssembler;

@@ -117,3 +117,9 @@ string Print (unsigned long int i) throw ()
 	reverse(s.begin(), s.end());
 	return s;
 }
+
+void UpperCase (string &s) throw ()
+{
+	for (string::iterator i = s.begin(); i != s.end(); i++)
+		if ((*i <= 'z') && (*i >= 'a')) *i -= 32;
+}
