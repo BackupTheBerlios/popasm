@@ -23,45 +23,36 @@
 #define TYPE_EXP_H
 
 #include <exception>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "express.h"
 #include "lexsym.h"
 #include "lexnum.h"
 #include "type.h"
+#include "defs.h"
 
 class UnexpectedSegmentPrefix;
 class InvalidSizeCast;
 
-class Expression : BasicExpression<Number, Symbol>, public Type
+class ExpressionData;
+class SimpleExpression;
+
+class Expression
 {
-	Expression *SegmentPrefix;		// Segment prefix (0 if none)
+	ReferenceCount<ExpressionData> *Data;
 
 	public:
-	Expression () throw () : Type(0, Type::SCALAR, UNDEFINED), SegmentPrefix(0) {}
-	Expression (Number *n, Symbol *s, const Type &tt = Type ()) throw ()
-		: BasicExpression<Number, Symbol> (n, s), Type(tt)
-	{
-		SegmentPrefix = 0;
-	}
+	Expression () {}
+	Expression (Number *n, Symbol *v, const Type &t = Type ()) throw ();
+	Expression (const Expression &e) throw () {Data = e.Data->Clone();}
+	~Expression () {kill (Data);}
 
-	Expression (const Expression &e) : BasicExpression<Number, Symbol> (e), Type(e)
-	{
-		SegmentPrefix = (e.SegmentPrefix == 0) ? 0 : e.SegmentPrefix->Clone();
-	}
-
-	~Expression () throw () {delete SegmentPrefix;}
-	virtual Expression *Clone() const {return new Expression(*this);}
-
-	void SetSize (unsigned int s, Number::NumberType nt = Number::ANY) throw (InvalidSize, CastFailed, CastConflict);
-	const Expression *GetSegmentPrefix () const throw () {return SegmentPrefix;}
-
-	void SetDistanceType (int dist) throw (InvalidSizeCast, CastConflict);
-
-	unsigned int QuantityOfTerms () const throw () {return Terms.size();}
-
-	// Attempts to convert an expression to a symbol. Succeeds only if expression is in the form ((0, Symbol*))
-	operator Symbol *() const;
+	ExpressionData &GetData () throw () {return Data->GetData();}
+	const ExpressionData &GetConstData () const throw () {return Data->GetConstData();}
+	void SetSize (unsigned int s, Number::NumberType nt = Number::ANY) const throw (InvalidSize, CastFailed, CastConflict);
+	void SetDistanceType (int dist) const throw (InvalidSizeCast, CastConflict);
 
 	Expression &operator=  (const Expression &e) throw ();
 	Expression &operator+= (const Expression &e);
@@ -78,6 +69,7 @@ class Expression : BasicExpression<Number, Symbol>, public Type
 	Expression &operator^= (const Expression &e);
 	Expression &operator<<= (const Expression &e);
 	Expression &operator>>= (const Expression &e);
+	Expression &operator[] (int);
 	bool operator== (const Expression &e) const throw ();
 
 	// Methods for implementing NASM >>, // and %% operators
@@ -87,30 +79,132 @@ class Expression : BasicExpression<Number, Symbol>, public Type
 
 	Expression &MemberSelect (const Expression &e);
 	Expression &Compose (const Expression &e);
+	Expression &AddToList (const Expression &e);
+	Expression &DUP (const Expression &e);
 
-	const pair<Number *, Symbol *> *TermAt (unsigned int n) const throw ();
+	const SimpleExpression *GetSimpleExpression() const throw ();
+	string Print () const throw ();
+	void Write (vector<Byte> &Output) const throw ();
+};
+
+class ExpressionData : public Type
+{
+	public:
+	ExpressionData (const Type &t = Type(0, Type::SCALAR, UNDEFINED)) throw () : Type(t) {}
+	virtual ~ExpressionData () throw ();
+
+	virtual string Print () const throw () = 0;
+	virtual void Write (vector<Byte> &Output) const throw () = 0;
+	virtual void SetSize (unsigned int s, Number::NumberType nt = Number::ANY) const throw (InvalidSize, CastFailed, CastConflict) = 0;
+	virtual void SetDistanceType (int dist) const throw (InvalidSizeCast, CastConflict) = 0;
+
+	virtual ExpressionData &operator=  (const Expression &e) throw () {Type::operator= (e.GetConstData()); return *this;}
+	virtual ExpressionData &operator+= (const Expression &e) {Type::operator+= (e.GetConstData()); return *this;}
+	virtual ExpressionData &operator-= (const Expression &e) {Type::operator-= (e.GetConstData()); return *this;}
+	virtual ExpressionData &operator*= (const Expression &e) {Type::operator*= (e.GetConstData()); return *this;}
+	virtual ExpressionData &operator/= (const Expression &e) {Type::operator/= (e.GetConstData()); return *this;}
+	virtual ExpressionData &operator%= (const Expression &e) {Type::operator%= (e.GetConstData()); return *this;}
+
+	virtual ExpressionData &operator- () {Type::operator- (); return *this;}
+	virtual ExpressionData &operator~ () {Type::operator~ (); return *this;}
+
+	virtual ExpressionData &operator&= (const Expression &e) {Type::operator&= (e.GetConstData()); return *this;}
+	virtual ExpressionData &operator|= (const Expression &e) {Type::operator|= (e.GetConstData()); return *this;}
+	virtual ExpressionData &operator^= (const Expression &e) {Type::operator^= (e.GetConstData()); return *this;}
+	virtual ExpressionData &operator<<= (const Expression &e) {Type::operator<<= (e.GetConstData()); return *this;}
+	virtual ExpressionData &operator>>= (const Expression &e) {Type::operator>>= (e.GetConstData()); return *this;}
+	virtual bool operator== (const Expression &e) const throw () {return Type::operator== (e.GetConstData());}
+	virtual bool operator== (const ExpressionData &e) const throw () {return Type::operator== (e);}
+
+	// Methods for implementing NASM >>, // and %% operators
+	virtual ExpressionData &BinaryShiftRight (const Expression &e) {Type::operator>>= (e.GetConstData()); return *this;}
+	virtual ExpressionData &UnsignedDivision (const Expression &e) {Type::operator/= (e.GetConstData()); return *this;}
+	virtual ExpressionData &UnsignedModulus (const Expression &e) {Type::operator%= (e.GetConstData()); return *this;}
+
+	virtual ExpressionData &MemberSelect (const Expression &e) {Type::operator= (e.GetConstData()); return *this;}
+	virtual ExpressionData &Compose (const Expression &e) {Type::operator= (e.GetConstData()); return *this;}
+	virtual ReferenceCount<ExpressionData> *AddToList (const Expression &e);
+	virtual ReferenceCount<ExpressionData> *DUP (const Expression &e) {Type::operator= (e.GetConstData()); return 0;}
+};
+
+class SimpleExpression : public ExpressionData
+{
+	BasicExpression<Number, Symbol> Value;					// Expression value
+	ReferenceCount<SimpleExpression> *SegmentPrefix;	// Segment prefix (0 if none)
+
+	public:
+	SimpleExpression () throw () {SegmentPrefix = 0;}
+	SimpleExpression (Number *n, Symbol *s, const Type &tt = Type ()) throw ();
+	SimpleExpression (const SimpleExpression &e);
+	~SimpleExpression () throw () {kill (SegmentPrefix);}
+	SimpleExpression *Clone() const {return new SimpleExpression(*this);}
+
+	void SetSize (unsigned int s, Number::NumberType nt = Number::ANY) const throw (InvalidSize, CastFailed, CastConflict);
+	void SetDistanceType (int dist) const throw (InvalidSizeCast, CastConflict);
+	void Write (vector<Byte> &Output) const;
+
+	const SimpleExpression *GetSegmentPrefix () const throw ();
+	const Symbol *GetSymbol () const throw ();
+	const Number *GetNumber () const throw ();
+
+	typedef BasicExpression<Number, Symbol>::const_iterator const_iterator;
+	const_iterator begin() const throw () {return Value.begin();}
+	const_iterator end() const throw () {return Value.end();}
+
+	SimpleExpression &operator+= (const Expression &e);
+	SimpleExpression &operator-= (const Expression &e);
+	SimpleExpression &operator*= (const Expression &e);
+	SimpleExpression &operator/= (const Expression &e);
+	SimpleExpression &operator%= (const Expression &e);
+
+	SimpleExpression &operator- ();
+	SimpleExpression &operator~ ();
+
+	SimpleExpression &operator&= (const Expression &e);
+	SimpleExpression &operator|= (const Expression &e);
+	SimpleExpression &operator^= (const Expression &e);
+	SimpleExpression &operator<<= (const Expression &e);
+	SimpleExpression &operator>>= (const Expression &e);
+	bool operator== (const ExpressionData &e) const throw ();
+	bool operator== (const Expression &e) const throw ();
+
+	// Methods for implementing NASM >>, // and %% operators
+	SimpleExpression &BinaryShiftRight (const Expression &e);
+	SimpleExpression &UnsignedDivision (const Expression &e);
+	SimpleExpression &UnsignedModulus (const Expression &e);
+
+	SimpleExpression &MemberSelect (const Expression &e);
+	SimpleExpression &Compose (const Expression &e);
+	ReferenceCount<ExpressionData> *AddToList (const Expression &e);
+	ReferenceCount<ExpressionData> *DUP (const Expression &e);
+
 	string Print () const throw ()
 	{
 		string s;
 
-		if (SegmentPrefix != 0)	s += SegmentPrefix->Print() + ":";
+		if (SegmentPrefix != 0)
+			s += SegmentPrefix->GetData().Print() + ":";
 
-		s += BasicExpression<Number, Symbol>::Print();
+		s += Value.Print();
 		return s;
 	}
+};
+
+class DupExpression : public ExpressionData
+{
 };
 
 class UnexpectedSegmentPrefix : public ExpressionException
 {
 	public:
-	UnexpectedSegmentPrefix (const Expression &e) : ExpressionException ("Unexpected segment prefix: ") {WhatString += e.Print();}
+	UnexpectedSegmentPrefix (const ExpressionData &e) : ExpressionException ("Unexpected segment prefix: ") {WhatString += e.Print();}
 	~UnexpectedSegmentPrefix () {}
 };
 
 class SymbolExpected : public ExpressionException
 {
 	public:
-	SymbolExpected (const Expression &e) : ExpressionException ("Symbol expected, got ") {WhatString += e.Print();}
+	SymbolExpected (const ExpressionData &e) : ExpressionException ("Symbol expected, got ") {WhatString += e.Print();}
 	~SymbolExpected () {}
 };
 
@@ -124,7 +218,7 @@ class AggregateExpected : public ExpressionException
 class InvalidArgument : public ExpressionException
 {
 	public:
-	InvalidArgument (const Expression &e) : ExpressionException ("Invalid argument: ") {WhatString += e.Print();}
+	InvalidArgument (const ExpressionData &e) : ExpressionException ("Invalid argument: ") {WhatString += e.Print();}
 	~InvalidArgument () {}
 };
 
