@@ -93,7 +93,7 @@ class BasicTerm : public pair <NumberClass *, VariableClass *>
 	public:
 	BasicTerm (NumberClass *n, VariableClass *v) throw () : pair<NumberClass *, VariableClass *> (n, v) {}
 	BasicTerm (const BasicTerm &t);
-	~BasicTerm () throw () {delete first; delete second;}	// deleting null pointers causes no problems
+	virtual ~BasicTerm () throw () {delete first; delete second;}	// deleting null pointers causes no problems
 
 	bool Zero () const;
 	bool Compatible (const BasicTerm &t) const;
@@ -117,6 +117,8 @@ class BasicTerm : public pair <NumberClass *, VariableClass *>
 	BasicTerm &operator^= (const BasicTerm &t);
 	BasicTerm &operator<<= (const BasicTerm &t);
 	BasicTerm &operator>>= (const BasicTerm &t);
+
+	virtual BasicTerm *Clone () const {return new BasicTerm (*this);}
 
 	// For debugging purposes only
 	string Print () const throw ()
@@ -398,6 +400,8 @@ class BasicExpression
 	BasicExpression (NumberClass *n, VariableClass *v) throw ();
 	BasicExpression (const BasicExpression &t);
 
+	virtual BasicExpression *Clone () const {return new BasicExpression (*this);}
+
 	// Adds a term to the expression. Duplicates it if necessary.
 	void AddTerm (const Term &t);
 	// Deletes all terms and removes them from the expression
@@ -475,7 +479,7 @@ BasicExpression<NumberClass, VariableClass, Redundant>::BasicExpression (const B
 {
 	for (vector<Term *>::const_iterator i = t.Terms.begin(); i != t.Terms.end(); i++)
 	{
-		Terms.push_back (new Term (**i));
+		Terms.push_back ((*i)->Clone());
 	}
 }
 
