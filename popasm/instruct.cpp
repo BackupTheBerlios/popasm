@@ -214,8 +214,8 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax        (110, Opcode (0x0F, 0xBA, 0x05), Syntax::FIRST_ARGUMENT, false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MemWordReg(), new Immed<8, Number::UNSIGNED>())),
 
 		Instruction ("CALL",
-			new UnarySyntax         (100, Opcode (0xFF, 0x02),       Syntax::FIRST_ARGUMENT,                                                          new WordRegNearMem()),
-			new UnarySyntax         (110, Opcode (0xFF, 0x03),       Syntax::FULL_POINTER,                                                            new Mem<0, Memory::INTEGER, Type::FAR>()),
+			new UnarySyntax         (100, Opcode (0xFF, 0x03),       Syntax::FULL_POINTER,                                                            new Mem<0, Memory::INTEGER, Type::FAR>()),
+			new UnarySyntax         (110, Opcode (0xFF, 0x02),       Syntax::FIRST_ARGUMENT,                                                          new WordRegNearMem()),
 			new RelativeUnarySyntax (120, Opcode (0xE8),             Syntax::FIRST_ARGUMENT,                                                          new RelativeArgument (Type::NEAR)),
 			new UnarySyntax         (130, Opcode (0x9A),             Syntax::FIRST_ARGUMENT,                                                          new FullPointer::IdFunctor())),
 
