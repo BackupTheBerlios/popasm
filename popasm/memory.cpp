@@ -23,6 +23,11 @@
 #include "lexsym.h"
 #include "asmer.h"
 
+bool Memory::UseAddressSizePrefix () const throw ()
+{
+	return (AddressSize != 0) && (AddressSize != CurrentAssembler->GetCurrentMode());
+}
+
 void Memory::MakeMemory16Bits (const BaseRegister *Base16, const IndexRegister *Index16)
 {
 	if ((Base16 != 0) && (Index16 != 0))

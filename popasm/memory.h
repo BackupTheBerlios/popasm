@@ -26,6 +26,7 @@
 #include <utility>
 #include <string>
 #include <vector>
+#include <typeinfo>
 
 #include "argument.h"
 #include "register.h"
@@ -181,7 +182,7 @@ class Memory : public BasicArgument
 	bool SIBUsed () const throw () {return (AddressSize == 32) && ((Code & 7) == 4);}
 
 	public:
-	Memory (const Type &t) throw () : BasicArgument (t), SegmentPrefix(0), SIB(0), Code(0), AddressSize(0) {}
+	Memory (const Type &t = Type ()) throw () : BasicArgument (t), SegmentPrefix(0), SIB(0), Code(0), AddressSize(0) {}
 	~Memory () throw () {}
 
 	void MakeMemory16Bits (const BaseRegister *Base16, const IndexRegister *Index16);
@@ -191,6 +192,7 @@ class Memory : public BasicArgument
 	void SetSegmentPrefix (Byte s) throw () {SegmentPrefix = s;}
 	unsigned int GetAddressSize () const throw () {return AddressSize;}
 	void SetAddressSize (unsigned int as) throw () {AddressSize = as;}
+	bool UseAddressSizePrefix () const throw ();
 
 	Byte &GetCode () throw () {return Code;}
 	const Byte &GetCode () const throw () {return Code;}
@@ -203,10 +205,21 @@ class Memory : public BasicArgument
 	class IdFunctor : public BasicArgument::IdFunctor
 	{
 		public:
-		bool operator() (const BasicArgument *arg)
+		bool operator() (Argument &arg)
 		{
-			const Memory *mem = dynamic_cast<const Memory *> (arg);
-			if (mem == 0) return false;
+			const Memory *mem = dynamic_cast<const Memory *> (arg.GetData());
+
+			if (mem == 0)
+			{
+				if (arg.IsUndefined())
+				{
+					arg.SetData (new Memory (Type (GetFirstSize(size), Type::WEAK_MEMORY, GetFirst(dist), GetFirst(type))));
+					return true;
+				}
+
+				return false;
+			}
+
 			if (MatchSize (size, mem->GetSize()))
 			{
 				if (!Match (type, mem->GetNumericalType()))
@@ -228,10 +241,21 @@ class Memory : public BasicArgument
 	class FarMemory : public BasicArgument::IdFunctor
 	{
 		public:
-		bool operator() (const BasicArgument *arg)
+		bool operator() (Argument &arg)
 		{
-			const Memory *mem = dynamic_cast<const Memory *> (arg);
-			if (mem == 0) return false;
+			const Memory *mem = dynamic_cast<const Memory *> (arg.GetData());
+
+			if (mem == 0)
+			{
+				if (arg.IsUndefined())
+				{
+					arg.SetData (new Memory (Type (0, Type::WEAK_MEMORY, FAR, UNDEFINED)));
+					return true;
+				}
+
+				return false;
+			}
+
 			if (!Match (UNDEFINED | INTEGER, mem->GetNumericalType()))
 			{
 				cout << "Must be integer variable";
@@ -246,10 +270,21 @@ class Memory : public BasicArgument
 	class DirectMemory : public BasicArgument::IdFunctor
 	{
 		public:
-		bool operator() (const BasicArgument *arg)
+		bool operator() (Argument &arg)
 		{
-			const Memory *mem = dynamic_cast<const Memory *> (arg);
-			if (mem == 0) return false;
+			const Memory *mem = dynamic_cast<const Memory *> (arg.GetData());
+
+			if (mem == 0)
+			{
+				if (arg.IsUndefined())
+				{
+					arg.SetData (new Memory());
+					return true;
+				}
+
+				return false;
+			}
+
 			if (mem->GetDistanceType() != UNDEFINED) throw MisusedDistanceQualifier();
 
 			switch (mem->GetAddressSize())
