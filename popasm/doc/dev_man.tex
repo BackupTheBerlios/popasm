@@ -52,9 +52,156 @@ Please check which manual is the one intended for your needs.
 
 \pagenumbering{arabic}
 \part{Getting Started}
-% The first chapters of this manual explain the basic modules
+This initial part starts with an introductory chapter which gives an
+overall introduction of how \popasm\ code is organized, so the reader
+can identify which of the chapters ahead will be of his interest.
+
+The remaining chapters deal with the main classes used by \popasm\ 
+to perform all of its functions. They are intended to those who
+wish to understand how things work at the highest level of abstraction,
+ignoring implementation details of the base classes (eg.: how two
+numbers are added is not a concern in this part).
 
 \chapter{Introduction}
+As many projects, \popasm\ code is distributed in many source files
+due to the clear advantages of modular design. The objective of this
+chapter is to offer the reader an overview of how \popasm\ code is
+organized, that is, what modules have been defined, which functionality
+each one offers, and how they interact with one another.
+
+Everything starts at main() function in main.cpp file. Its job is to
+start \popasm\ up, parse command line options and so on (details in
+Chapter \ref{chapmain}). After main() is done with this initialization
+it calls the methods for assembling the input files.
+
+Note that \popasm\ source defines an Assembler class (see Chapter
+\ref{chapasm}) which carries out the assembling task via its
+AssembleFile() method. This method can be seen as the ``root'' of
+\popasm\ execution, for it calls the other vital modules of the
+assembler.
+
+One of such modules is the parser (described in Chapter \ref{chapparser}),
+which calls the lexical analyzer (see Chapter \ref{chaplex}) to read
+the keywords, expressions, etc. from the input files. Such lexical
+items are then checked to verify whether or not they follow \popasm\ 
+syntax. If they do, the parser then converts them into arguments
+(such as memory references) and give them to the instruction (or
+directive) found in the current line.
+
+The Instruction class (explained in Chapter \ref{chapinst}) gets such
+arguments and performs additional checking (eg. type checking). If
+they succeed the instruction is assembled and the resulting encoding
+is returned to the parser.
+
+The paragraphs above rawly descrive how the assembly process works.
+However many details have been intentionally ommited in order to
+make the explanation simple. Such details are fully covered in other
+chapters.
+
+\chapter{What main() does\label{chapmain}}
+To be written.
+
+\chapter{The assembler classes\label{chapasm}}
+One of \popasm\ greatest concerns is compatibility with existing code.
+Such code was written according to syntatic rules due to other
+assemblers. Most of those rules can be gathered together in a single
+assembler (like \popasm\ does), but some of them conflict with one
+another. For example, in \tasm\ a variable name stands for its contents
+while in \nasm\ it returns its offset.
+
+Due to such conflicts, command line options have been created to change
+\popasm\ configuration. Nevertheless, there are differences among
+assemblers which are better tackled by emulating the target assembler
+(for example, operator precedence is slightly different between \popasm\ 
+and \nasm.).
+
+In order to do that, a base class from which all assemblers to be emulated
+derive has been defined. It contains all methods required to perform
+the assembly task. The emulated assemblers then inherit from the base
+class and overrides the necessary methods to achieve compatibility.
+The next sections describe the Assembler base class and PopAsm, the
+only supported assembler at the time of this writing.
+
+\section{Assembler base class}
+The definition of this class can be found in asmer.h file. It contains four
+integer members:
+
+\begin{itemize}
+\item InitialMode --- contains the mode (16 or 32 bits) the assembler must
+be set to before assembling the source file. In other words, this is the
+default operating mode the source will be assembled at, unless explicitly
+changed (eg. via a BITS directive);
+
+\item CurrentMode --- Keeps track of which mode the assembler is operating
+at. This is the member changed by the BITS directive.
+
+\item CurrentPass --- This member is used to store which pass the assembler
+is in. It may be necessary to perform several passes to assemble a single file.
+
+\item CurrentOffset --- stores the memory address the next instruction or
+variable will occupy in memory.
+\end{itemize}
+
+The methods GetCurrentMode(), SetCurrentMode() and GetCurrentOffset() allow
+the interaction with those members.
+
+The only constructor for this class takes the initial mode as its argument.
+It initializes the InitialMode member to this value and sets CurrentPass
+to zero. Note that CurrentMode and CurrentOffset do not need to be
+initialized because the assembler will do that properly at the beginning of
+each pass.
+
+The other methods are PerformPass() and AssembleFile(). The latter takes an
+input file (InputFile is described in Chapter \ref{chapinp}) as argument and
+assembles it. This is done by calling PerformPass() as many times as needed.
+
+PerformPass(), in turn, performs a single pass through the input file and
+returns true if another pass is needed or false if assembly success or failure
+has already been determined. This method resets the CurrentOffset and CurrentMode
+members and parses the lines from the input file, one by one (by means of
+Parser::ParseLine() method. See chapter \ref{chapparser} for details). After
+parsing a line, this method updates the CurrentOffset accordingly.
+
+\section{PopAsm class}
+This is currently the only class that inherits from Assembler, defined in
+files popasm.cpp and popasm.h. The constructor takes the initial mode as
+its only argument. It also initializes the operator, encloser, instruction
+and directive tables. The destructor is responsible for releasing all memory
+from the operator and encloser tables (the other tables use static memory and
+thus do not need to be destroyed).
+
+All the heavy work is performed in the base class by its default AssemblyFile()
+and PerformPass() methods.
+
+\chapter{The Parser\label{chapparser}}
+
+\chapter{Instructions\label{chapinst}}
+
+
+
+
+
+
+
+
+\chapter{Lexical Analyzer\label{chaplex}}
+
+\chapter{Definitions\label{chaprefs}}
+
+\chapter{Numbers\label{chapnums}}
+
+\chapter{Input Files\label{chapinp}}
+
+\chapter{Hash Tables\label{chaphash}}
+
+\chapter{Numbers Again\label{chapnumsagain}}
+
+\chapter{Operators\label{chapop}}
+
+\chapter{Registers\label{chapregs}}
+
+
+
 
 \appendix
 
