@@ -29,7 +29,16 @@ Token *Token::GetToken (InputFile &inp, Context c)
 {
 	// Gets the next string from file. Returns zero if EOF is reached
 	string *s = inp.GetString();
-	if (s == 0) return 0;
+	if (s == 0)
+		return 0;
+
+	// Checks for comment
+	if (*s == ";")
+	{
+		delete s;
+		inp.SkipLine ();
+		return new Symbol (new BasicSymbol ("\n"), true);
+	}
 
 	Token *NextToken;
 
@@ -87,5 +96,5 @@ Token *Token::GetToken (InputFile &inp, Context c)
 	}
 
 	// If all of the above fails... who knows which token is this??
-	return new Symbol (new BasicSymbol (*s), false);
+	return new Symbol (new BasicSymbol (*s), true);
 }
