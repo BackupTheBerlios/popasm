@@ -22,6 +22,38 @@
 #include "asmer.h"
 #include "defs.h"
 
+Segment::Segment (const string &n = "") : BasicSymbol (n), Open(true)
+{
+	CurrentOffset = 0;
+	CurrentOffset = new Label ("$");
+	DefineSymbol (CurrentOffset);
+}
+
+Segment::~Segment ()
+{
+	//! Erase symbol table elements
+}
+
+void Segment::AddContents (const vector<Byte> &v) throw ()
+{
+	Contents.insert(Contents.end(), v.begin(), v.end());
+	CurrentOffset->SetOffset (CurrentOffset->GetOffset() + v.size());
+}
+
+void Segment::Reset () throw ()
+{
+	CurrentOffset->SetOffset (0);
+	Open = true;
+}
+
+Dword Segment::GetCurrentOffset () const throw ()
+{
+	if (CurrentOffset == 0)
+		return 0;
+
+	return CurrentOffset->GetOffset ();
+}
+
 Token *Segment::Read (const string &str, InputFile &inp) throw ()
 {
 	BasicSymbol *temp = Find (str);
@@ -42,30 +74,18 @@ void Segment::DefineSymbol (BasicSymbol *s) throw (MultidefinedSymbol)
 	}
 	else
 	{
-		// Checks if the existing entry in the symbol table is provisory (forward reference)
-		if (typeid (**sym) == typeid (BasicSymbol))
-		{
-			// Yes, it is. Replace it for the new definition unless it is also provisory
-			if (typeid (*s) != typeid (BasicSymbol))
-			{
-				UndefineSymbol (*sym);
-				DefineSymbol (s);
-			}
-		}
+		// No, it is a full-featured symbol. Check whether we are in the same pass
+		// the previous symbol was defined. If so we have a multidefined symbol.
+		if (((*sym)->GetDefinitionPass() == CurrentAssembler->GetCurrentPass()) && (typeid (**sym) != typeid (BasicSymbol)))
+			throw MultidefinedSymbol (s->GetName());
 		else
 		{
-			// No, it is a full-featured symbol. Check whether we are in the same pass
-			// the previous symbol was defined. If so we have a multidefined symbol.
-			if ((*sym)->GetDefinitionPass() == CurrentAssembler->GetCurrentPass())
-				throw MultidefinedSymbol (s->GetName());
-			else
-			{
-				// If the symbol changed since last pass request another one
-				if ((*sym)->Changed (s))
-					CurrentAssembler->RequestNewPass ();
+			// If the symbol changed since last pass request another one
+			if ((*sym)->Changed (s))
+				CurrentAssembler->RequestNewPass ();
 
-				delete s;
-			}
+			UndefineSymbol (*sym);
+			DefineSymbol (s);
 		}
 	}
 }

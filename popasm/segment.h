@@ -21,6 +21,7 @@
 #include <string>
 
 #include "symbol.h"
+#include "variable.h"
 #include "defs.h"
 #include "lexical.h"
 #include "hashtab.h"
@@ -30,17 +31,20 @@ class Segment : public BasicSymbol
 {
 	bool Open;
 	vector<Byte> Contents;
+	Label *CurrentOffset;
 
 	HashTable<BasicSymbol *, HashFunctor, PointerComparator<BasicSymbol> > SymbolTable;
 	void UndefineSymbol (BasicSymbol *s) throw ();
 
 	public:
-	Segment (const string &n = "") : BasicSymbol (n), Open(true) {}
-	~Segment () {}
+	Segment (const string &n = "");
+	~Segment ();
 
 	void Close () {if (!Open) throw 0; Open = false;}
 	bool IsOpen () const throw () {return Open;}
-	void AddContents (const vector<Byte> &v) throw () {Contents.insert(Contents.end(), v.begin(), v.end());}
+	void AddContents (const vector<Byte> &v) throw ();
+	void Reset () throw ();
+	Dword GetCurrentOffset () const throw ();
 
 	Token *Read (const string &str, InputFile &inp) throw ();
 	void DefineSymbol (BasicSymbol *s) throw (MultidefinedSymbol);
