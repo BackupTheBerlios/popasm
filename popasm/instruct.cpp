@@ -74,9 +74,6 @@ HashTable <Instruction *, HashFunctor, PointerComparator<BasicSymbol> > Instruct
 
 typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           GPRegister::IdFunctor>       MemGPReg;
 typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           MMXRegister::IdFunctor>      MemMMXReg;
-typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           MMXRegister::IdFunctor>      MemXMMReg;
-typedef BinaryCompose <logical_or<bool>,  Mem<32, Memory::FLOAT>,      MMXRegister::IdFunctor>      Mem32XMMReg;
-typedef BinaryCompose <logical_or<bool>,  Mem<64, Memory::FLOAT>,      MMXRegister::IdFunctor>      Mem64XMMReg;
 typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           GPRegister16Bits::IdFunctor> MemReg16;
 typedef BinaryCompose <logical_or<bool>,  Memory::IdFunctor,           GPRegister32Bits::IdFunctor> MemReg32;
 typedef BinaryCompose <logical_or<bool>,  GPRegister16Bits::IdFunctor, GPRegister32Bits::IdFunctor> WordReg;
@@ -98,6 +95,11 @@ typedef BinaryCompose <logical_and<bool>, SegmentRegister::IdFunctor,  Register:
 typedef BinaryCompose <logical_and<bool>, SegmentRegister::IdFunctor,  Register::CompareCodeFunctor<3> > DS;
 typedef BinaryCompose <logical_and<bool>, SegmentRegister::IdFunctor,  Register::CompareCodeFunctor<4> > FS;
 typedef BinaryCompose <logical_and<bool>, SegmentRegister::IdFunctor,  Register::CompareCodeFunctor<5> > GS;
+
+template <unsigned int sz = 0, Memory::ContentsType ct = Memory::FLOAT>
+class MemXMMReg : public BinaryCompose <logical_or<bool>,  Mem<sz, ct>, MMXRegister::IdFunctor>
+{
+};
 
 // Instructions that take two arguments. Any combination of register, memory and immediate are allowed.
 // Byte immediate values can be signed extended and accumulators have special optimized opcode.
@@ -175,30 +177,30 @@ void Instruction::SetupInstructionTable () throw ()
 		new OptimizedBinaryInstruction ("ADD", Opcode (0x04), Opcode(0x80, 0x00), Opcode(0x83, 0x00), Opcode (0x00)),
 
 		new Instruction ("ADDPD",
-			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg())),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("ADDPS",
-			new BinarySyntax        (100, Opcode (0x0F, 0x58),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x58),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("ADDSD",
-			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new Mem64XMMReg())),
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
 
 		new Instruction ("ADDSS",
-			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new Mem32XMMReg())),
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x58), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
 
 		new OptimizedBinaryInstruction ("AND", Opcode (0x24), Opcode(0x80, 0x04), Opcode(0x83, 0x04), Opcode (0x20)),
 
 		new Instruction ("ANDPD",
-			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x54), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg())),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x54), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("ANDPS",
-			new BinarySyntax        (100, Opcode (0x0F, 0x54),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x54),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("ANDNPD",
-			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x55), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg())),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x55), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("ANDNPS",
-			new BinarySyntax        (100, Opcode (0x0F, 0x55),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x55),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("ARPL",
 			new BinarySyntax        (100, Opcode (0x63),             Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MemReg16(),   new GPRegister16Bits::IdFunctor())),
@@ -354,10 +356,10 @@ void Instruction::SetupInstructionTable () throw ()
 		new OptimizedBinaryInstruction ("CMP", Opcode (0x3C), Opcode(0x80, 0x07), Opcode(0x83, 0x07), Opcode (0x38)),
 
 		new Instruction ("CMPPD",
-			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("CMPPS",
-			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("CMPS",
 			new StringSyntax        (100, Opcode (0xA6),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<8>(),     new Mem<8>()),
@@ -372,10 +374,10 @@ void Instruction::SetupInstructionTable () throw ()
 
 		new Instruction ("CMPSD",
 			new ZerarySyntax        (100, Opcode (0xA7),             Syntax::MODE_32BITS),
-			new BinarySyntax        (110, Opcode (0xF2, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new Mem64XMMReg(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (110, Opcode (0xF2, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("CMPSS",
-			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new Mem32XMMReg(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0xC2), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("CMPXCHG",
 			new BinarySyntax        (100, Opcode (0x0F, 0xB0),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::PRESENT, new MemGPReg(),   new GPRegister::IdFunctor())),
@@ -384,13 +386,79 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax         (100, Opcode (0x0F, 0xC7, 0x01), Syntax::NOTHING,                                                          new Mem<64>())),
 
 		new Instruction ("COMISD",
-			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x2F), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new Mem64XMMReg())),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x2F), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
 
 		new Instruction ("COMISS",
-			new BinarySyntax        (100, Opcode (0x66, 0x0F),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new Mem64XMMReg())),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT,  new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
 
 		new Instruction ("CPUID",
 			new ZerarySyntax        (100, Opcode (0x0F, 0xA2),       Syntax::NOTHING)),
+
+		new Instruction ("CVTDQ2PD",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0xE6), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::INTEGER>())),
+
+		new Instruction ("CVTDQ2PS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x5B),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::INTEGER>())),
+
+		new Instruction ("CVTPD2DQ",
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0xE6), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("CVTPD2PI",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x2D), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::INTEGER>())),
+
+		new Instruction ("CVTPD2PS",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x5A), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("CVTPI2PD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x2A), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemMMXReg())),
+
+		new Instruction ("CVTPI2PS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x2A),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemMMXReg())),
+
+		new Instruction ("CVTPS2DQ",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x5B), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("CVTPS2PD",
+			new BinarySyntax        (100, Opcode (0x0F, 0x5A),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+
+		new Instruction ("CVTPS2PI",
+			new BinarySyntax        (100, Opcode (0x0F, 0x2D),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+
+		new Instruction ("CVTSD2SI",
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x2D), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+
+		new Instruction ("CVTSD2SS",
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x5A), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+
+		new Instruction ("CVTSI2SD",
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x2A), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemReg32)),
+
+		new Instruction ("CVTSI2SS",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x2A), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemReg32)),
+
+		new Instruction ("CVTSS2SD",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x5A), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
+
+		new Instruction ("CVTSS2SI",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x2D), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
+
+		new Instruction ("CVTTPD2PI",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x2C), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("CVTTPD2DQ",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0xE6), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("CVTTPS2DQ",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x5B), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("CVTTPS2PI",
+			new BinarySyntax        (100, Opcode (0x0F, 0x2C),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+
+		new Instruction ("CVTTSD2SI",
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x2C), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+
+		new Instruction ("CVTTSS2SI",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x2C), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
 
 		new Instruction ("CWD",
 			new ZerarySyntax        (100, Opcode (0x99),             Syntax::MODE_16BITS)),
@@ -410,6 +478,18 @@ void Instruction::SetupInstructionTable () throw ()
 
 		new Instruction ("DIV",
 			new UnarySyntax         (100, Opcode (0xF6, 0x06),       Syntax::FIRST_ARGUMENT,                                                   new MemGPReg(), 1)),
+
+		new Instruction ("DIVPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x5E), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("DIVPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x5E),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("DIVSD",
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x5E), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+
+		new Instruction ("DIVSS",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x5E), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
 
 		new Instruction ("EMMS",
 			new ZerarySyntax        (100, Opcode (0x0F, 0x77),       Syntax::NOTHING)),
@@ -743,6 +823,12 @@ void Instruction::SetupInstructionTable () throw ()
 			new AdditiveUnarySyntax (120, Opcode (0xD9, 0xC8),       Syntax::NOTHING,                                                          new FPURegister::IdFunctor()),
 			new ZerarySyntax        (130, Opcode (0xD9, 0xc9),       Syntax::NOTHING)),
 
+		new Instruction ("FXRSTOR",
+			new UnarySyntax         (100, Opcode (0x0F, 0xAE, 0x01), Syntax::NOTHING,                                                          new Mem<0, Memory::INTEGER>())),
+
+		new Instruction ("FXSAVE",
+			new UnarySyntax         (100, Opcode (0x0F, 0xAE, 0x00), Syntax::NOTHING,                                                          new Mem<0, Memory::INTEGER>())),
+
 		new Instruction ("FXTRACT",
 			new ZerarySyntax        (100, Opcode (0xD9, 0xF4),       Syntax::NOTHING)),
 
@@ -951,6 +1037,12 @@ void Instruction::SetupInstructionTable () throw ()
 		new Instruction ("LAR",
 			new BinarySyntax        (100, Opcode (0x0F, 0x02),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new WordReg(),    new MemWordReg())),
 
+		new Instruction ("LDMXCSR",
+			new UnarySyntax         (100, Opcode (0x0F, 0xAE, 0x02), Syntax::NOTHING,                                                                 new GPRegister32Bits::IdFunctor())),
+
+		new Instruction ("LFENCE",
+			new ZerarySyntax        (100, Opcode (0x0F, 0xAE, 0xE8), Syntax::NOTHING)),
+
 		new Instruction ("LDS",
 			new BinarySyntax        (100, Opcode (0xC5),             Syntax::FIRST_ARGUMENT, false, Argument::MINUS_16BITS, 0, BinarySyntax::PRESENT, new WordReg(),    new Memory::IdFunctor())),
 
@@ -1025,6 +1117,36 @@ void Instruction::SetupInstructionTable () throw ()
 		new Instruction ("MASKMOVQ",
 			new BinarySyntax        (100, Opcode (0x0F, 0xF7),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MMXRegister::IdFunctor())),
 
+		new Instruction ("MASKMOVDQU",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0xF7), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MAXPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x5F), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("MAXPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x5F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("MAXSD",
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x5F), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+
+		new Instruction ("MAXSS",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x5F), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
+
+		new Instruction ("MFENCE",
+			new ZerarySyntax        (100, Opcode (0x0F, 0xAE, 0xF0), Syntax::NOTHING)),
+
+		new Instruction ("MINPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x5D), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("MINPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x5D),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("MINSD",
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x5D), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+
+		new Instruction ("MINSS",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x5D), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
+
 		new Instruction ("MOV",
 			new BinarySyntax        (100, Opcode (0x88),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,	       3, BinarySyntax::PRESENT, new GPRegister::IdFunctor(),      new MemGPReg()),
 			new BinarySyntax        (110, Opcode (0x8C),             Syntax::FIRST_ARGUMENT, false, Argument::NONE,         0, BinarySyntax::PRESENT, new MemWordReg(),                 new SegmentRegister::IdFunctor()),
@@ -1038,9 +1160,68 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax        (190, Opcode (0x0F, 0x21),       Syntax::NOTHING,        true,  Argument::NONE,         2, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new DebugRegister::IdFunctor()),
 			new BinarySyntax        (200, Opcode (0x0F, 0x24),       Syntax::NOTHING,        true,  Argument::NONE,         2, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new TestRegister::IdFunctor())),
 
+		new Instruction ("MOVAPD",
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x28), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>()),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x29), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MemXMMReg<128, Memory::FLOAT>(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVAPS",
+			new BinarySyntax        (110, Opcode (0x0F, 0x28),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>()),
+			new BinarySyntax        (100, Opcode (0x0F, 0x29),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MemXMMReg<128, Memory::FLOAT>(), new XMMRegister::IdFunctor())),
+
 		new Instruction ("MOVD",
-			new BinarySyntax        (100, Opcode (0x0F, 0x6E),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemReg32()),
-			new BinarySyntax        (110, Opcode (0x0F, 0x7E),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MemReg32(),               new MMXRegister::IdFunctor())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x6E),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemReg32()),
+			new BinarySyntax        (110, Opcode (0x0F, 0x7E),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new MemReg32(),               new MMXRegister::IdFunctor())),
+
+		new Instruction ("MOVDQA",
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x6F), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>()),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x7F), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MemXMMReg<128, Memory::FLOAT>(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVDQU",
+			new BinarySyntax        (110, Opcode (0xF3, 0x0F, 0x6F), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>()),
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x7F), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MemXMMReg<128, Memory::FLOAT>(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVDQ2Q",
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0xD6), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVHLPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x12),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVHPD",
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x16), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new Mem<64, Memory::FLOAT>()),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x17), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new Mem<64, Memory::FLOAT>(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVHPS",
+			new BinarySyntax        (110, Opcode (0x0F, 0x16),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new Mem<64, Memory::FLOAT>()),
+			new BinarySyntax        (100, Opcode (0x0F, 0x17),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new Mem<64, Memory::FLOAT>(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVLHPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x16),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVLPD",
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x12), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new Mem<64, Memory::FLOAT>()),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x13), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new Mem<64, Memory::FLOAT>(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVLPS",
+			new BinarySyntax        (110, Opcode (0x0F, 0x12),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new Mem<64, Memory::FLOAT>()),
+			new BinarySyntax        (100, Opcode (0x0F, 0x13),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new Mem<64, Memory::FLOAT>(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVMSKPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x50), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVMSKPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x50),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVNTDQ",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0xE7), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new Mem<128, Memory::FLOAT>(),     new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVNTI",
+			new BinarySyntax        (100, Opcode (0x0F, 0xC3),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new Mem<32, Memory::INTEGER>(),    new GPRegister32Bits::IdFunctor())),
+
+		new Instruction ("MOVNTPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x2B), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new Mem<128, Memory::FLOAT>(),     new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVNTPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x2B),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new Mem<128, Memory::FLOAT>(),     new XMMRegister::IdFunctor())),
 
 		new Instruction ("MOVNTQ",
 			new BinarySyntax        (100, Opcode (0x0F, 0xE7),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new Memory::IdFunctor(),      new MMXRegister::IdFunctor())),
@@ -1048,6 +1229,9 @@ void Instruction::SetupInstructionTable () throw ()
 		new Instruction ("MOVQ",
 			new BinarySyntax        (100, Opcode (0x0F, 0x6F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
 			new BinarySyntax        (110, Opcode (0x0F, 0x7F),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MemMMXReg(),              new MMXRegister::IdFunctor())),
+
+		new Instruction ("MOVQ2DQ",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0xD6), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MMXRegister::IdFunctor())),
 
 		new Instruction ("MOVS",
 			new StringSyntax        (100, Opcode (0xAC),             Syntax::FIRST_ARGUMENT,        Argument::NONE,                                   new Mem<8>(),     new Mem<8>()),
@@ -1063,6 +1247,18 @@ void Instruction::SetupInstructionTable () throw ()
 		new Instruction ("MOVSD",
 			new ZerarySyntax        (100, Opcode (0xAD),             Syntax::MODE_32BITS)),
 
+		new Instruction ("MOVSS",
+			new BinarySyntax        (110, Opcode (0xF3, 0x0F, 0x10), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>()),
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x11), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new MemXMMReg<32, Memory::FLOAT>(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVUPD",
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x10), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>()),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x11), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new MemXMMReg<32, Memory::FLOAT>(), new XMMRegister::IdFunctor())),
+
+		new Instruction ("MOVUPS",
+			new BinarySyntax        (110, Opcode (0x0F, 0x10),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>()),
+			new BinarySyntax        (100, Opcode (0x0F, 0x11),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new MemXMMReg<32, Memory::FLOAT>(), new XMMRegister::IdFunctor())),
+
 		new Instruction ("MOVSX",
 			new BinarySyntax        (100, Opcode (0x0F, 0xBE),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,         0, BinarySyntax::PRESENT, new WordReg(),                new Mem8Reg8()),
 			new BinarySyntax        (110, Opcode (0x0F, 0xBF),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new Mem16Reg16())),
@@ -1074,6 +1270,18 @@ void Instruction::SetupInstructionTable () throw ()
 		new Instruction ("MUL",
 			new UnarySyntax         (100, Opcode (0xF6, 0x04),       Syntax::FIRST_ARGUMENT,                                                          new MemGPReg(), 1)),
 
+		new Instruction ("MULPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x59), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("MULPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x59),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("MULSD",
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x59), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+
+		new Instruction ("MULSS",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x59), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
+
 		new Instruction ("NEG",
 			new UnarySyntax         (100, Opcode (0xF6, 0x03),       Syntax::FIRST_ARGUMENT,                                                          new MemGPReg(), 1)),
 
@@ -1084,6 +1292,12 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax        (100, Opcode (0x90),             Syntax::NOTHING)),
 
 		new OptimizedBinaryInstruction ("OR",  Opcode (0x0C), Opcode(0x80, 0x01), Opcode(0x83, 0x01), Opcode (0x08)),
+
+		new Instruction ("ORPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x56), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("ORPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x56),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("OUT",
 			new ZerarySyntax        (100, Opcode (0xEF),             Syntax::SECOND_ARGUMENT,                                                         new DX(),         new Accumulator()),
@@ -1106,70 +1320,98 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax        (100, Opcode (0x6F),             Syntax::MODE_32BITS)),
 
 		new Instruction ("PACKSSWB",
-			new BinarySyntax        (100, Opcode (0x0F, 0x63),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x63),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x63), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PACKSSDW",
-			new BinarySyntax        (100, Opcode (0x0F, 0x6B),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x6B),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x6B), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PACKUSWB",
-			new BinarySyntax        (100, Opcode (0x0F, 0x67),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x67),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x67), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PADDB",
-			new BinarySyntax        (100, Opcode (0x0F, 0xFC),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xFC),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xFC), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PADDW",
-			new BinarySyntax        (100, Opcode (0x0F, 0xFD),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xFD),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xFD), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PADDD",
-			new BinarySyntax        (100, Opcode (0x0F, 0xFE),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xFE),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xFE), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("PADDQ",
+			new BinarySyntax        (100, Opcode (0x0F, 0xD4),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xD4), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PADDSB",
-			new BinarySyntax        (100, Opcode (0x0F, 0xEC),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xEC),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xEC), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PADDSW",
-			new BinarySyntax        (100, Opcode (0x0F, 0xED),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xED),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xED), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PADDUSB",
-			new BinarySyntax        (100, Opcode (0x0F, 0xDC),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xDC),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xDC), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PADDUSW",
-			new BinarySyntax        (100, Opcode (0x0F, 0xDD),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xDD),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xDD), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PAND",
-			new BinarySyntax        (100, Opcode (0x0F, 0xDB),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xDB),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xDB), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PANDN",
-			new BinarySyntax        (100, Opcode (0x0F, 0xDF),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xDF),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xDF), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("PAUSE",
+			new ZerarySyntax        (100, Opcode (0xF3, 0x90),       Syntax::NOTHING)),
 
 		new Instruction ("PAVGB",
-			new BinarySyntax        (100, Opcode (0x0F, 0xE0),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xE0),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xE0), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
-		new Instruction ("PAVGB",
-			new BinarySyntax        (100, Opcode (0x0F, 0xE3),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+		new Instruction ("PAVGW",
+			new BinarySyntax        (100, Opcode (0x0F, 0xE3),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xE3), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PAVGUSB",
 			new TDNowSyntax         (100, 0xBF)),
 
 		new Instruction ("PCMPEQB",
-			new BinarySyntax        (100, Opcode (0x0F, 0x74),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x74),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x74), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PCMPEQW",
-			new BinarySyntax        (100, Opcode (0x0F, 0x75),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x75),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x75), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PCMPEQD",
-			new BinarySyntax        (100, Opcode (0x0F, 0x76),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x76),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x76), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PCMPGTB",
-			new BinarySyntax        (100, Opcode (0x0F, 0x64),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x64),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x64), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PCMPGTW",
-			new BinarySyntax        (100, Opcode (0x0F, 0x65),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x65),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x65), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PCMPGTD",
-			new BinarySyntax        (100, Opcode (0x0F, 0x66),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x66),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x66), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PEXTRW",
-			new BinarySyntax        (100, Opcode (0x0F, 0xC5),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xC5),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (110, Opcode (0x0F, 0xC5),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new XMMRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("PF2ID",
 			new TDNowSyntax         (100, 0x1D)),
@@ -1233,37 +1475,52 @@ void Instruction::SetupInstructionTable () throw ()
 
 		new Instruction ("PINSRW",
 			new BinarySyntax        (100, Opcode (0x0F, 0xC4),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new GPRegister32Bits::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
-			new BinarySyntax        (110, Opcode (0x0F, 0xC4),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new Mem<16, Memory::INTEGER>(),    new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (110, Opcode (0x0F, 0xC4),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new Mem<16, Memory::INTEGER>(),    new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (120, Opcode (0x0F, 0xC4),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new GPRegister32Bits::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (130, Opcode (0x0F, 0xC4),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new Mem<16, Memory::INTEGER>(),    new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("PMADDWD",
-			new BinarySyntax        (100, Opcode (0x0F, 0xF5),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xF5),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xF5), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PMAXSW",
-			new BinarySyntax        (100, Opcode (0x0F, 0xEE),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xEE),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xEE), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PMAXUB",
-			new BinarySyntax        (100, Opcode (0x0F, 0xDE),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xDE),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xDE), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PMINSW",
-			new BinarySyntax        (100, Opcode (0x0F, 0xEA),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xEA),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xEA), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PMINUB",
-			new BinarySyntax        (100, Opcode (0x0F, 0xDA),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xDA),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xDA), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PMOVMSKB",
-			new BinarySyntax        (100, Opcode (0x0F, 0xD7),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new MMXRegister::IdFunctor())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xD7),       Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new MMXRegister::IdFunctor()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xD7), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PRESENT, new GPRegister32Bits::IdFunctor(), new XMMRegister::IdFunctor())),
 
 		new Instruction ("PMULHRW",
 			new TDNowSyntax         (100, 0xB7)),
 
 		new Instruction ("PMULHUW",
-			new BinarySyntax        (100, Opcode (0x0F, 0xE4),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xE4),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xE4), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PMULHW",
-			new BinarySyntax        (100, Opcode (0x0F, 0xE5),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xE5),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xE5), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PMULLW",
-			new BinarySyntax        (100, Opcode (0x0F, 0xD5),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xD5),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xD5), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("PMULUDQ",
+			new BinarySyntax        (100, Opcode (0x0F, 0xF4),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xF4), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("POP",
 			new UnarySyntax         (100, Opcode (0x8F, 0x00),       Syntax::FIRST_ARGUMENT,                                                          new MemGPReg()),
@@ -1294,7 +1551,8 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax        (100, Opcode (0x9D),             Syntax::MODE_32BITS)),
 
 		new Instruction ("POR",
-			new BinarySyntax        (100, Opcode (0x0F, 0xEB),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xEB),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xEB), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PREFETCH",
 			new UnarySyntax         (100, Opcode (0x0F, 0x0D, 0x00), Syntax::NOTHING,                                                                 new Memory::IdFunctor())),
@@ -1315,84 +1573,139 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax         (100, Opcode (0x0F, 0x0D, 0x01), Syntax::NOTHING,                                                                 new Memory::IdFunctor())),
 
 		new Instruction ("PSADBW",
-			new BinarySyntax        (100, Opcode (0x0F, 0xF6),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xF6),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xF6), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("PSHUFD",
+			new BinarySyntax        (100, Opcode (0x0F, 0x70),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
+
+		new Instruction ("PSHUFHW",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x70), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
+
+		new Instruction ("PSHUFLW",
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x70), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("PSHUFW",
 			new BinarySyntax        (100, Opcode (0x0F, 0x70),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg(), new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("PSLLW",
 			new BinarySyntax        (100, Opcode (0x0F, 0xF1),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
-			new BinarySyntax        (110, Opcode (0x0F, 0x71, 0x06), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (110, Opcode (0x0F, 0x71, 0x06), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (120, Opcode (0x66, 0x0F, 0x71, 0x06), Syntax::NOTHING,  false, Argument::NONE,         0, BinarySyntax::PARTIAL, new XMMRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (130, Opcode (0x66, 0x0F, 0xF1), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PSLLD",
 			new BinarySyntax        (100, Opcode (0x0F, 0xF2),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
-			new BinarySyntax        (110, Opcode (0x0F, 0x72, 0x06), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (110, Opcode (0x0F, 0x72, 0x06), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (120, Opcode (0x66, 0x0F, 0x72, 0x06), Syntax::NOTHING,  false, Argument::NONE,         0, BinarySyntax::PARTIAL, new XMMRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (130, Opcode (0x66, 0x0F, 0xF2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("PSLLDQ",
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x73, 0x07), Syntax::NOTHING,        false, Argument::NONE,   0, BinarySyntax::PARTIAL, new XMMRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("PSLLQ",
 			new BinarySyntax        (100, Opcode (0x0F, 0xF3),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
-			new BinarySyntax        (110, Opcode (0x0F, 0x73, 0x06), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (110, Opcode (0x0F, 0x73, 0x06), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (120, Opcode (0x66, 0x0F, 0xF3), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>()),
+			new BinarySyntax        (130, Opcode (0x66, 0x0F, 0x73, 0x06), Syntax::NOTHING,  false, Argument::NONE,         0, BinarySyntax::PARTIAL, new XMMRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("PSRAW",
 			new BinarySyntax        (100, Opcode (0x0F, 0xE1),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
-			new BinarySyntax        (110, Opcode (0x0F, 0x71, 0x04), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (110, Opcode (0x0F, 0x71, 0x04), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (120, Opcode (0x66, 0x0F, 0xE1), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>()),
+			new BinarySyntax        (130, Opcode (0x66, 0x0F, 0x71, 0x04), Syntax::NOTHING,  false, Argument::NONE,         0, BinarySyntax::PARTIAL, new XMMRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("PSRAD",
 			new BinarySyntax        (100, Opcode (0x0F, 0xE2),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
-			new BinarySyntax        (110, Opcode (0x0F, 0x72, 0x04), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (110, Opcode (0x0F, 0x72, 0x04), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (120, Opcode (0x66, 0x0F, 0xE2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>()),
+			new BinarySyntax        (130, Opcode (0x66, 0x0F, 0x72, 0x04), Syntax::NOTHING,  false, Argument::NONE,         0, BinarySyntax::PARTIAL, new XMMRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("PSRLW",
 			new BinarySyntax        (100, Opcode (0x0F, 0xD1),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
-			new BinarySyntax        (110, Opcode (0x0F, 0x71, 0x02), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (110, Opcode (0x0F, 0x71, 0x02), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (120, Opcode (0x66, 0x0F, 0x71, 0x02), Syntax::NOTHING,  false, Argument::NONE,         0, BinarySyntax::PARTIAL, new XMMRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (130, Opcode (0x66, 0x0F, 0xD1), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PSRLD",
 			new BinarySyntax        (100, Opcode (0x0F, 0xD2),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
-			new BinarySyntax        (110, Opcode (0x0F, 0x72, 0x02), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (110, Opcode (0x0F, 0x72, 0x02), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (120, Opcode (0x66, 0x0F, 0x72, 0x02), Syntax::NOTHING,  false, Argument::NONE,         0, BinarySyntax::PARTIAL, new XMMRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (130, Opcode (0x66, 0x0F, 0xD2), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("PSRLDQ",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x73, 0x03), Syntax::NOTHING,  false, Argument::NONE,         0, BinarySyntax::PARTIAL, new XMMRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
 
 		new Instruction ("PSRLQ",
 			new BinarySyntax        (100, Opcode (0x0F, 0xD3),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
-			new BinarySyntax        (110, Opcode (0x0F, 0x73, 0x02), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>())),
+			new BinarySyntax        (110, Opcode (0x0F, 0x73, 0x02), Syntax::NOTHING,        false, Argument::NONE,         0, BinarySyntax::PARTIAL, new MMXRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (130, Opcode (0x66, 0x0F, 0x73, 0x02), Syntax::NOTHING,  false, Argument::NONE,         0, BinarySyntax::PARTIAL, new XMMRegister::IdFunctor(), new Immed<8, Number::UNSIGNED>()),
+			new BinarySyntax        (130, Opcode (0x66, 0x0F, 0xD3), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PSUBB",
-			new BinarySyntax        (100, Opcode (0x0F, 0xF8),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xF8),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xF8), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PSUBW",
-			new BinarySyntax        (100, Opcode (0x0F, 0xF9),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xF9),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xF9), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PSUBD",
-			new BinarySyntax        (100, Opcode (0x0F, 0xFA),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xFA),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xFA), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("PSUBQ",
+			new BinarySyntax        (100, Opcode (0x0F, 0xFB),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xFB), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PSUBSB",
-			new BinarySyntax        (100, Opcode (0x0F, 0xE8),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xE8),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xE8), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PSUBSW",
-			new BinarySyntax        (100, Opcode (0x0F, 0xE9),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xE9),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xE9), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PSUBUSB",
-			new BinarySyntax        (100, Opcode (0x0F, 0xD8),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xD8),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xD8), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PSUBUSW",
-			new BinarySyntax        (100, Opcode (0x0F, 0xD9),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xD9),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0xD9), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PSWAPD",
 			new TDNowSyntax         (100, 0xBB)),
 
 		new Instruction ("PUNPCKHBW",
-			new BinarySyntax        (100, Opcode (0x0F, 0x68),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x68),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x68), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
-		new Instruction ("PUNPCKHBD",
-			new BinarySyntax        (100, Opcode (0x0F, 0x69),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+		new Instruction ("PUNPCKHWD",
+			new BinarySyntax        (100, Opcode (0x0F, 0x69),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x69), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
-		new Instruction ("PUNPCKHBQ",
-			new BinarySyntax        (100, Opcode (0x0F, 0x6A),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+		new Instruction ("PUNPCKHDQ",
+			new BinarySyntax        (100, Opcode (0x0F, 0x6A),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x6A), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("PUNPCKHQDQ",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x6D), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PUNPCKLBW",
-			new BinarySyntax        (100, Opcode (0x0F, 0x60),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0x60),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x60), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
-		new Instruction ("PUNPCKLBD",
-			new BinarySyntax        (100, Opcode (0x0F, 0x61),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+		new Instruction ("PUNPCKLWD",
+			new BinarySyntax        (100, Opcode (0x0F, 0x61),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x61), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
-		new Instruction ("PUNPCKLBQ",
-			new BinarySyntax        (100, Opcode (0x0F, 0x62),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+		new Instruction ("PUNPCKLDQ",
+			new BinarySyntax        (100, Opcode (0x0F, 0x62),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (110, Opcode (0x66, 0x0F, 0x62), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("PUNPCKLQDQ",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x6C), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("PUSH",
 			new UnarySyntax         (100, Opcode (0xFF, 0x06),       Syntax::FIRST_ARGUMENT,                                                          new MemGPReg()),
@@ -1425,7 +1738,8 @@ void Instruction::SetupInstructionTable () throw ()
 			new ZerarySyntax        (100, Opcode (0x9C),             Syntax::MODE_32BITS)),
 
 		new Instruction ("PXOR",
-			new BinarySyntax        (100, Opcode (0x0F, 0xEF),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg())),
+			new BinarySyntax        (100, Opcode (0x0F, 0xEF),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MMXRegister::IdFunctor(), new MemMMXReg()),
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0xEF), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("RCL",
 			new UnarySyntax         (120, Opcode (0xD0, 0x02),       Syntax::FIRST_ARGUMENT,                                                          new MemGPReg(),               new ImmedEqual<1>(), 1),
@@ -1446,6 +1760,12 @@ void Instruction::SetupInstructionTable () throw ()
 			new UnarySyntax         (120, Opcode (0xD0, 0x01),       Syntax::FIRST_ARGUMENT,                                                          new MemGPReg(),               new ImmedEqual<1>(), 1),
 			new BinarySyntax        (110, Opcode (0xD2, 0x01),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,         1, BinarySyntax::PARTIAL, new MemGPReg(),               new CL()),
 			new BinarySyntax        (100, Opcode (0xC0, 0x01),       Syntax::FIRST_ARGUMENT, false, Argument::NONE,         1, BinarySyntax::PARTIAL, new MemGPReg(),               new Immed<8, Number::UNSIGNED>())),
+
+		new Instruction ("RCPPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x53),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("RCPSS",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x53), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
 
 		new Instruction ("RDMSR",
 			new ZerarySyntax        (100, Opcode (0x0F, 0x32),       Syntax::NOTHING)),
@@ -1473,6 +1793,12 @@ void Instruction::SetupInstructionTable () throw ()
 
 		new Instruction ("RSM",
 			new ZerarySyntax        (100, Opcode (0x0F, 0xAA),       Syntax::NOTHING)),
+
+		new Instruction ("RSQRTPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x52),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("RSQRTSS",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x52), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
 
 		new Instruction ("RET",
 			new ZerarySyntax        (100, Opcode (0xC3),             Syntax::NOTHING),
@@ -1629,11 +1955,29 @@ void Instruction::SetupInstructionTable () throw ()
 			new BinarySyntax        (100, Opcode (0x0F, 0xAC),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MemWordReg(),             new WordReg(),                     new CL()),
 			new BinarySyntax        (110, Opcode (0x0F, 0xAD),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new MemWordReg(),             new WordReg(),                     new Immed<8, Number::UNSIGNED>())),
 
+		new Instruction ("SHUFPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0xC6), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
+
+		new Instruction ("SHUFPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0xC6),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>(), new Immed<8, Number::UNSIGNED>())),
+
 		new Instruction ("SIDT",
 			new UnarySyntax         (100, Opcode (0x0F, 0x01, 0x01), Syntax::FIRST_ARGUMENT,                                                          new Mem<48>())),
 
 		new Instruction ("SLDT",
 			new UnarySyntax         (100, Opcode (0x0F, 0x00, 0x00), Syntax::FIRST_ARGUMENT,                                                          new MemWordReg())),
+
+		new Instruction ("SQRTPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x51), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("SQRTPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x51),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("SQRTSD",
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x51), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+
+		new Instruction ("SQRTSS",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x51), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
 
 		new Instruction ("STC",
 			new ZerarySyntax        (100, Opcode (0xF9),             Syntax::NOTHING)),
@@ -1643,6 +1987,9 @@ void Instruction::SetupInstructionTable () throw ()
 
 		new Instruction ("STI",
 			new ZerarySyntax        (100, Opcode (0xFB),             Syntax::NOTHING)),
+
+		new Instruction ("STMXCSR",
+			new UnarySyntax         (100, Opcode (0x0F, 0xAE, 0x03), Syntax::NOTHING,                                                                 new GPRegister32Bits::IdFunctor())),
 
 		new Instruction ("STOS",
 			new StringSyntax        (100, Opcode (0xAA),                                                                                              new Mem<8>(),  false),
@@ -1663,13 +2010,49 @@ void Instruction::SetupInstructionTable () throw ()
 
 		new OptimizedBinaryInstruction ("SUB", Opcode (0x2C), Opcode(0x80, 0x05), Opcode(0x83, 0x05), Opcode (0x28)),
 
+		new Instruction ("SUBPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x5C), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("SUBPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x5C),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("SUBSD",
+			new BinarySyntax        (100, Opcode (0xF2, 0x0F, 0x5C), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+
+		new Instruction ("SUBSS",
+			new BinarySyntax        (100, Opcode (0xF3, 0x0F, 0x5C), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
+
+		new Instruction ("SYSENTER",
+			new ZerarySyntax        (100, Opcode (0x0F, 0x34),       Syntax::NOTHING)),
+
+		new Instruction ("SYSEXIT",
+			new ZerarySyntax        (100, Opcode (0x0F, 0x35),       Syntax::NOTHING)),
+
 		new Instruction ("TEST",
 			new BinarySyntax        (100, Opcode (0xF6, 0x00),       Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,	       1, BinarySyntax::PARTIAL, new MemGPReg(),    new Immediate::IdFunctor()),
 			new BinarySyntax        (110, Opcode (0x84),             Syntax::FIRST_ARGUMENT, true,  Argument::EQUAL,        1, BinarySyntax::PRESENT, new MemGPReg(),    new GPRegister::IdFunctor()),
 			new BinarySyntax        (120, Opcode (0xA8),             Syntax::FIRST_ARGUMENT, false, Argument::EQUAL,        1, BinarySyntax::ABSENT,  new Accumulator(), new Immediate::IdFunctor())),
 
+		new Instruction ("UCOMISD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x2E), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<64, Memory::FLOAT>())),
+
+		new Instruction ("UCOMISS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x2E),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<32, Memory::FLOAT>())),
+
 		new Instruction ("UD2",
 			new ZerarySyntax        (100, Opcode (0x0F, 0x0B),       Syntax::NOTHING)),
+
+		new Instruction ("UNPCKHPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x15), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("UNPCKHPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x15),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("UNPCKLPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x14), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("UNPCKLPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x14),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 
 		new Instruction ("VERR",
 			new UnarySyntax         (100, Opcode (0x0F, 0x00, 0x04), Syntax::NOTHING,                                                                 new MemWordReg())),
@@ -1699,7 +2082,13 @@ void Instruction::SetupInstructionTable () throw ()
 		new Instruction ("XLATB",
 			new ZerarySyntax        (100, Opcode (0xD7),             Syntax::NOTHING)),
 
-		new OptimizedBinaryInstruction ("XOR",  Opcode (0x34), Opcode(0x80, 0x06), Opcode(0x83, 0x06), Opcode (0x30))
+		new OptimizedBinaryInstruction ("XOR",  Opcode (0x34), Opcode(0x80, 0x06), Opcode(0x83, 0x06), Opcode (0x30)),
+
+		new Instruction ("XORPD",
+			new BinarySyntax        (100, Opcode (0x66, 0x0F, 0x57), Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
+
+		new Instruction ("XORPS",
+			new BinarySyntax        (100, Opcode (0x0F, 0x57),       Syntax::NOTHING,        false, Argument::EQUAL,        0, BinarySyntax::PRESENT, new XMMRegister::IdFunctor(), new MemXMMReg<128, Memory::FLOAT>())),
 	};
 
 	unsigned int n = sizeof (Instructions) / sizeof (Instruction *);
